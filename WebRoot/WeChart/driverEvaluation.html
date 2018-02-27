@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<script src="mui/js/mui.min.js"></script>
+		<link href="mui/css/mui.min.css" rel="stylesheet" />
+
+		<link rel="stylesheet" href="mui/css/iconfont.css" />
+		<script type="text/javascript" charset="utf-8">
+			var num = 0;
+			var datas = "";
+			var shiping_order_id = getUrlParam("id");
+			if(shiping_order_id == '' || shiping_order_id == null) {
+				 goback();
+			} else {
+				mui.init({
+					swipeBack: false
+				});
+
+				window.onload = function() {
+					start();
+					mui.ajax('searchWaybill.do?method=getOrderMessage', {
+						data: {
+							//shiping_order_goid: order_shipper,
+							id: shiping_order_id
+						},
+						dataType: 'json', //服务器返回json格式数据 
+						type: 'post', //HTTP请求类型 
+						// timeout:10000,//超时时间设置为10秒；
+						success: function(data) {
+						    if(data==""){
+						      goback();
+						    }else if(data.driver_name=""){
+						       goback();
+						    }else{
+						    datas=data;
+							message(data);
+						    }
+						    
+							//showMessge(data);
+
+							//服务器返回响应，根据响应结果，分析是否登录成功； ... 
+						},
+						error: function(xhr, type, errorThrown) {
+							//异常处理；
+							console.log(type);
+							mui.alert("系统异常", '提示', '确认');
+						}
+					});
+
+				};
+			}
+			function message(message){
+			   var mess = message[0];
+			    //console.info(mess);
+			    document.getElementById("driver_name").innerHTML=mess.driver_name;
+			    document.getElementById("driver_phone").innerHTML=mess.driver_phone;
+			    document.getElementById("order_num").innerHTML=mess.shiping_order_num;
+			    document.getElementById("good_num").innerHTML=mess.goods_name;
+			}
+			
+			//获取url中的参数
+			function getUrlParam(name) {
+				var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+				var r = window.location.search.substr(1).match(reg);
+				if(r != null) {
+					return unescape(r[2]);
+				} else {
+					return null;
+				}
+			}
+
+			function pingjia() {
+			    var datamess = JSON.stringify(datas); 
+			    var message = document.getElementById("textarea").value;
+			    if(num==0){
+			        mui.alert("请选择星星分数", '提示', '确认');
+			    }else if(message==""){
+			        mui.alert("请填写评价内容", '提示', '确认');
+			    }else{
+			    var mask = mui.createMask();
+			    mui.ajax('searchWaybill.do?method=saveMssage', {
+						data: {
+							//shiping_order_goid: order_shipper,
+							message: message,
+							num:num,
+							datas:datamess
+						},
+						dataType: 'json', //服务器返回json格式数据 
+						type: 'post', //HTTP请求类型 
+						// timeout:10000,//超时时间设置为10秒；
+						success: function(data) {
+						    mask.close();//关闭遮罩
+						    var mess = data.message;
+						    if(mess){
+						     mui.alert("感谢你评价", '提示', '确认',function(){
+						       goback();
+						     });
+						   }else{
+						      mui.alert("失败了,请反馈", '提示', '确认',function(){
+						      });
+						   }
+						  
+							//showMessge(data);
+
+							//服务器返回响应，根据响应结果，分析是否登录成功； ... 
+						},
+						error: function(xhr, type, errorThrown) {
+							//异常处理；
+							console.log(type);
+							 mui.alert("系统异常", '提示', '确认');
+						}
+					});
+			   }	//mui.back();
+			}
+
+			function start() {
+				var star = document.getElementById("star");
+				var star_li = star.getElementsByTagName("li");
+				var i = 0;
+				var j = 0;
+				var len = star_li.length;
+
+				for(i = 0; i < len; i++) {
+					star_li[i].index = i;
+					star_li[i].onclick = function() {
+						var st = this.index + 1;
+						num = this.index + 1;
+						for(i = 0; i < st; i++) {
+							star_li[i].style.color = "gold";
+						}
+
+						for(j = len; j > st; j--) {
+
+							star_li[j - 1].style.color = "";
+						}
+
+					};
+				}
+			}
+			function goback(){
+			mui.openWindow({
+					url: 'waybillQuery.html',
+					id: 'pingjia',
+					styles: {
+						top: 0, //新页面顶部位置
+
+					},
+				});
+			}
+		</script>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<h1 class="mui-title">DMS 司机评价</h1>
+		</header>
+		<div class="mui-content">
+			<ul class="mui-table-view">
+				<li class="mui-table-view-cell mui-media">
+					<a href="javascript:;">
+						<img class="mui-media-object mui-pull-left" src="mui/images/sj.png">
+						<div class="mui-media-body">
+							司机信息
+							<p class='mui-ellipsis'>司机姓名：
+							    <span id="driver_name"></span>
+							</p>
+							<p class='mui-ellipsis'>司机电话：
+							    <span id="driver_phone"></span>
+							</p>
+						</div>
+					</a>
+				</li>
+				<li class="mui-table-view-cell mui-media">
+					<a href="javascript:;">
+						<img class="mui-media-object mui-pull-left" src="mui/images/icon_my_car.png">
+						<div class="mui-media-body">
+							货物信息
+							<p class='mui-ellipsis'>货运编号：
+							    <span id="order_num"></span>
+							</p>
+							<p class='mui-ellipsis'>货物名称：
+							    <span id="good_num"></span>
+							</p>
+						</div>
+					</a>
+				</li>
+			</ul>
+		</div>driverEvaluation
+		<div class="mui-content">
+			<div class="mui-card">
+				<!--页眉，放置标题-->
+				<div class="mui-card-header mui-card-media">
+					<img src="mui/images/pingjia.png" />
+					<div class="mui-media-body">评价内容</div>
+				</div>
+				<!--内容区-->
+				<div class="mui-card-content">
+					<ul id="star">
+						<li class="mui-icon iconfont icon-star-demo"></li>
+						<li class="mui-icon iconfont icon-star-demo"></li>
+						<li class="mui-icon iconfont icon-star-demo"></li>
+						<li class="mui-icon iconfont icon-star-demo"></li>
+						<li class="mui-icon iconfont icon-star-demo"></li>
+					</ul>
+					<div class="mui-input-row" style="margin: 10px 5px;">
+						<textarea id="textarea" rows="5" placeholder="请输入评价内容"></textarea>
+					</div>
+					<div class="mui-card-footer">
+						<button type="button" class="mui-btn mui-btn-success mui-btn-outlined mui-btn-block" onclick="pingjia()">评价</button>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</body>
+
+</html>

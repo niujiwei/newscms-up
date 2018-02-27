@@ -1,0 +1,899 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.DriverDao">
+	<resultMap id="BaseResultMap" type="com.jy.model.Driver">
+		<id column="driver_id" property="driverId" jdbcType="VARCHAR" />
+		<result column="car_id" property="carId" jdbcType="VARCHAR" />
+		<result column="driver_name" property="driverName" jdbcType="VARCHAR" />
+		<result column="gender" property="gender" />
+		<result column="birthday" property="birthday" jdbcType="DATE" />
+		<result column="phone_number" property="phoneNumber" jdbcType="VARCHAR" />
+		<result column="address" property="address" jdbcType="VARCHAR" />
+		<result column="card_number" property="cardNumber" jdbcType="VARCHAR" />
+		<result column="card_nation" property="cardNation" jdbcType="VARCHAR" />
+		<result column="card_issuing_authority_authority" property="cardIssuingAuthorityAuthority" />
+		<result column="card_validity_date" property="cardValidityDate" />
+		<result column="driving_license" property="drivingLicense" />
+		<result column="driver_nationality" property="driverNationality" />
+		<result column="driver_license_date" property="driverLicenseDate" />
+		<result column="driving_type" property="drivingType" />
+		<result column="driver_carnumber" property="driver_carnumber" />
+		<result column="driver_cartype" property="driver_cartype" />
+		<result column="driver_phonebrand" property="driver_phonebrand" />
+		<result column="driver_phonemodel" property="driver_phonemodel" />
+
+		<result column="drving_licensing_date" property="drvingLicensingDate" />
+		<result column="driver_license_archivesNumber" property="driverLicenseArchivesnumber" />
+		<result column="employment_certified_card" property="employmentCertifiedCard" />
+		<result column="employment_type" property="employmentType" />
+		<result column="employment_issuing_authority" property="employmentIssuingAuthority" />
+		<result column="employment_validity_date" property="employmentValidityDate" />
+		<result column="employment_licensing_date" property="employmentLicensingDate" />
+		<result column="employment_license_date" property="employmentLicenseDate" />
+		<result column="update_date" property="updateDate" />
+		<result column="driving_record" property="drivingRecord" />
+		<result column="travel_card_id" property="travel_card_id" />
+		<result column="plate_number" property="plate_number" />
+
+		<result column="ptype" property="ptype" />
+	</resultMap>
+	<select id="getSupDriverId" resultType="Driver">
+		select driver_id from
+		jy_driver_info where driver_suppliers =#{id}
+	</select>
+	<select id="Driver_province" resultType="City_info">
+		select citycode from jy_city_info where
+		<if test="_parameter!=null and _parameter!=''">
+			cityname like "%${_parameter}%"
+		</if>
+	</select>
+	<select id="Driver_city" resultType="City_info">
+		select citycode from jy_city where
+		<if test="_parameter!=null and _parameter!=''">
+			cityname like "%${_parameter}%"
+		</if>
+	</select>
+	<select id="driver_suppliers" resultType="String">
+		select suppliers_id from jy_suppliers where
+		<if test="param1!=null and param1!=''">
+			suppliers_name like "%${param1}%"
+		</if>
+		<if test="param2!=null and param2!=''">
+			or suppliers_address like "%${param2}%"
+		</if>
+	</select>
+	<select id="othergetDriverExcelInfo" resultType="Driver">
+		SELECT
+	    js.supplie_company,
+		js.suppliers_name as
+		driver_suppliersname,
+		ji.driver_address,concat(ji.driver_cardnumber,' ')  as driver_cardnumber,ji.driver_carnumber,
+		ji.driver_cartype,ji.driver_city,ji.driver_county,
+		ji.driver_createtime,ji.driver_id,ji.driver_name,
+		ji.driver_phone,ji.driver_phonebrand,ji.driver_phonemodel,
+		ji.driver_province,ji.driver_remarks,ji.driver_suppliers,
+		ji.driver_updatedate,ji.driver_updatepeople,ji.is_supperlis
+		FROM
+		jy_driver_info ji
+		LEFT
+		JOIN
+		jy_suppliers js ON
+		js.suppliers_id=ji.driver_suppliers
+		LEFT JOIN
+		jy_customer jcu ON
+		FIND_IN_SET( jcu.customer_id,js.suppliers_customer)
+		LEFT JOIN jy_user
+		ju ON ju.customer_id =jcu.customer_id
+		WHERE
+		ju.id=#{param8}
+		<include refid="getDriverInfoExcel_sql" />
+	</select>
+	<select id="getDriverInfoExcel" resultType="Driver">
+		SELECT
+		js.supplie_company,
+		js.suppliers_name as
+		driver_suppliersname,
+		ji.driver_address,concat(ji.driver_cardnumber,' ')  as driver_cardnumber,ji.driver_carnumber,
+		ji.driver_cartype,ji.driver_city,ji.driver_county,
+		ji.driver_createtime,ji.driver_id,ji.driver_name,
+		ji.driver_phone,ji.driver_phonebrand,ji.driver_phonemodel,
+		ji.driver_province,ji.driver_remarks,ji.driver_suppliers,
+		ji.driver_updatedate,ji.driver_updatepeople,ji.is_supperlis
+		FROM
+		jy_driver_info ji
+		LEFT JOIN
+		jy_suppliers js ON
+		js.suppliers_id =
+		ji.driver_suppliers
+		LEFT JOIN
+		jy_user ju ON
+		ju.driver_id = ji.driver_id
+		where
+		ju.id = #{param8}
+		<include refid="getDriverInfoExcel_sql" />
+	</select>
+	<select id="getDriverInfoExcelSupp" resultType="Driver">
+		SELECT
+		js.supplie_company,
+		js.suppliers_name as
+		driver_suppliersname,
+		ji.driver_address,concat(ji.driver_cardnumber,' ') as driver_cardnumber,ji.driver_carnumber,
+		ji.driver_cartype,ji.driver_city,ji.driver_county,
+		ji.driver_createtime,ji.driver_id,ji.driver_name,
+		ji.driver_phone,ji.driver_phonebrand,ji.driver_phonemodel,
+		ji.driver_province,ji.driver_remarks,ji.driver_suppliers,
+		ji.driver_updatedate,ji.driver_updatepeople,ji.is_supperlis
+		FROM
+		jy_driver_info ji
+		LEFT JOIN
+		jy_suppliers js ON
+		js.suppliers_id =
+		ji.driver_suppliers
+		where
+		ji.driver_suppliers =
+		#{param8}
+		<include refid="getDriverInfoExcel_sql" />
+	</select>
+	<select id="getDriverInfoExcelSuppUser" resultType="Driver">
+		SELECT
+		js.supplie_company,
+		js.suppliers_name as
+		driver_suppliersname,
+		ji.driver_address,concat(ji.driver_cardnumber,' ')  as driver_cardnumber ,ji.driver_carnumber,
+		ji.driver_cartype,ji.driver_city,ji.driver_county,
+		ji.driver_createtime,ji.driver_id,ji.driver_name,
+		ji.driver_phone,ji.driver_phonebrand,ji.driver_phonemodel,
+		ji.driver_province,ji.driver_remarks,ji.driver_suppliers,
+		ji.driver_updatedate,ji.driver_updatepeople,ji.is_supperlis
+		FROM
+		jy_driver_info ji
+		LEFT
+		JOIN
+		jy_suppliers js ON
+		js.suppliers_id =
+		ji.driver_suppliers
+		where 1=1
+		<include refid="getDriverInfoExcel_sql" />
+	</select>
+	<sql id="getDriverInfoExcel_sql"><!-- 收货客户查询信息条件 -->
+		<if test="array!=null and array.length!=0">
+			and ji.driver_id in
+			<foreach collection="array" index="index" item="item" open="("
+				separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+
+		<if test="param1!=null and param1!=''">
+			and ji.driver_name like "%${param1}%"
+		</if>
+		<if test="param2!=null and param2!=''">
+			and js.suppliers_name like "${param2}"
+		</if>
+		<if test="param3!=null and param3!=''">
+			and ji.driver_phone like "%${param3}%"
+		</if>
+		<if test="param4!=null and param4!=''">
+			and ji.driver_cardnumber like "%${param4}%"
+		</if>
+		<if test="param5!=null and param5!=''">
+			and ji.driver_address like "%${param5}%"
+		</if>
+		<if test="(param6!=null and param6!='') or ( param7!=null and param7!='')">
+			and ji.driver_id IN (SELECT jdo.driver_id from jy_drivertoorder jdo
+			LEFT JOIN
+			jy_shiping_order jso ON jso.shiping_order_id=jdo.order_id
+			where 1=1
+			<if test="param6!=null and param6!=''">
+				and jso.shiping_order_num like '%${param6}%'
+			</if>
+			<if test="param7!=null and param7!=''">
+				and jso.shiping_order_goid like '%${param7}%'
+			</if>
+			)
+		</if>
+		ORDER BY
+		ji.driver_address ASC
+	</sql>
+
+	<!-- 供应商,查询司机信息及供应商名,多加了两个表的联合查询jy_drivertoorder、jy_shiping_order,且进行去除重复值 -->
+	<select id="getDriverInfoSupp" resultType="Driver">
+		SELECT
+		ji.*,js.supplie_company,ju.username AS userName,
+		js.suppliers_name as
+		driver_suppliersname
+		FROM
+		jy_driver_info ji
+		LEFT JOIN
+		jy_suppliers js ON
+		js.suppliers_id =
+		ji.driver_suppliers
+		LEFT JOIN
+		jy_user ju ON ju.driver_id = ji.driver_id
+		where
+		ji.driver_suppliers =
+		#{param10}
+		<include refid="driver_info_sql" />
+	</select>
+
+
+	<!-- 供应商,统计司机数量,多加了两个表的联合查询jy_drivertoorder、jy_shiping_order,且进行去除重复值 -->
+	<select id="getDriverSupp" resultType="int">
+		select
+		count(*)
+		FROM
+		jy_driver_info ji
+		LEFT JOIN
+		jy_suppliers js ON
+		js.suppliers_id =
+		ji.driver_suppliers
+		LEFT JOIN
+		jy_drivertoorder do ON
+		do.driver_id=ji.driver_id
+		LEFT JOIN
+		jy_shiping_order so ON
+		so.shiping_order_id=do.order_id
+		where
+		1=1
+		and ji.driver_suppliers =
+		#{param8}
+		<include refid="driver_count_sql" />
+	</select>
+
+	<sql id="driver_info_sql"><!--司机管理和分配运单 -->
+		<if test="param3!=null and param3!=''">
+			and ji.driver_name like "%${param3}%"
+		</if>
+		<if test="param4!=null and param4!=''">
+			and js.suppliers_id = #{param4}
+		</if>
+		<if test="param5!=null and param5!=''">
+			and ji.driver_phone like "%${param5}%"
+		</if>
+		<if test="param6!=null and param6!=''">
+			and ji.driver_cardnumber like "%${param6}%"
+		</if>
+		<if test="param7!=null and param7!=''">
+			and ji.driver_address like "%${param7}%"
+		</if>
+		<if test="(param8!=null and param8!='') or ( param9!=null and param9!='')">
+			and ji.driver_id IN (SELECT jdo.driver_id from jy_drivertoorder jdo
+			LEFT JOIN
+			jy_shiping_order jso ON jso.shiping_order_id=jdo.order_id
+			where 1=1
+			<if test="param8!=null and param8!=''">
+				and jso.shiping_order_num = #{param8}
+			</if>
+			<if test="param9!=null and param9!=''">
+				and jso.shiping_order_goid = #{param9}
+			</if>
+			)
+		</if>
+		ORDER BY
+		ji.driver_address ASC
+		limit #{param1},#{param2}
+	</sql>
+
+	<sql id="driver_count_sql"><!-- 司机管理和分配运单查询总条数 -->
+		<if test="param1!=null and param1!=''">
+			and ji.driver_name like "%${param1}%"
+		</if>
+		<if test="param2!=null and param2!=''">
+			and js.suppliers_name like "%${param2}%"
+		</if>
+		<if test="param3!=null and param3!=''">
+			and ji.driver_phone like "%${param3}%"
+		</if>
+		<if test="param4!=null and param4!=''">
+			and ji.driver_cardnumber like "%${param4}%"
+		</if>
+		<if test="param5!=null and param5!=''">
+			and ji.driver_address like "%${param5}%"
+		</if>
+		<if test="(param6!=null and param6!='') or ( param7!=null and param7!='')">
+			and ji.driver_id IN (SELECT jdo.driver_id from jy_drivertoorder jdo
+			LEFT JOIN
+			jy_shiping_order jso ON jso.shiping_order_id=jdo.order_id
+			where 1=1
+			<if test="param6!=null and param6!=''">
+				and jso.shiping_order_num like '%${param6}%'
+			</if>
+			<if test="param7!=null and param7!=''">
+				and jso.shiping_order_goid like '%${param7}%'
+			</if>
+			)
+		</if>
+
+
+	</sql>
+
+	<!-- 管理员,查询司机信息及供应商名,多加了两个表的联合查询jy_drivertoorder、jy_shiping_order,且进行去除重复值 -->
+	<select id="getDriverInfoSuppUser" resultType="Driver">
+		SELECT
+		ji.*,js.supplie_company,
+		js.suppliers_name as
+		driver_suppliersname,ju.username AS userName
+		FROM
+		jy_driver_info ji
+		LEFT
+		JOIN jy_user ju ON ju.driver_id = ji.driver_id
+		LEFT JOIN
+		jy_suppliers
+		js
+		ON
+		js.suppliers_id =
+		ji.driver_suppliers
+		where 1=1
+		<include refid="driver_info_sql" />
+	</select>
+
+	<!-- 管理员,统计司机数量,多加了两个表的联合查询jy_drivertoorder、jy_shiping_order,且进行去除重复值 -->
+	<select id="getDriverSuppUser" resultType="int">
+		select
+		count(*)
+		FROM
+		jy_driver_info ji
+		LEFT JOIN
+		jy_suppliers js ON
+		js.suppliers_id =
+		ji.driver_suppliers
+		where
+		1=1
+		<include refid="driver_count_sql" />
+	</select>
+	<!-- 查询司机信息 ，加了货运编号和出货订单号两个查询字段 -->
+	<!-- 司机,查询司机信息及供应商名,多加了两个表的联合查询jy_drivertoorder、jy_shiping_order,且进行去除重复值 -->
+	<select id="getDriverInfo" resultType="Driver">
+		SELECT
+		ji.*,js.supplie_company,
+		js.suppliers_name as
+		driver_suppliersname,ju.username AS userName
+		FROM
+		jy_driver_info ji
+		LEFT
+		JOIN
+		jy_suppliers js ON
+		js.suppliers_id =
+		ji.driver_suppliers
+		LEFT JOIN
+		jy_user ju ON
+		ju.driver_id = ji.driver_id
+		where
+		ju.id = #{param10}
+		<include refid="driver_info_sql" />
+	</select>
+
+	<select id="searchDriver" resultType="int">
+		select
+		count(*)
+		FROM
+		jy_driver_info ji
+		LEFT JOIN
+		jy_travel_card jtc ON jtc.travel_card_id =
+		ji.car_id
+		where
+		ji.driver_name = #{param1}
+		and
+		jtc.travel_card_id
+		=#{param2}
+
+	</select>
+	<!-- 司机查询自己订单的统计，加了两个条件，货运编号和出货订单号 -->
+	<!-- 司机,统计司机数量,多加了两个表的联合查询jy_drivertoorder、jy_shiping_order,且进行去除重复值 -->
+	<select id="getDriver" resultType="int">
+		select
+		count(*)
+		FROM
+		jy_driver_info ji
+		LEFT JOIN
+		jy_suppliers js ON
+		js.suppliers_id =
+		ji.driver_suppliers
+		LEFT JOIN
+		jy_user ju ON
+		ju.driver_id = ji.driver_id
+		where
+		1=1
+		and ju.id = #{param8}
+		<include refid="driver_count_sql" />
+	</select>
+
+	<!-- <delete id="deleteDriverl" parameterType="Driver"> -->
+	<!-- delete from driver_info where driver_id=#{driver_id} -->
+	<!-- </delete> -->
+	<delete id="deleteSupDriver" parameterType="java.util.Arrays">
+		delete from
+		jy_driver_info
+		where
+		driver_suppliers IN
+		<foreach collection="array" index="index" item="item" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	<delete id="deleteDriver" parameterType="java.util.Arrays">
+		delete from
+		jy_driver_info
+		where
+		driver_id IN
+		<foreach collection="array" index="index" item="item" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	<insert id="saveDrivertoOrder" parameterType="java.util.List">
+		insert into
+		jy_drivertoorder(
+		id,
+		driver_id,
+		order_id,
+		updatetime,
+		equipmentNum,
+		userName
+		)VALUES
+		<foreach collection="list" index="index" item="item"
+			separator=",">
+			(
+			#{item.id},
+			#{item.driver_id},
+			#{item.order_id},
+			NOW(),
+			#{item.equipmentNum},
+			#{item.userName}
+			)
+		</foreach>
+	</insert>
+
+	<insert id="saveDriver" parameterType="com.jy.model.Driver">
+		insert into
+		jy_driver_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="driver_id != null">
+				driver_id,
+			</if>
+			<if test="driver_name != null">
+				driver_name,
+			</if>
+			<if test="driver_phone != null">
+				driver_phone,
+			</if>
+			<if test="driver_cardnumber != null">
+				driver_cardnumber,
+			</if>
+			<if test="driver_updatedate != null  and driver_updatedate !=''">
+				driver_updatedate,
+			</if>
+			<if test="driver_updatepeople != null">
+				driver_updatepeople,
+			</if>
+			<if test="driver_createtime != null and driver_createtime !=''">
+				driver_createtime,
+			</if>
+			<if test="driver_suppliers != null">
+				driver_suppliers,
+			</if>
+			<if test="driver_province != null">
+				driver_province,
+			</if>
+			<if test="driver_city != null">
+				driver_city,
+			</if>
+			<if test="driver_county != null">
+				driver_county,
+			</if>
+			<if test="driver_address != null">
+				driver_address,
+			</if>
+			<if test="driver_remarks != null">
+				driver_remarks,
+			</if>
+			<if test="driver_carnumber !=null">
+				driver_carnumber,
+			</if>
+			<if test="driver_cartype !=null">
+				driver_cartype,
+			</if>
+			<if test="driver_phonemodel !=null">
+				driver_phonemodel,
+			</if>
+			<if test="driver_phonebrand !=null">
+				driver_phonebrand,
+			</if>
+			<if test="is_supperlis !=null">
+				is_supperlis,
+			</if>
+			<if test="driver_sex !=null">
+				driver_sex,
+			</if>
+			<if test="driver_age !=null">
+				driver_age,
+			</if>
+			<if test="start_time !=null">
+				start_time
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="driver_id != null">
+				#{driver_id},
+			</if>
+			<if test="driver_name != null">
+				#{driver_name},
+			</if>
+			<if test="driver_phone != null">
+				#{driver_phone},
+			</if>
+			<if test="driver_cardnumber != null">
+				#{driver_cardnumber},
+			</if>
+			<if test="driver_updatedate != null  and driver_updatedate !=''">
+				#{driver_updatedate},
+			</if>
+			<if test="driver_updatepeople != null">
+				#{driver_updatepeople},
+			</if>
+			<if test="driver_createtime != null and driver_createtime !=''">
+				now(),
+			</if>
+			<if test="driver_suppliers != null">
+				#{driver_suppliers},
+			</if>
+			<if test="driver_province != null">
+				#{driver_province},
+			</if>
+			<if test="driver_city != null">
+				#{driver_city},
+			</if>
+			<if test="driver_county != null">
+				#{driver_county},
+			</if>
+			<if test="driver_address != null">
+				#{driver_address},
+			</if>
+			<if test="driver_remarks != null">
+				#{driver_remarks},
+			</if>
+			<if test="driver_carnumber !=null">
+				#{driver_carnumber},
+			</if>
+			<if test="driver_cartype !=null">
+				#{driver_cartype},
+			</if>
+			<if test="driver_phonemodel !=null">
+				#{driver_phonemodel},
+			</if>
+			<if test="driver_phonebrand !=null">
+				#{driver_phonebrand},
+			</if>
+			<if test="is_supperlis !=null">
+				#{is_supperlis},
+			</if>
+			<if test="driver_sex !=null">
+				#{driver_sex},
+			</if>
+			<if test="driver_age !=null">
+				#{driver_age},
+			</if>
+			<if test="start_time !=null">
+				#{start_time}
+			</if>
+		</trim>
+	</insert>
+	<select id="getUpdateDriver" parameterType="String" resultType="com.jy.model.Driver">
+		SELECT
+		ji.*,
+		js.suppliers_name as driver_suppliersname
+		FROM
+		jy_driver_info ji
+		LEFT JOIN
+		jy_suppliers js ON js.suppliers_id =
+		ji.driver_suppliers
+		where
+		ji.driver_id=#{driverId}
+	</select>
+	<update id="updateDriver" parameterType="com.jy.model.Driver">
+		update
+		jy_driver_info
+		<set>
+			<if test="driver_name != null">
+				driver_name = #{driver_name,jdbcType=VARCHAR},
+			</if>
+			<if test="driver_phone != null">
+				driver_phone = #{driver_phone,jdbcType=VARCHAR},
+			</if>
+			<if test="driver_cardnumber != null">
+				driver_cardnumber =
+				#{driver_cardnumber,jdbcType=VARCHAR},
+			</if>
+			<if test="driver_updatedate != null  and driver_updatedate !=''">
+				driver_updatedate = now(),
+			</if>
+			<if test="driver_updatepeople != null">
+				driver_updatepeople =
+				#{driver_updatepeople,jdbcType=VARCHAR},
+			</if>
+			<if test="driver_suppliers != null">
+				driver_suppliers = #{driver_suppliers,jdbcType=VARCHAR},
+			</if>
+			<if test="driver_province != null">
+				driver_province = #{driver_province,jdbcType=VARCHAR},
+			</if>
+			<if test="driver_city != null">
+				driver_city = #{driver_city,jdbcType=VARCHAR},
+			</if>
+			<if test="driver_county != null">
+				driver_county = #{driver_county,jdbcType=VARCHAR},
+			</if>
+			<if test="driver_address != null">
+				driver_address = #{driver_address,jdbcType=VARCHAR},
+			</if>
+			<if test="driver_remarks != null">
+				driver_remarks = #{driver_remarks,jdbcType=VARCHAR},
+			</if>
+			<if test="driver_carnumber !=null">
+				driver_carnumber = #{driver_carnumber,jdbcType=VARCHAR},
+			</if>
+			<if test="driver_cartype !=null">
+				driver_cartype = #{driver_cartype,jdbcType=VARCHAR},
+			</if>
+			<if test="driver_phonemodel !=null">
+				driver_phonemodel =
+				#{driver_phonemodel,jdbcType=VARCHAR},
+			</if>
+			<if test="driver_phonebrand !=null">
+				driver_phonebrand = #{driver_phonebrand,jdbcType=VARCHAR},
+			</if>
+
+			<if test="driver_sex !=null">
+				driver_sex = #{driver_sex},
+			</if>
+			<if test="driver_age !=null">
+				driver_age = #{driver_age},
+			</if>
+			<if test="start_time !=null">
+				start_time = #{start_time}
+			</if>
+		</set>
+		where driver_id = #{driver_id,jdbcType=VARCHAR}
+	</update>
+	<!-- 人名 -->
+	<select id="getDriver_length" resultMap="BaseResultMap">
+		select
+		*
+		from
+		jy_driver_info
+		<if test="_parameter!=null">
+			where car_id like "%${_parameter}%"
+		</if>
+	</select>
+	<!-- 电话 -->
+	<select id="getPhone" resultMap="BaseResultMap">
+		select
+		*
+		from
+		jy_driver_info
+		<if test="_parameter!=null">
+			where driver_id like "%${_parameter}%"
+		</if>
+	</select>
+	<!-- 车牌 -->
+	<select id="getPhone_length" resultMap="BaseResultMap">
+		SELECT
+		DISTINCT jtc.travel_card_id,jtc.plate_number
+		FROM
+		jy_travel_card
+		jtc
+		INNER JOIN
+		jy_driver_info ji ON ji.car_id=jtc.travel_card_id
+		<if test="_parameter!=null">
+			WHERE jtc.plate_number like "%${_parameter}%"
+		</if>
+	</select>
+	<select id="getSuppliers" resultType="JySuppliers">
+		SELECT
+		jtc.suppliers_id as suppliersId,jtc.suppliers_name as
+		suppliersName
+		FROM
+		jy_suppliers jtc
+		<if test="_parameter!=null">
+			WHERE jtc.suppliers_name like "%${_parameter}%"
+		</if>
+	</select>
+	<select id="getFinalposition" resultType="PositionInfo">
+		SELECT
+		j.*
+		FROM
+		j_position_info j
+		WHERE
+		j.oneid!=0 and j.twoid=0 and j.threeid=0
+
+	</select>
+	<select id="getFinalpositionCity" resultType="PositionInfo">
+		SELECT
+		j.*
+		FROM
+		j_position_info j
+		WHERE 1=1
+		and j.oneid=#{0} and j.twoid!=0 and
+		j.threeid=0
+	</select>
+	<select id="getFinalpositionCounty" resultType="PositionInfo">
+		SELECT
+		j.*
+		FROM
+		j_position_info j
+		WHERE 1=1
+		and j.oneid=#{0} and j.twoid=#{1} and
+		j.threeid!=0
+	</select>
+	<select id="getDateLength" resultMap="BaseResultMap">
+		select
+		driver_id,update_date
+		from
+		jy_driver_info
+		<if test="_parameter!=null">
+			where update_date like "%${_parameter}%"
+		</if>
+	</select>
+	<select id="driver" resultMap="BaseResultMap">
+		SELECT
+		DISTINCT jtc.travel_card_id,jtc.plate_number
+		FROM
+		jy_travel_card
+		jtc
+		INNER JOIN
+		jy_driver_info ji ON ji.car_id=jtc.travel_card_id
+		WHERE
+		ji.ptype=0
+		<if test="_parameter!=null">
+			and jtc.plate_number like "%${_parameter}%"
+		</if>
+	</select>
+	<select id="ptype" resultMap="BaseResultMap">
+		SELECT
+		*
+		FROM
+		jy_driver_info
+		WHERE ptype&lt;&gt;0
+		<if test="_parameter!=null">
+			and car_id = #{_parameter}
+		</if>
+	</select>
+	<select id="getNum" resultType="PositionInfo">
+		SELECT
+		j.*
+		FROM
+		j_position_info j
+		WHERE j.id in (#{0},#{1},#{2})
+	</select>
+
+	<!-- 新增 省市联动 -->
+	<select id="getNewFinalPositionCounty" resultType="City_info">
+		SELECT * FROM
+		jy_city_info jci WHERE jci.city_type=1 AND
+		jci.citye_parent_id=1
+	</select>
+	<select id="getNewFinalpositionCity" resultType="City_info">
+		SELECT * FROM
+		jy_city_info jci WHERE jci.city_type=2 AND
+		jci.citye_parent_id=#{0}
+	</select>
+	<select id="getNewFinalpositionCounty" resultType="City_info">
+		SELECT * FROM
+		jy_city_info jci WHERE jci.city_type=3 AND
+		jci.citye_parent_id=#{0}
+	</select>
+
+	<select id="getNewFinalPositionAddress" resultType="City_info">
+SELECT jci.* FROM
+		jy_city_info jci
+LEFT JOIN jy_city_info jci2 ON jci.citye_parent_id =jci2.citycode AND jci.city_type = jci2.city_type+1
+WHERE jci.citye_parent_id=#{id}
+	</select>
+	<!-- 牛冀伟新增 -->
+	<insert id="saveDriverCityInfo" parameterType="java.util.List">
+		INSERT INTO jy_driver_info_cityinfo
+		(id,driver_id,driver_province,driver_city,driver_county) VALUES
+		<foreach collection="list" index="index" item="item"
+			separator=",">
+			(
+			#{item.id},#{item.driver_id},#{item.driver_province},#{item.driver_city},#{item.driver_county}
+			)
+		</foreach>
+	</insert>
+	<select id="getDriverCityInfo" resultType="City_info">
+		SELECT
+		jdic.driver_province AS province,jdic.driver_city AS
+		city,jdic.driver_county AS county FROM jy_driver_info_cityinfo jdic
+		WHERE driver_id=#{0}
+	</select>
+	<delete id="deleteDriverCityInfo" parameterType="java.util.Arrays">
+		DELETE from
+		jy_driver_info_cityinfo WHERE driver_id
+		IN
+		<foreach collection="array" index="index" item="item" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	<select id="getDriverInfoSuppapp" resultType="Driver">
+		SELECT
+		ji.*,js.supplie_company,
+		js.suppliers_name as
+		driver_suppliersname
+		FROM
+		jy_driver_info ji
+
+		LEFT JOIN
+		jy_suppliers js ON
+		js.suppliers_id =
+		ji.driver_suppliers
+		where
+		1=1
+		<if test="_parameter!=null and _parameter!=''">
+			and ji.driver_suppliers =#{_parameter}
+		</if>
+		ORDER BY
+		ji.driver_createtime ASC
+	</select>
+	<update id="updateShipperorderState">
+		UPDATE jy_shiping_order SET shipping_order_state='1' WHERE
+		shiping_order_id IN
+		<foreach collection="array" index="index" item="item" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+	<select id="selectID" resultType="Driver">
+		select * from jy_driver_info
+		where driver_suppliers=#{id}
+	</select>
+	<select id="othergetDriverInfo" resultType="Driver">
+		SELECT
+		ji.*,js.supplie_company,jsu.username as userName,
+		js.suppliers_name as
+		driver_suppliersname
+		FROM
+		jy_driver_info ji
+		LEFT JOIN
+		jy_suppliers js ON
+		js.suppliers_id=ji.driver_suppliers
+		LEFT JOIN
+		jy_customer jcu ON
+		FIND_IN_SET( jcu.customer_id,js.suppliers_customer)
+		LEFT JOIN jy_user
+		ju ON ju.customer_id =jcu.customer_id
+		LEFT JOIN
+		jy_user jsu ON jsu.driver_id = ji.driver_id
+		where ju.id=#{param10}
+		<include refid="driver_info_sql" />
+	</select>
+
+	<!-- 信息员,统计司机数量,多加了两个表的联合查询jy_drivertoorder、jy_shiping_order,且进行去除重复值 -->
+	<select id="otherDriverInfoCount" resultType="int">
+		SELECT
+		COUNT(*)
+		FROM
+		jy_driver_info ji
+		LEFT JOIN
+		jy_suppliers js ON
+		js.suppliers_id=ji.driver_suppliers
+		LEFT JOIN jy_customer jcu ON
+		FIND_IN_SET( jcu.customer_id,js.suppliers_customer)
+		LEFT JOIN jy_user
+		ju ON ju.customer_id =jcu.customer_id
+		WHERE
+		ju.id=#{param8}
+		<include refid="driver_count_sql" />
+	</select>
+
+	<select id="driverISHaveGps" resultType="map">
+		SELECT COUNT(1) AS
+		num,ju.username as username FROM jy_equipment_info jei
+		INNER JOIN
+		jy_user ju ON jei.username = ju.username
+		WHERE
+		ju.driver_id=#{driverId};
+	</select>
+
+</mapper>

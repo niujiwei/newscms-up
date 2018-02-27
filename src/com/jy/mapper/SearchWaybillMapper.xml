@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.SearchWaybillDao">
+	<!-- 新增app端查看运单历史记录，展示运单信息节点 -->
+	<select id="getSearchWaybill" resultType="OrderHistory">
+		SELECT
+		*
+		FROM
+		jy_order_history ohr
+		LEFT JOIN jy_shiping_order sor
+		on
+		ohr.orders_id=sor.shiping_order_id
+		where sor.shiping_order_id =
+		#{_parameter}
+		order by
+		ohr.order_arrive_time desc
+	</select>
+	<select id="getShippingOrders" resultType="ShippingOrder">
+		SELECT * FROM jy_shiping_order WHERE
+		shiping_order_num =
+		#{shiping_order_num}
+		<if test="shiping_order_goid!=null and shiping_order_goid!=''">
+			AND shiping_order_goid =#{shiping_order_goid}
+		</if>
+	</select>
+	<select id="getOrderMessage" resultType="ShippingOrder">
+		SELECT
+		jso.send_mechanism,jso.shiping_order_id,jso.shiping_order_num,jso.shiping_order_goid,jso.goods_name,jso.goods_num,jso.goods_vol,jso.goods_packing,jso.receipt_address,jso.receipt,jso.receipt_name,jso.receipt_tel,jdi.driver_id,jdi.driver_name,jdi.driver_phone,jdi.driver_suppliers
+		FROM jy_shiping_order jso
+		INNER JOIN jy_drivertoorder jdt ON
+		jdt.order_id = jso.shiping_order_id
+		LEFT JOIN jy_driver_info jdi ON
+		jdi.driver_id = jdt.driver_id
+		WHERE shiping_order_id =#{id}
+	</select>
+
+	<insert id="saveComment">
+		insert into jy_comment
+		(comment_id,shiping_order_id,send_mechanism,driver_id,driver_name,comment_name,remark,xing,comment_data,suppliers_id)
+		values(#{comment_id},#{shiping_order_id},#{send_mechanism},#{driver_id},#{driver_name},#{comment_name},#{remark},#{xing},now(),#{suppliers_id})
+
+	</insert>
+
+	<select id="getCommentCount" resultType="int">
+		SELECT COUNT(1) FROM jy_comment WHERE shiping_order_id = #{id}
+
+	</select>
+</mapper>

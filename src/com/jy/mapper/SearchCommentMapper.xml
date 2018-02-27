@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.SearchCommentDao">
+	<sql id="getCommentList_sql"><!-- 列表 -->
+		<if test="param3!=null and param3!=''">
+			and so.shiping_order_num=#{param3}
+		</if>
+		<if test="param4!=null and param4!=''">
+			and co.send_mechanism=#{param4}
+		</if>
+		<if test="param5!=null and param5!=''">
+			and so.end_address=#{param5}
+		</if>
+		<if test="param6!=null and param6!=''">
+			and co.driver_name=#{param6}
+		</if>
+		<if test="param7!=null and param7!=''">
+			and so.receipt_name=#{param7}
+		</if>
+		order by co.comment_data asc
+		limit #{param1},#{param2}
+	</sql>
+	<sql id="getComment_count_sql"><!-- 统计 -->
+		<if test="param1!=null and param1!=''">
+			and so.shiping_order_num=#{param1}
+		</if>
+		<if test="param2!=null and param2!=''">
+			and co.send_mechanism=#{param2}
+		</if>
+		<if test="param3!=null and param3!=''">
+			and so.end_address=#{param3}
+		</if>
+		<if test="param4!=null and param4!=''">
+			and co.driver_name=#{param4}
+		</if>
+		<if test="param5!=null and param5!=''">
+			and so.receipt_name=#{param5}
+		</if>
+	</sql>
+	<!-- 查詢列表頁 -->
+	<!-- 管理员 -->
+	<select id="getCommentList" resultType="Comment">
+		select so.shiping_order_num as
+		shiping_order_num,co.comment_id as
+		comment_id,co.send_mechanism as send_mechanism,so.end_address as
+		end_address,so.receipt_name as receipt_name,
+		so.receipt_tel as
+		receipt_tel,so.goods_name as
+		goods_name,so.goods_num as
+		goods_num,co.driver_name as driver_name,co.comment_name as
+		comment_name,
+		co.xing as xing,co.remark as remark,co.comment_data as
+		comment_data from jy_comment co join
+		jy_shiping_order so on
+		co.shiping_order_id=so.shiping_order_id
+		where 1=1
+		<include refid="getCommentList_sql" />
+	</select>
+	<!-- 司机 -->
+	<select id="getCommentList1" resultType="Comment">
+		select so.shiping_order_num as
+		shiping_order_num,co.comment_id as
+		comment_id,
+		co.send_mechanism as send_mechanism,
+		so.end_address as
+		end_address,
+		so.receipt_name as receipt_name,
+		so.receipt_tel as
+		receipt_tel,
+		so.goods_name as goods_name,
+		so.goods_num as goods_num,
+		co.driver_name as driver_name,
+		co.comment_name as comment_name,
+		co.xing
+		as xing,
+		co.remark as remark,
+		co.comment_data as comment_data
+		from
+		jy_comment co left join
+		jy_shiping_order so on
+		co.shiping_order_id=so.shiping_order_id
+		left join jy_user ju on
+		ju.driver_id=co.driver_id
+		where ju.id = #{param8}
+		<include refid="getCommentList_sql" />
+	</select>
+	<!-- 供应商 -->
+	<select id="getCommentList2" resultType="Comment">
+		select so.shiping_order_num as
+		shiping_order_num,co.comment_id as
+		comment_id,
+		co.send_mechanism as send_mechanism,
+		so.end_address as
+		end_address,
+		so.receipt_name as receipt_name,
+		so.receipt_tel as
+		receipt_tel,
+		so.goods_name as goods_name,
+		so.goods_num as goods_num,
+		co.driver_name as driver_name,
+		co.comment_name as comment_name,
+		co.xing
+		as xing,
+		co.remark as remark,
+		co.comment_data as comment_data
+		from
+		jy_comment co left join
+		jy_shiping_order so on
+		co.shiping_order_id=so.shiping_order_id
+		left join jy_user ju on
+		ju.driver_id=co.driver_id
+		where ju.suppliers_id = #{param8}
+		<include refid="getCommentList_sql" />
+	</select>
+	<!-- 信息员 -->
+	<select id="getCommentList3" resultType="Comment">
+		select so.shiping_order_num as
+		shiping_order_num,co.comment_id as
+		comment_id,
+		co.send_mechanism as send_mechanism,
+		so.end_address as
+		end_address,
+		so.receipt_name as receipt_name,
+		so.receipt_tel as
+		receipt_tel,
+		so.goods_name as goods_name,
+		so.goods_num as goods_num,
+		co.driver_name as driver_name,
+		co.comment_name as comment_name,
+		co.xing
+		as xing,
+		co.remark as remark,
+		co.comment_data as comment_data
+		from
+		jy_comment co left join
+		jy_shiping_order so on
+		co.shiping_order_id=so.shiping_order_id
+		left join jy_user ju on
+		ju.driver_id=co.driver_id
+		where ju.id = #{param8}
+		<include refid="getCommentList_sql" />
+	</select>
+	<!-- 统计数据 -->
+	<!-- 管理员 -->
+	<select id="getComment_count" resultType="int">
+		select count(*) from jy_comment co left join
+		jy_shiping_order so on
+		co.shiping_order_id=so.shiping_order_id
+		where 1=1
+		<include refid="getComment_count_sql" />
+	</select>
+	<!-- 司机 -->
+	<select id="getComment_count1" resultType="int">
+		select count(*) from jy_comment co left join
+		jy_shiping_order so on
+		co.shiping_order_id=so.shiping_order_id
+		left join jy_user ju on
+		ju.driver_id=co.driver_id
+		where ju.id=#{param6}
+		<include refid="getComment_count_sql" />
+	</select>
+	<!-- 供应商 -->
+	<select id="getComment_count2" resultType="int">
+		select count(*) from jy_comment co left join
+		jy_shiping_order so on
+		co.shiping_order_id=so.shiping_order_id
+		left join jy_user ju on
+		ju.driver_id=co.driver_id
+		where ju.suppliers_id=#{param6}
+		<include refid="getComment_count_sql" />
+	</select>
+	<!-- 信息员 -->
+	<select id="getComment_count3" resultType="int">
+		select count(*) from jy_comment co left join
+		jy_shiping_order so on
+		co.shiping_order_id=so.shiping_order_id
+		left join jy_user ju on
+		ju.driver_id=co.driver_id
+		where ju.id=#{param6}
+		<include refid="getComment_count_sql" />
+	</select>
+	<!-- 删除评论 -->
+	<delete id="deleteComment">
+		delete from jy_comment where comment_id in
+		<foreach collection="array" index="index" item="item" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+
+	<select id="getCommentListByIds" resultType="Comment">
+		select so.shiping_order_num as
+		shiping_order_num,co.comment_id as
+		comment_id,co.send_mechanism as send_mechanism,so.end_address as
+		end_address,so.receipt_name as receipt_name,
+		so.receipt_tel as
+		receipt_tel,so.goods_name as
+		goods_name,so.goods_num as
+		goods_num,co.driver_name as driver_name,co.comment_name as
+		comment_name,
+		co.xing as xing,co.remark as remark,co.comment_data as
+		comment_data from jy_comment co join
+		jy_shiping_order so on
+		co.shiping_order_id=so.shiping_order_id
+		where 1=1
+		AND comment_id IN
+		<foreach collection="array" index="index" item="item" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+
+
+
+</mapper>

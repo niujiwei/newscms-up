@@ -1,0 +1,698 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.MapDao">
+
+	<resultMap type="Maps" id="Mapsres">
+		<result column="department_name" property="deptname" />
+		<result column="plate_number" property="carno" />
+		<result column="car_owner_name" property="drivename" />
+		<result column="phone_number" property="drivenumber" />
+		<result column="equipment_number" property="beidouno" />
+	</resultMap>
+	<select id="returncarinfo" parameterType="java.util.Arrays"
+		resultMap="Mapsres">
+		SELECT
+		jda.lng,jda.lat,jda.beidouid,jda.gpsstate,jda.nowdate,jdt.department_name,jtc.plate_number
+		AS carno,jcoi.car_owner_name,jcoi.phone_number
+		FROM jy_monitor_data jda
+		LEFT JOIN jy_department jdt ON
+		jdt.department_id=jda.departmentid
+		LEFT
+		JOIN jy_travel_card jtc ON
+		jtc.travel_card_id=jda.carid
+		LEFT JOIN
+		jy_car_owner_info jcoi ON
+		jcoi.car_id=jtc.travel_card_id
+		where
+		jtc.plate_number in
+		<foreach collection="array" index="index" item="item" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+		ORDER BY nowdate DESC
+	</select>
+	<select id="loadmapinfo" resultMap="Mapsres">
+		SELECT
+		jda.monitorid,jda.lng,jda.lat,jda.nowdate,jda.state,jda.gpsstate,jda.angle,jda.beidouid,
+		jdt.department_name,jda.carid AS carno FROM
+		jy_monitor_data jda INNER
+		JOIN jy_user jc ON jda.carid=jc.username
+		LEFT JOIN
+		jy_department jdt
+		ON
+		jdt.department_id=jda.departmentid
+		where 1=1
+		<if test="_parameter !=null">
+			and jc.username='${_parameter}'
+
+		</if>
+		and jc.flag IN (1,2)
+		ORDER BY nowdate DESC
+	</select>
+	<select id="loadmapinfo2" resultMap="Mapsres">
+		SELECT
+		jda.monitorid,jda.lng,jda.lat,jda.nowdate,jda.state,jda.gpsstate,jda.angle,jda.beidouid,jda.carid
+		AS carno FROM
+		jy_monitor_data jda
+		where 1=1
+		and jda.carid = #{_parameter}
+	</select>
+	<select id="driverLoadmapinfo" resultMap="Mapsres">
+		SELECT
+		jda.monitorid,jda.lng,jda.lat,jda.nowdate,jda.state,jda.gpsstate,jda.angle,jda.beidouid,
+		jdt.department_name,jda.carid AS carno
+		FROM
+		jy_monitor_data jda
+		INNER
+		JOIN jy_user jtc ON jtc.username=jda.carid
+		LEFT
+		JOIN jy_department jdt
+		ON
+		jdt.department_id=jtc.did
+		INNER JOIN jy_driver_info jdi ON
+		jdi.driver_id=jtc.driver_id
+		where
+		1=1
+		AND
+		jdi.driver_id=#{param2}
+		<if test="param1!=null and param1!=''">
+			and jtc.username='${param1}'
+		</if>
+		and jtc.flag IN (1,2)
+		ORDER BY nowdate DESC
+	</select>
+
+	<select id="suppliersLoadmapinfo" resultMap="Mapsres">
+		SELECT
+		jda.monitorid,jda.lng,jda.lat,jda.nowdate,jda.state,jda.gpsstate,jda.angle,jda.beidouid,
+		jdt.department_name,jda.carid AS carno
+		FROM
+		jy_monitor_data jda
+		INNER
+		JOIN jy_user jc ON jc.username=jda.carid
+		LEFT
+		JOIN jy_department jdt
+		ON
+		jdt.department_id=jc.did
+		INNER JOIN jy_driver_info jdi ON
+		jdi.driver_id=jc.driver_id
+		INNER JOIN jy_suppliers jsu ON
+		jsu.suppliers_id = jdi.driver_suppliers
+		where
+		1=1
+		AND
+		jsu.suppliers_id=#{param2}
+		<if test="param1!=null and param1!=''">
+			and jc.username='${param1}'
+		</if>
+		and jc.flag IN (1,2)
+		ORDER BY nowdate DESC
+	</select>
+
+	<select id="otherLoadmapinfo" resultMap="Mapsres">
+		SELECT
+		jda.monitorid,jda.lng,jda.lat,jda.nowdate,jda.state,jda.gpsstate,jda.angle,jda.beidouid,
+		jdt.department_name,jda.carid AS carno FROM jy_user juu
+		INNER JOIN
+		jy_monitor_data jda ON juu.username=jda.carid
+		LEFT JOIN jy_driver_info
+		jdi ON jdi.driver_id=juu.driver_id
+		LEFT JOIN jy_department jdt ON
+		jdt.department_id =juu.did
+		WHERE juu.driver_id IN (
+		SELECT jdi.driver_id
+		FROM jy_user ju
+		LEFT JOIN jy_customer jc ON jc.customer_id
+		=ju.customer_id
+		LEFT JOIN jy_suppliers jsu ON
+		find_in_set(jc.customer_id,jsu.suppliers_customer)
+		LEFT JOIN
+		jy_driver_info jdi ON jdi.driver_suppliers =
+		jsu.suppliers_id
+		WHERE
+		ju.id=#{param2})
+		<if test="param1!=null and param1!=''">
+			and juu.username='${param1}'
+		</if>
+		and juu.flag IN (1,2)
+		ORDER BY nowdate DESC
+	</select>
+
+	<sql id="loadallcarinfo_sql">
+		<if test="param3!=null and param3!=''">
+			and jdi.driver_name like "%${param3}%"
+		</if>
+		<if test="param4!=null and param4!=''">
+			and jdt.department_name like "%${param4}%"
+		</if>
+		<if test="param5!=null and param5!=''">
+			and jdi.driver_phone like "%${param5}%"
+		</if>
+		<if test="(param6!=null and param6!='') or (param7!=null and param7!='') ">
+			AND jdi.driver_id IN (SELECT jdt.driver_id FROM jy_drivertoorder jdt
+			LEFT JOIN jy_shiping_order jso ON jdt.order_id=jso.shiping_order_id
+			WHERE 1=1
+			<if test="param6!=null and param6!=''">
+				and shiping_order_num LIKE '${param6}%'
+			</if>
+			<if test="param7!=null and param7!=''">
+				AND shiping_order_goid like "${param7}%"
+			</if>
+			)
+		</if>
+		<if test="param8!=null and param8!=''">
+			AND jtc.username=#{param8}
+		</if>
+		<if test="param9!=null and param9!=''">
+			and jdi.driver_address like "%${param9}%"
+		</if>
+		ORDER BY nowdate DESC
+		limit #{param1},#{param2}
+	</sql>
+	<select id="loadallcarinfo" resultType="Maps">
+		SELECT
+		jda.state,jda.nowdate, jda.gpsstate,jdt.department_name AS
+		deptname,jtc.username AS
+		carno,jda.carid AS carid ,jdi.driver_name AS
+		drivename,jdi.driver_phone AS drivenumber,jdi.driver_id AS driverId,
+		jdi.driver_address AS address,jtc.flag
+		FROM
+		jy_monitor_data jda
+		LEFT
+		JOIN jy_user
+		jtc ON jtc.username=jda.carid
+		LEFT
+		JOIN jy_department jdt
+		ON
+		jdt.department_id=jtc.did
+		LEFT JOIN
+		jy_driver_info jdi ON
+		jdi.driver_id=jtc.driver_id
+		where
+		1=1
+		<include refid="loadallcarinfo_sql" />
+
+	</select>
+
+	<select id="driverLoadallcarinfo" resultType="Maps">
+		SELECT
+		jda.state,jda.nowdate, jda.gpsstate,jdt.department_name AS
+		deptname,jtc.username AS
+		carno,jda.carid AS carid ,jdi.driver_name AS
+		drivename,jdi.driver_phone AS drivenumber,jdi.driver_id AS driverId,
+		jdi.driver_address AS address,jtc.flag
+		FROM
+		jy_monitor_data jda
+		LEFT
+		JOIN jy_user
+		jtc ON jtc.username=jda.carid
+		LEFT
+		JOIN jy_department jdt
+		ON
+		jdt.department_id=jtc.did
+		LEFT JOIN
+		jy_driver_info jdi ON
+		jdi.driver_id=jtc.driver_id
+		where
+		1=1
+		AND
+		jdi.driver_id=#{param10}
+		<include refid="loadallcarinfo_sql" />
+
+	</select>
+
+	<select id="suppliersLoadallcarinfo" resultType="Maps">
+		SELECT
+		jda.state,jda.nowdate, jda.gpsstate,jdt.department_name AS
+		deptname,jtc.username AS
+		carno,jda.carid AS carid ,jdi.driver_name AS
+		drivename,jdi.driver_phone AS drivenumber,jdi.driver_id AS driverId,
+		jdi.driver_address AS address,jtc.flag
+		FROM
+		jy_monitor_data jda
+		LEFT
+		JOIN jy_user
+		jtc ON jtc.username=jda.carid
+		LEFT
+		JOIN jy_department jdt
+		ON
+		jdt.department_id=jtc.did
+		LEFT JOIN
+		jy_driver_info jdi ON
+		jdi.driver_id=jtc.driver_id
+		LEFT JOIN
+		jy_suppliers jsu ON
+		jsu.suppliers_id = jdi.driver_suppliers
+		where
+	     jsu.suppliers_id =#{param10}
+		<include refid="loadallcarinfo_sql" />
+
+	</select>
+	<select id="otherLoadallcarinfo" resultType="Maps">
+		SELECT jda.state,jda.nowdate, jda.gpsstate,jdt.department_name AS
+		deptname,jtc.username AS
+		carno,jda.carid AS carid ,jdi.driver_name AS
+		drivename,jdi.driver_phone AS drivenumber,jdi.driver_id AS driverId,
+		jdi.driver_address AS address,jtc.flag
+		FROM jy_user jtc
+		LEFT JOIN
+		jy_monitor_data jda ON
+		jtc.username=jda.carid
+		LEFT JOIN jy_driver_info
+		jdi ON
+		jdi.driver_id=jtc.driver_id
+		LEFT JOIN jy_department jdt ON
+		jdt.department_id =jtc.did
+		WHERE jtc.driver_id IN (
+		SELECT jdi.driver_id
+		FROM jy_user ju
+		LEFT JOIN jy_customer jc ON jc.customer_id
+		=ju.customer_id
+		LEFT JOIN jy_suppliers jsu ON
+		find_in_set(jc.customer_id,jsu.suppliers_customer)
+		LEFT JOIN
+		jy_driver_info jdi ON jdi.driver_suppliers =
+		jsu.suppliers_id
+		WHERE
+		ju.id=#{param10})
+		<include refid="loadallcarinfo_sql" />
+
+	</select>
+
+	<select id="otherLoadallcarinfoCount" resultType="int">
+		SELECT COUNT(*) FROM jy_user jtc
+		LEFT JOIN jy_monitor_data jda ON
+		jtc.username=jda.carid
+		LEFT JOIN jy_driver_info jdi ON
+		jdi.driver_id=jtc.driver_id
+		LEFT JOIN jy_department jdt ON
+		jdt.department_id =jtc.did
+		WHERE jtc.driver_id IN (
+		SELECT jdi.driver_id
+		FROM jy_user ju
+		LEFT JOIN jy_customer jc ON jc.customer_id
+		=ju.customer_id
+		LEFT JOIN jy_suppliers jsu ON
+		find_in_set(jc.customer_id,jsu.suppliers_customer)
+		LEFT JOIN
+		jy_driver_info jdi ON jdi.driver_suppliers =
+		jsu.suppliers_id
+		WHERE
+		ju.id=#{param8})
+		<include refid="loadallcarinfocount_sql" />
+	</select>
+
+	<select id="driverLoadallcarinfoCount" resultType="int">
+		SELECT
+		COUNT(*)
+		FROM
+		jy_monitor_data jda
+		LEFT
+		JOIN jy_user jtc ON
+		jtc.username=jda.carid
+		LEFT
+		JOIN jy_department jdt
+		ON
+		jdt.department_id=jtc.did
+		LEFT JOIN jy_driver_info jdi ON
+		jdi.driver_id=jtc.driver_id
+		where
+		1=1
+		AND
+		jdi.driver_id=#{param8}
+		<include refid="loadallcarinfocount_sql" />
+	</select>
+	<select id="suppliersLoadallcarinfoCount" resultType="int">
+		SELECT
+		COUNT(*)
+		FROM
+		jy_monitor_data jda
+		LEFT
+		JOIN jy_user jtc ON
+		jtc.username=jda.carid
+		LEFT
+		JOIN jy_department jdt
+		ON
+		jdt.department_id=jtc.did
+		LEFT JOIN jy_driver_info jdi ON
+		jdi.driver_id=jtc.driver_id
+		LEFT JOIN jy_suppliers jsu ON
+		jsu.suppliers_id = jdi.driver_suppliers
+		where
+		1=1
+		AND
+		jsu.suppliers_id=#{param8}
+		<include refid="loadallcarinfocount_sql" />
+
+	</select>
+	<sql id="loadallcarinfocount_sql">
+		<if test="param1!=null and param1!=''">
+			and jdi.driver_name like "%${param1}%"
+		</if>
+		<if test="param2!=null and param2!=''">
+			and jdt.department_name like "%${param2}%"
+		</if>
+		<if test="param3!=null and param3!=''">
+			and jdi.driver_phone like "%${param3}%"
+		</if>
+		<if test="(param4!=null and param4!='') or (param5!=null and param5!='') ">
+			AND jdi.driver_id IN (SELECT jdt.driver_id FROM jy_drivertoorder jdt
+			LEFT JOIN jy_shiping_order jso ON jdt.order_id=jso.shiping_order_id
+			WHERE 1=1
+			<if test="param4!=null and param4!=''">
+				and shiping_order_num LIKE '${param4}%'
+			</if>
+			<if test="param5!=null and param5!=''">
+				AND shiping_order_goid like "${param5}%"
+			</if>
+			)
+		</if>
+		<if test="param6!=null and param6!=''">
+			AND jtc.username=#{param6}
+		</if>
+		<if test="param7!=null and param7!=''">
+			and jdi.driver_address like "%${param7}%"
+		</if>
+	</sql>
+	<select id="loadallcarinfocount" resultType="int">
+		SELECT
+		count(*)
+		FROM
+		jy_monitor_data jda
+		LEFT JOIN jy_user jtc ON
+		jtc.username=jda.carid
+		LEFT
+		JOIN jy_department jdt ON
+		jdt.department_id=jtc.did
+		LEFT JOIN jy_driver_info jdi ON
+		jdi.driver_id=jtc.driver_id
+		where
+		1=1
+		<include refid="loadallcarinfocount_sql" />
+	</select>
+
+	<select id="getallremark" resultType="Remark">
+		SELECT
+		remark_id,remark_name,jd.department_name,remark_state,remark_point,remark_address,
+		REPLACE(remark_range_name,'米','') AS remark_range_name
+		FROM jy_remark
+		jr LEFT JOIN jy_remark_range jrr ON
+		jrr.remark_range_id=jr.remark_range
+		LEFT JOIN jy_department jd ON
+		jd.department_id=jr.remark_department
+	</select>
+
+	<select id="getallremarkbydname" resultType="Remark">
+		SELECT
+		remark_id,remark_name,jd.department_name,remark_state,remark_point,remark_address,
+		REPLACE(remark_range_name,'米','') AS remark_range_name
+		FROM jy_remark
+		jr LEFT JOIN jy_remark_range jrr ON
+		jrr.remark_range_id=jr.remark_range
+		LEFT JOIN jy_department jd ON
+		jd.department_id=jr.remark_department
+		<if test="_parameter !=null">
+			where jr.remark_name='${_parameter}'
+		</if>
+	</select>
+	<!-- 回放追踪代码在线 -->
+
+	<select id="gethfinfo" resultType="OldMointorData">
+		SELECT
+		monitorid AS did,
+		lat AS dlat,
+		lng AS dlng,
+		nowdate AS dcreatetime,
+		carno
+		FROM
+		jy_monitor_data_week
+		<if test="_parameter !=null">
+			where carno='${_parameter}' AND nowdate BETWEEN
+			DATE_ADD(NOW(), INTERVAL -1 DAY)AND DATE_ADD(NOW(), INTERVAL 1 DAY)
+		</if>
+		ORDER BY nowdate
+	</select>
+
+	<!-- 查询回放数据 -->
+	<select id="gethfmess" resultType="Maps" parameterType="String">
+		SELECT * FROM jy_monitor_data_week where 1=1
+		<if
+			test="param3!=null and param3!=''and param2!=null and param2!=''and param1!=null and param1!=''">
+			and nowdate BETWEEN '${param2}' AND '${param3}'
+			AND
+			carno='${param1}'
+			UNION
+			SELECT * FROM jy_monitor_data_month
+			WHERE
+			nowdate BETWEEN '${param2}' AND '${param3}'
+			AND carno='${param1}'
+			UNION
+			SELECT * FROM jy_monitor_data_old
+			WHERE nowdate BETWEEN
+			'${param2}' AND '${param3}'
+			AND carno='${param1}'
+			ORDER BY nowdate
+		</if>
+	</select>
+	<!-- select2 name carno -->
+	<select id="getcarnotoselect" parameterType="String" resultType="Maps">
+		<if test="_parameter !=null">
+			select linid,linname from jy_linstandard where linname
+			like
+			'%${_parameter}%'
+		</if>
+	</select>
+
+
+	<select id="gethfmesspage" resultType="Maps">
+		SELECT carno,lng,lat,nowdate FROM jy_monitor_data_week where 1=1
+		<if
+			test="param3!=null and param3!=''and param2!=null and param2!=''and param1!=null and param1!=''">
+			and nowdate BETWEEN '${param2}' AND '${param3}'
+			AND
+			carno='${param1}'
+			UNION
+			SELECT carno,lng,lat,nowdate FROM
+			jy_monitor_data_month
+			WHERE nowdate BETWEEN '${param2}' AND
+			'${param3}'
+			AND carno='${param1}'
+			UNION
+			SELECT carno,lng,lat,nowdate
+			FROM jy_monitor_data_old
+			WHERE nowdate BETWEEN '${param2}' AND
+			'${param3}'
+			AND carno='${param1}'
+			ORDER BY nowdate
+			limit
+			#{param4},#{param5}
+		</if>
+	</select>
+
+	<select id="loadhfpage" resultType="int">
+		SELECT SUM(s.c) AS zs FROM(SELECT COUNT(*) AS c FROM
+		jy_monitor_data_week WHERE 1=1
+		<if
+			test="param3!=null and param3!=''and param2!=null and param2!=''and param1!=null and param1!=''">
+			and nowdate BETWEEN '${param2}' AND '${param3}'
+			AND
+			carno='${param1}'
+			UNION
+			SELECT count(*) FROM jy_monitor_data_month
+			WHERE nowdate BETWEEN '${param2}' AND '${param3}'
+			AND
+			carno='${param1}'
+			UNION
+			SELECT count(*) FROM jy_monitor_data_old
+			WHERE
+			nowdate BETWEEN '${param2}' AND '${param3}'
+			AND carno='${param1}' )as
+			s
+		</if>
+	</select>
+
+	<sql id="l">
+		LOCK TABLES jy_monitor_data WRITE
+	</sql>
+	<sql id="ul">
+		UNLOCK TABLES
+	</sql>
+
+	<insert id="saveMaps" parameterType="Maps">
+		INSERT INTO
+		jy_monitor_data (
+		monitorid,
+		lng,
+		lat,
+		carid,
+		carno,
+		beidouid,
+		nowspace,
+		nowdate,
+		state,
+		departmentid,
+		gpsstate,
+		angle,
+		inssj,
+		isspeed
+		)
+		VALUES
+		(
+		#{monitorid},
+		#{lng},
+		#{lat},
+		#{carid},
+		#{carno},
+		#{beidouid},
+		#{nowspace},
+		now(),
+		#{state},
+		#{departmentid},
+		#{gpsstate},
+		#{angle},
+		#{inssj},
+		#{isspeed}
+		)
+	</insert>
+
+	<insert id="saveMapsweek" parameterType="Maps">
+		INSERT INTO
+		`${param2}` (
+		monitorid,
+		lng,
+		lat,
+		carid,
+		carno,
+		beidouid,
+		nowspace,
+		nowdate,
+		state,
+		departmentid,
+		gpsstate,
+		angle,
+		originallng,
+		originallat,
+		inssj,
+		isspeed
+		)
+		VALUES
+		(
+		#{param1.monitorid},
+		#{param1.lng},
+		#{param1.lat},
+		#{param1.carid},
+		#{param1.carno},
+		#{param1.beidouid},
+		#{param1.nowspace},
+		now(),
+		#{param1.state},
+		#{param1.departmentid},
+		#{param1.gpsstate},
+		#{param1.angle},
+		#{param1.oldLng},
+		#{param1.oldLat},
+		#{param1.inssj},
+		#{param1.isspeed}
+		)
+	</insert>
+	<delete id="deletecarbyid" parameterType="String">
+		DELETE
+		FROM
+		jy_monitor_data
+		WHERE carid = '${_parameter}'
+	</delete>
+	<select id="gethfpage" resultType="int">
+
+		SELECT count(1) FROM `${param1}` where 1=1
+		<if
+			test="param3!=null and param3!=''and param2!=null and param2!=''and param4!=null and param4!=''">
+			AND
+			carno='${param2}' <!-- and gpsstate>='5' -->
+			and nowdate BETWEEN
+			'${param3}' AND
+			'${param4}'
+			AND (lng!='4.9E-324')  AND (lat!='4.9E-324')
+			ORDER BY nowdate
+		</if>
+
+	</select>
+	<select id="gethfmessnozero" resultType="Maps" parameterType="String">
+		(SELECT monitorid,nowdate, carno, stopstate, gpsstate, lng, lat,
+		angle,nowspace FROM `${param1}` where 1=1
+		<if
+			test="param3!=null and param3!=''and param2!=null and param2!=''and param4!=null and param4!=''">
+			AND
+			carno='${param2}' <!-- and gpsstate>='5' -->
+			and nowdate BETWEEN
+			'${param3}' AND
+			'${param4}'
+			AND (lng!='4.9E-324')  AND (lat!='4.9E-324')
+		</if>
+		)
+		UNION
+		(SELECT monitorid,nowdate, carno, stopstate, gpsstate, lng, lat,
+		angle,nowspace FROM `${param5}` where 1=1
+		<if
+			test="param3!=null and param3!=''and param2!=null and param2!=''and param4!=null and param4!=''">
+			and nowdate BETWEEN
+			'${param3}' AND
+			'${param4}'
+			AND
+			carno='${param2}' 
+			AND (lng!='4.9E-324')  AND (lat!='4.9E-324')
+			 <!-- and gpsstate>='5' -->
+			
+			
+		</if>
+		)
+		ORDER BY nowdate
+		<if test="param6!=null and param6!=''">
+			limit ${param6},1000
+		</if>
+	</select>
+
+	<select id="getOrderTime" resultType="map">
+		SELECT MIN(jdt.receivetime) AS receivetime,MAX(jso.sign_time) AS
+		signtime
+		FROM jy_shiping_order jso LEFT JOIN
+		jy_drivertoorder jdt ON
+		jso.shiping_order_id = jdt.order_id
+		WHERE 1=1
+		<if test="param1!=null and param1!=''">
+			and shiping_order_num like '${param1}%'
+		</if>
+		<if test="param2!=null and param2!=''">
+			and shiping_order_goid like '${param2}%'
+		</if>
+		<if test="param3!=null and param3!=''">
+			AND driver_id=#{param3}
+		</if>
+	</select>
+	<select id="getSupplerDriver" resultType="Maps">
+	SELECT
+		jda.state,jda.nowdate, jda.gpsstate,jdt.department_name AS
+		deptname,jtc.username AS
+		carno,jda.carid AS carid ,jdi.driver_name AS
+		drivename,jdi.driver_phone AS drivenumber,jdi.driver_id AS driverId,
+		jdi.driver_address AS address,jtc.flag
+		FROM
+		jy_monitor_data jda
+		LEFT
+		JOIN jy_user
+		jtc ON jtc.username=jda.carid
+		LEFT
+		JOIN jy_department jdt
+		ON
+		jdt.department_id=jtc.did
+		LEFT JOIN
+		jy_driver_info jdi ON
+		jdi.driver_id=jtc.driver_id
+		where
+		1=1 AND
+		jdi.driver_id IN(
+		SELECT driver_id FROM jy_driver_info WHERE
+		driver_suppliers IN ( SELECT suppliers_id FROM jy_user ju WHERE
+		ju.username=#{userId}))
+	</select>
+</mapper>

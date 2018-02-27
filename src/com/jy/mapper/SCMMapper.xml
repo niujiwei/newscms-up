@@ -1,0 +1,650 @@
+<?xml version="1.0" encoding="UTF-8" ?><!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.SCMDao">
+    <delete id="deleteSCMSupplierUserCount">
+          DELETE FROM jy_scm_supplier_user WHERE supUserId =#{supplierId}
+    </delete>
+    <select id="getShippingOrder" resultType="ShippingOrder">
+		SELECT t_order.* FROM jy_shiping_order t_order
+INNER  JOIN jy_customer t_cus ON t_order.send_mechanism=t_cus.customer_name
+INNER JOIN jy_scm_customer t_scm_cus ON t_cus.customer_id=t_scm_cus.customer_id
+LEFT JOIN jy_scm_update_time t_time ON t_order.updatetime
+BETWEEN t_time.time and
+t_time.end_time
+where t_time.id='1'
+	</select>
+    <insert id="insertShippingOrder">
+        insert into
+        jy_scm_shiping_order
+        (
+        shiping_order_id,
+        shiping_order_num,
+
+        goods_weight,
+
+
+        goods_vol,
+
+
+        transport_pay,
+
+
+        trade_agency,
+
+        send_mechanism,
+        send_station,
+        send_time,
+        end_mechanism,
+        end_address,
+        custom_code,
+        custom_name,
+        custom_contact,
+        custom_tel,
+        receipt,
+        receipt_name,
+        receipt_tel,
+        receipt_address,
+        goods_name,
+        goods_packing,
+        goods_num,
+        remarks ,
+        shipping_order_state,
+        creat_type,
+        updatetime,
+        shipping_order,
+
+        other_fee,
+
+
+        deliver_fee,
+
+        upstairs_fee,
+
+
+        added_fee,
+
+        is_recept,
+        aging_time,
+        topordernumber,
+        downordernumber,
+        aging_day,
+        shiping_order_goid,
+
+        driver_province,
+
+
+        driver_city,
+
+
+        driver_county,
+
+        shiping_yueid
+        )
+        values
+        <foreach collection="list" index="index" item="item" separator=",">
+
+            (
+            #{item.shiping_order_id},
+            #{item.shiping_order_num},
+
+            #{item.goods_weight},
+
+
+            #{item.goods_vol},
+
+
+            #{item.transport_pay},
+
+            #{item.trade_agency},
+
+            #{item.send_mechanism},
+            #{item.send_station},
+            #{item.send_time},
+            #{item.end_mechanism},
+            #{item.end_address},
+            #{item.custom_code},
+            #{item.custom_name},
+            #{item.custom_contact},
+            #{item.custom_tel},
+            #{item.receipt},
+            #{item.receipt_name},
+            #{item.receipt_tel},
+            #{item.receipt_address},
+            #{item.goods_name},
+            #{item.goods_packing},
+            #{item.goods_num},
+            #{item.remarks},
+            0,
+            #{item.creat_type},
+            SYSDATE(),
+            #{item.shipping_order},
+
+            #{item.other_fee},
+
+
+            #{item.deliver_fee},
+
+
+            #{item.upstairs_fee},
+
+
+            #{item.added_fee},
+
+            #{item.is_recept},
+            #{item.aging_time},
+            #{item.topordernumber},
+            #{item.downordernumber},
+            #{item.aging_day},
+
+
+            #{item.shiping_order_goid},
+
+            #{item.driver_province},
+
+            #{item.driver_city},
+
+            #{item.driver_county},
+
+            #{item.shiping_yueid}
+            )
+        </foreach>
+    </insert>
+
+    <select id="countShippingOrder" resultType="int">
+         SELECT count(1) FROM jy_scm_shiping_order WHERE shiping_order_id=#{orderId}
+	</select>
+
+    <select id="getScmShippingOrder" resultType="ShippingOrder">
+        SELECT * FROM jy_scm_shiping_order WHERE shipping_order_state
+        BETWEEN #{startState} AND #{endState}
+        <!--
+        SELECT * FROM jy_shiping_order WHERE shiping_order_num='SCM20170812000844'
+        -->
+
+    </select>
+
+
+    <select id="getOrderHistory" resultType="OrderHistory">
+
+	SELECT * FROM jy_order_history t_history
+WHERE NOT EXISTS (SELECT dms_id FROM jy_scm_business_remark_data  WHERE t_history.order_history_id=
+dms_id) AND t_history.orders_id=#{orderId}
+AND t_history.state in (0,1,2,3,4)
+GROUP BY state
+
+	</select>
+
+    <select id="getSCMBusinessRemarkDataOrder" resultType="SCMBusinessRemarkData">
+SELECT
+	order_history_id AS dms_id,
+	t_order.end_address AS address,
+	t_history.order_arrive_time AS createtime,
+	t_driver.driver_id AS dpeoid,
+	t_order.shiping_order_num AS platform_number,
+	t_history.orders_id AS bus_id,
+	t_history.state AS shipping_order_state,
+	'2' AS datecome,
+	CASE t_history.state
+WHEN '0' THEN
+	''
+WHEN '1' THEN
+	''
+WHEN '2' THEN
+	''
+WHEN '4' THEN
+	t_sign.sign_user
+END AS signpeople,
+ CASE t_history.state
+WHEN '0' THEN
+	''
+WHEN '1' THEN
+	''
+WHEN '2' THEN
+	''
+WHEN '4' THEN
+	t_sign.sign_time
+END AS signtime,
+ CASE t_history.state
+WHEN '0' THEN
+	'S'
+WHEN '1' THEN
+	'Y'
+WHEN '2' THEN
+	'P'
+WHEN '4' THEN
+	'Q'
+END AS dotype,
+ '0' AS state,
+ CASE t_history.state
+WHEN '0' THEN
+	'0'
+WHEN '1' THEN
+	'0'
+WHEN '2' THEN
+	'0'
+WHEN '4' THEN
+	'1'
+END AS pointtype,
+CASE t_history.state
+WHEN '0' THEN
+	' '
+WHEN '1' THEN
+	' '
+WHEN '2' THEN
+	''
+WHEN '4' THEN
+	t_sign.sign_usernumber
+END AS idccard
+FROM
+	jy_order_history t_history
+LEFT JOIN jy_shiping_order t_order ON t_history.orders_id = t_order.shiping_order_id
+LEFT JOIN jy_drivertoorder t_toorder ON t_order.shiping_order_id = t_toorder.order_id
+LEFT JOIN jy_driver_info t_driver ON t_driver.driver_id = t_toorder.driver_id
+LEFT JOIN jy_sign_order t_sign ON t_sign.order_id = t_order.shiping_order_id
+WHERE
+	t_history.state IN (1, 2, 4)
+AND t_history.order_history_id = #{historyId}
+	</select>
+
+    <select id="getSCMBusinessCount" resultType="int">
+        SELECT COUNT(1) FROM  jy_scm_business_remark_data WHERE dms_id=#{dmsId}
+    </select>
+
+    <select id="getSCMBusinessCountSate" resultType="int">
+         SELECT count(1) FROM  jy_scm_business_remark_data
+        WHERE bus_id=#{bus_id}
+        AND shipping_order_state=#{state}
+    </select>
+
+    <insert id="insertSCMBusinessRemarkData">
+        INSERT jy_scm_business_remark_data (
+        dms_id,
+        state,
+        ord_number,
+        manu_Id,
+        dotype,
+        datecome,
+        signtime,
+        datacreatetime,
+        pointtype,
+        signpeople,
+        platform_number,
+        idccard,
+        dpeoid,
+        createtime,
+        address,
+        bus_id,
+        t_count,
+        shipping_order_state,
+        id)
+        VALUES
+        <foreach collection="list" index="index" item="item" separator=",">
+            (
+            #{item.dms_id},
+            #{item.state},
+            #{item.ord_number},
+            #{item.manu_Id},
+            #{item.dotype},
+            #{item.datecome},
+            #{item.signtime},
+            now(),
+            #{item.pointtype},
+            #{item.signpeople},
+            #{item.platform_number},
+            #{item.idccard},
+            #{item.dpeoid},
+            #{item.createtime},
+            #{item.address},
+            #{item.bus_id},
+            0,
+            #{item.shipping_order_state},
+            #{item.id}
+            )
+        </foreach>
+    </insert>
+
+    <select id="getSCMBusinessRemarkData" resultType="SCMBusinessRemarkData">
+        SELECT
+        id,
+        '0' AS bus_id,
+        address,
+        createtime,
+        CASE shipping_order_state
+        WHEN '0' THEN
+        ' '
+        WHEN '1' THEN
+        ' '
+        WHEN '2' THEN
+        dpeoid
+        WHEN '4' THEN
+        dpeoid
+        END AS dpeoid,
+        IF(idccard REGEXP '[0-9]{18}|[0-9]{17}X|[0-9]{15}',idccard,'') AS idccard,
+        platform_number,
+        signpeople,
+        pointtype,
+        datacreatetime,
+        signtime,
+        dotype,
+        datecome,
+        manu_Id,
+        dms_id
+        FROM jy_scm_business_remark_data where
+        state=#{state} AND t_count &lt;=#{time}
+        AND dotype IS NOT NULL
+        GROUP BY bus_id,shipping_order_state
+        ORDER BY
+        shipping_order_state ASC,
+        createtime ASC,datacreatetime DESC
+        <if test="max_size!=null">
+            limit #{max_size}
+        </if>
+
+    </select>
+
+    <update id="updateSCMBusinessRemarkData">
+        UPDATE jy_scm_business_remark_data SET state=#{state},t_count = t_count+1
+        WHERE dms_id IN (
+        <foreach collection="list" index="index" item="item" separator=",">
+            #{item}
+        </foreach>
+        )
+    </update>
+
+    <update id="updateScmShippingOrder">
+        UPDATE jy_scm_shiping_order t_scm_order,
+        (SELECT shipping_order_state,bus_id,dms_id,state,t_count FROM jy_scm_business_remark_data) t_remark
+        SET t_scm_order.shipping_order_state = t_remark.shipping_order_state
+        WHERE t_remark.bus_id = t_scm_order.shiping_order_id AND IFNULL(t_scm_order.shipping_order_state,0)&lt;t_remark.shipping_order_state
+        and t_remark.state=#{state}
+        and t_remark.t_count BETWEEN #{minCount} AND #{maxCount}
+        AND t_remark.dms_id in (
+        <foreach collection="list" index="index" item="item" separator=",">
+            #{item}
+        </foreach>
+        )
+    </update>
+
+
+    <update id="updateScmShippingOrderA">
+        UPDATE jy_scm_shiping_order t_scm_order,
+        (SELECT MAX(shipping_order_state) AS shipping_order_state,bus_id,dms_id,state,t_count FROM
+        jy_scm_business_remark_data GROUP BY bus_id) t_remark
+        SET t_scm_order.shipping_order_state = t_remark.shipping_order_state
+        WHERE t_remark.bus_id = t_scm_order.shiping_order_id AND IFNULL(t_scm_order.shipping_order_state,0)&lt;t_remark.shipping_order_state
+        AND t_remark.dms_id in (
+        <foreach collection="list" index="index" item="item" separator=",">
+            #{item.dms_id}
+        </foreach>
+        )
+    </update>
+
+    <update id="updateScmUpdateTime">
+      UPDATE jy_scm_update_time set time =end_time, end_time=date_add(end_time, interval 60 minute)
+      WHERE end_time &lt;NOW()
+    </update>
+
+    <select id="getInsertSCMSupplierUser" resultType="SCMSupplierUser">
+        SELECT
+        '0' AS suid,
+        '' AS susername,
+        '' AS suserpassword,
+        t_driver.driver_name AS srealname,
+        '' AS sdid,
+        '' AS slasttime,
+        t_driver.driver_createtime AS createtime,
+        '1' AS state,
+        '' AS salt,
+        '' AS belongid,
+        t_head.file_name AS head ,
+        t_head.image_url,
+
+        t_driver.driver_age AS age,
+        t_driver.start_time AS servicetimes,
+        t_driver.driver_phone AS tel,
+        '' AS supids,
+        '1' AS usable,
+        t_province.citycode AS pid,
+        t_province.cityname AS pname,
+        t_city.citycode AS cid,
+        t_city.cityname AS cname,
+        t_conty.cityname AS aname,
+        t_conty.citycode AS aid,
+        '' AS zname,
+        '' as zid,
+        '' AS addmin,
+        '' AS addminid,
+        t_driver.driver_id AS supUserId,
+        '2'AS datacome,
+        CASE t_driver.driver_sex
+        WHEN '1' THEN '男'
+        WHEN '0' THEN '女'
+        END AS sex,
+        t_suppliers.suppliers_name AS supname
+        FROM
+        jy_driver_info t_driver
+        LEFT JOIN jy_driver_info_cityinfo t_driver_city ON t_driver.driver_id = t_driver_city.driver_id
+        LEFT JOIN jy_city_info t_province ON t_province.citycode = t_driver_city.driver_province
+        LEFT JOIN jy_city_info t_city ON t_city.citycode = t_driver_city.driver_city
+        LEFT JOIN jy_city_info t_conty ON t_conty.citycode = t_driver_city.driver_county
+        LEFT JOIN jy_user t_user ON t_user.driver_id = t_driver.driver_id
+        LEFT JOIN jy_suppliers t_suppliers ON t_suppliers.suppliers_id = t_driver.driver_suppliers
+        LEFT JOIN jy_user_head t_head ON t_head.user_id = t_user.id
+        WHERE
+        t_driver.driver_suppliers IN (
+        SELECT
+        t_supp.suppliers_id
+        FROM
+        jy_suppliers t_supp
+        LEFT JOIN jy_customer t_customer ON FIND_IN_SET(
+        t_customer.customer_id,
+        t_supp.suppliers_customer
+        )
+        WHERE
+        customer_id IN (
+        SELECT
+        customer_id
+        FROM
+        jy_scm_customer
+        )
+        )
+        GROUP BY
+        t_driver.driver_id
+        <if test="size!=null">
+            LIMIT #{size}
+        </if>
+    </select>
+
+    <insert id="insertSCMSupplierUser">
+        INSERT INTO jy_scm_supplier_user (
+        suid,
+        susername,
+        suserpassword,
+        srealname,
+        sdid,
+        slasttime,
+        createtime,
+        state,
+        salt,
+        head,
+        image_url,
+        sex,
+        age,
+        servicetimes,
+        tel,
+        supids,
+        usable,
+        pname,
+        pid,
+        cname,
+        cid,
+        aname,
+        aid,
+        zname,
+        zid,
+        addmin,
+        addminid,
+        supUserId,
+        datacome,
+        t_state,
+        supname
+        )
+        VALUES
+        <foreach collection="list" index="index" item="item" separator=",">
+            ( #{item.suid},
+            #{item.susername},
+            #{item.suserpassword},
+            #{item.srealname},
+            #{item.sdid},
+            #{item.slasttime},
+            #{item.createtime},
+            #{item.state},
+            #{item.salt},
+            #{item.head},
+            #{item.image_url},
+            #{item.sex},
+            #{item.age},
+            #{item.servicetimes},
+            #{item.tel},
+            #{item.supids},
+            #{item.usable},
+            #{item.pname},
+            #{item.pid},
+            #{item.cname},
+            #{item.cid},
+            #{item.aname},
+            #{item.aid},
+            #{item.zname},
+            #{item.zid},
+            #{item.addmin},
+            #{item.addminid},
+            #{item.supUserId},
+            #{item.datacome},
+            '0',
+            #{item.supname}
+            )
+        </foreach>
+    </insert>
+
+    <select id="getSCMSupplierUser" resultType="SCMSupplierUser">
+        SELECT * FROM jy_scm_supplier_user
+        WHERE t_state=#{state}
+        <if test="size!=null and page!=null">
+            LIMIT #{page},#{size}
+        </if>
+    </select>
+
+    <select id="getSCMSupplierUserCount" resultType="int">
+        SELECT count(1) FROM jy_scm_supplier_user
+        WHERE t_state=#{state}
+    </select>
+
+    <select id="selectSCMSupplierUserCount" resultType="int">
+          SELECT count(1) FROM jy_scm_supplier_user WHERE supUserId=#{supUserId}
+    </select>
+
+
+    <update id="updateSCMSupplierUser">
+        UPDATE jy_scm_supplier_user SET t_state=#{state} WHERE supUserId
+        in (
+        <foreach collection="list" index="index" item="item" separator=",">
+            #{item}
+        </foreach>
+        )
+    </update>
+
+    <select id="getSCMSupplierUserHead" resultType="String">
+        SELECT image_url FROM jy_scm_supplier_user
+        WHERE t_state=#{state} AND image_url IS NOT NULL
+        <if test="size!=null and page!=null">
+            LIMIT #{page},#{size}
+        </if>
+    </select>
+    <select id="getSCMSupplierUserHeadCount" resultType="int">
+        SELECT count(1)  FROM jy_scm_supplier_user
+        WHERE t_state=#{state}  AND image_url IS NOT NULL
+    </select>
+    <select id="getInsertSCMSupplierUserDay" resultType="com.jy.model.SCMSupplierUser">
+           SELECT
+        '0' AS suid,
+        '' AS susername,
+        '' AS suserpassword,
+        t_driver.driver_name AS srealname,
+        '' AS sdid,
+        '' AS slasttime,
+        t_driver.driver_createtime AS createtime,
+        '1' AS state,
+        '' AS salt,
+        '' AS belongid,
+        t_head.file_name AS head ,
+        t_head.image_url,
+
+        t_driver.driver_age AS age,
+        t_driver.start_time AS servicetimes,
+        t_driver.driver_phone AS tel,
+        '' AS supids,
+        '1' AS usable,
+        t_province.citycode AS pid,
+        t_province.cityname AS pname,
+        t_city.citycode AS cid,
+        t_city.cityname AS cname,
+        t_conty.cityname AS aname,
+        t_conty.citycode AS aid,
+        '' AS zname,
+        '' as zid,
+        '' AS addmin,
+        '' AS addminid,
+        t_driver.driver_id AS supUserId,
+        '2'AS datacome,
+        CASE t_driver.driver_sex
+        WHEN '1' THEN '男'
+        WHEN '0' THEN '女'
+        END AS sex,
+        t_suppliers.suppliers_name AS supname
+        FROM
+        jy_driver_info t_driver
+        LEFT JOIN jy_driver_info_cityinfo t_driver_city ON t_driver.driver_id = t_driver_city.driver_id
+        LEFT JOIN jy_city_info t_province ON t_province.citycode = t_driver_city.driver_province
+        LEFT JOIN jy_city_info t_city ON t_city.citycode = t_driver_city.driver_city
+        LEFT JOIN jy_city_info t_conty ON t_conty.citycode = t_driver_city.driver_county
+        LEFT JOIN jy_user t_user ON t_user.driver_id = t_driver.driver_id
+        LEFT JOIN jy_suppliers t_suppliers ON t_suppliers.suppliers_id = t_driver.driver_suppliers
+        LEFT JOIN jy_user_head t_head ON t_head.user_id = t_user.id
+        WHERE
+        t_driver.driver_suppliers IN (
+        SELECT
+        t_supp.suppliers_id
+        FROM
+        jy_suppliers t_supp
+        LEFT JOIN jy_customer t_customer ON FIND_IN_SET(
+        t_customer.customer_id,
+        t_supp.suppliers_customer
+        )
+        WHERE
+        customer_id IN (
+        SELECT
+        customer_id
+        FROM
+        jy_scm_customer
+        )
+        )
+AND DATE_FORMAT(t_driver.driver_createtime,'%Y-%m-%d') = DATE_FORMAT(NOW(),'%Y-%m-%d')
+
+OR DATE_FORMAT(t_driver.driver_updatedate ,'%Y-%m-%d') = DATE_FORMAT(NOW(),'%Y-%m-%d')
+
+        GROUP BY
+        t_driver.driver_id
+    </select>
+    <select id="getSCMSupplierUserHeadImage" resultType="java.lang.String">
+        SELECT image_url FROM jy_scm_supplier_user
+        WHERE t_state=1 AND image_url IS NOT NULL
+        AND supUserId in
+         (
+        <foreach collection="list" index="index" item="item" separator=",">
+            #{item}
+        </foreach>
+        )
+    </select>
+
+
+</mapper>

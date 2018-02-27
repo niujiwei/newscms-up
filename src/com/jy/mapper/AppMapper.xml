@@ -1,0 +1,1897 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.AppDao">
+    <resultMap type="com.jy.model.JySuppliers" id="suppliers">
+        <id column="suppliers_id" property="suppliersId"/>
+        <result column="suppliers_name" property="suppliersName"/>
+        <result column="suppliers_address" property="suppliersAddress"/>
+        <result column="suppliers_people" property="suppliersPeople"/>
+        <result column="suppliers_person" property="suppliersPerson"/>
+        <result column="suppliers_phone" property="suppliersPhone"/>
+        <result column="suppliers_services" property="suppliersService"/>
+        <result column="suppliers_deadline" property="suppliersDeadline"/>
+        <result column="suppliers_start_date" property="suppliersStartDate"/>
+        <result column="suppliers_end_date" property="suppliersEndDate"/>
+        <result column="suppliers_prove" property="suppliersProve"/>
+        <result column="suppliers_operator" property="suppliersOperator"/>
+        <result column="suppliers_operator_date" property="suppliersOperatorDate"/>
+        <collection property="customer" ofType="Customer">
+            <!-- id：订单明细唯 一标识 property:要将订单明细的唯 一标识 映射到cn.itcast.mybatis.po.Orderdetail的哪个属性 -->
+            <id column="customer_id" property="customer_id"/>
+            <result column="customer_name" property="customer_name"/>
+        </collection>
+
+
+    </resultMap>
+
+    <select id="appGetDepartmentInfo" resultType="Department">
+        SELECT * FROM jy_department
+        WHERE
+        FIND_IN_SET(department_id,queryChildrenAreaInfo(#{departmentId}))
+        <if test="departmentName!=null and departmentName!=''">
+            AND department_name LIKE '%${departmentName}%'
+        </if>
+    </select>
+    <sql id="app_driver_info_sql"><!-- APP 查询司机信息 -->
+        <if test="type==1">
+            and jdi.driver_id NOT in (select
+            distinct(u.driver_id) from
+            jy_user u
+            where
+            u.driver_id
+            IS NOT NULL)
+        </if>
+
+        <if test="driverName!=null and driverName!=''">
+            AND jdi.driver_name LIKE '%${driverName}%'
+        </if>
+    </sql>
+
+    <select id="appGetDriverInfo" resultType="Driver">
+        SELECT * FROM jy_driver_info jdi
+        WHERE
+        1=1
+        <include refid="app_driver_info_sql"/>
+    </select>
+
+    <select id="appDriverGetDriverInfo" resultType="Driver">
+        SELECT * FROM jy_driver_info jdi
+        WHERE
+        1=1
+        AND
+        jdi.driver_id =#{driverId}
+        <include refid="app_driver_info_sql"/>
+    </select>
+
+    <select id="appSupplersGetDriverInfo" resultType="Driver">
+        SELECT * FROM jy_driver_info jdi
+        WHERE
+        1=1
+        AND
+        jdi.driver_suppliers
+        =#{supplersId}
+        <include refid="app_driver_info_sql"/>
+    </select>
+
+    <select id="appOtherGetDriverInfo" resultType="Driver">
+        SELECT * FROM jy_driver_info jdi
+        WHERE
+        1=1
+        AND
+        jdi.driver_suppliers IN(
+        SELECT suppliers_id FROM jy_suppliers jsu
+        INNER JOIN jy_customer jco ON
+        FIND_IN_SET(jco.customer_id,jsu.suppliers_customer)
+        WHERE
+        jco.customer_id=#{customerId}
+        )
+        <include refid="app_driver_info_sql"/>
+    </select>
+
+    <sql id="app_suppliers_info_sql"><!-- APP 查询司机信息 -->
+        <if test="type==1">
+            AND
+            jsu.suppliers_id NOT in (select
+            distinct(u.suppliers_id) from jy_user u
+            where
+            u.suppliers_id
+            IS NOT
+            NULL)
+        </if>
+        <if test="supplersName!=null and supplersName!=''">
+            AND jsu.suppliers_name LIKE '%${supplersName}%'
+        </if>
+    </sql>
+
+    <select id="appOtherGetSuppliersInfo" resultMap="suppliers">
+        SELECT * FROM jy_suppliers jsu
+        INNER JOIN jy_customer
+        jco ON
+        FIND_IN_SET(jco.customer_id,jsu.suppliers_customer)
+        WHERE
+        jco.customer_id= #{customerId}
+        <include refid="app_suppliers_info_sql"/>
+    </select>
+
+    <select id="appGetSuppliersInfo" resultMap="suppliers">
+        SELECT * FROM jy_suppliers jsu
+        INNER JOIN jy_customer
+        jco ON
+        FIND_IN_SET(jco.customer_id,jsu.suppliers_customer)
+        WHERE
+        1=1
+        <include refid="app_suppliers_info_sql"/>
+    </select>
+
+    <select id="appGetCustomersInfo" resultType="Customer">
+        SELECT * FROM
+        jy_customer jcu
+        WHERE
+        1=1
+        <if test="customersName!=null and customersName!=''">
+            AND
+            jcu.customer_name LIKE '%${customersName}%'
+        </if>
+
+    </select>
+
+    <select id="appCheckUser" resultType="int">
+		select count(*) FROM
+		jy_user ju WHERE
+		ju.username = #{name}
+	</select>
+    <insert id="appSaveUserInfo" parameterType="User">
+		insert into jy_User(
+		id,
+		username,
+		password,
+		realname,
+		did,
+		lasttime,
+		state,
+		flag,
+		createtime,
+		channelId,
+		device_type,
+		driver_id,
+		suppliers_id,
+		user_province,
+		user_city,
+		user_county,
+		user_address,
+		customer_id
+		)
+		values(#{id},#{username},#{password},#{realName},
+		#{did},null,#{state},#{flag},now(),null,null,#{driver_id},
+		#{suppliers_id},#{user_province},#{user_city},#{user_county},
+		#{user_address},#{customer_id})
+	</insert>
+
+    <update id="appUpdataUserInfo" parameterType="User">
+		UPDATE jy_user SET
+		realname=#{realName},did=#{did},flag=#{flag},driver_id=#{driver_id},
+		user_city=#{user_city},user_county=#{user_county},user_province=#{user_province},
+		user_address=#{user_address},suppliers_id=#{suppliers_id},
+		customer_id=#{customer_id}
+		WHERE
+		id=#{id}
+	</update>
+
+    <insert id="appSaveAbnormalReport" parameterType="AbnormalReport">
+		INSERT INTO
+		jy_abnormalreport
+		(id,shiping_order_id,abnormal_type,abnormal_message,abnormal_time,abnormal_num,abnormal_name,abnormal_supperid,abnormal_driverid,abnormal_remark,abnormal_userid)
+		VALUES
+		(#{id},#{shiping_order_id},#{abnormal_type},#{abnormal_message},now(),#{abnormal_num},#{abnormal_name},#{abnormal_supperid},#{abnormal_driverid},#{abnormal_remark},#{abnormal_userid})
+	</insert>
+
+    <insert id="appSaveAbnormalImage">
+        INSERT INTO jy_abnormalimages
+        (image_id,order_id,abnormalt_id,imageUrl)
+        VALUES
+        <foreach collection="list" item="item" index="index"
+                 separator=",">
+            (#{item.image_id},#{item.order_id},#{item.abnormalt_id},#{item.imageUrl})
+        </foreach>
+    </insert>
+
+    <update id="appUpdateIsAbnormal">
+		update jy_shiping_order SET is_abnormal =#{flag}
+		WHERE
+		shiping_order_id=#{shippingOrderId}
+	</update>
+
+    <update id="appUpdateAbnormalState">
+		UPDATE jy_abnormalreport SET
+		abnormal_result='1',
+		abnormal_resultremark=#{abnormal_resultremark},
+		abnormal_resultuser=#{userName},
+		abnormal_resulttime=now()
+		WHERE
+		id=#{id}
+	</update>
+
+    <select id="appGetAbnormalOrderNum" resultType="int">
+		SELECT COUNT(*)
+		FROM
+		jy_abnormalreport
+		jabr WHERE
+		jabr.shiping_order_id=#{orderId} AND
+		jabr.abnormal_result='0'
+	</select>
+
+    <update id="appUpdateOrederAbnormal">
+		UPDATE jy_shiping_order SET is_abnormal ='3' WHERE
+		shiping_order_id=#{orderId}
+	</update>
+
+    <select id="appShiFouFenPei" resultType="int">
+		SELECT count(*) FROM
+		jy_drivertoorder WHERE order_id
+		=#{orderId}
+	</select>
+
+    <insert id="appSaveDrivertoOrder" parameterType="java.util.List">
+        insert into
+        jy_drivertoorder(
+        id,
+        driver_id,
+        order_id,
+        updatetime,
+        equipmentNum,
+        userName
+        )VALUES
+        <foreach collection="list" index="index" item="item"
+                 separator=",">
+            (
+            #{item.id},
+            #{item.driver_id},
+            #{item.order_id},
+            NOW(),
+            #{item.equipmentNum},
+            #{item.userName}
+            )
+        </foreach>
+    </insert>
+
+    <update id="appUpdateShipperorderState">
+        UPDATE jy_shiping_order SET shipping_order_state='1' WHERE
+        shiping_order_id IN
+        <foreach collection="array" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <update id="appReceiveOrder" parameterType="String">
+        update
+        jy_drivertoorder set isreceive=1,receivetime=Now()
+        where
+        order_id=#{param1}
+        <if test="param2!='' and param2!=null">
+            and driver_id=#{param2}
+        </if>
+
+    </update>
+
+    <update id="appUpdateOrderState">
+		update jy_shiping_order set
+		shipping_order_state=#{flag},
+		aging_alltime=#{allTime}
+		where
+		shiping_order_id=#{order_id}
+	</update>
+
+    <select id="appGetDriverName" parameterType="string" resultType="string">
+		select
+		driver_name
+		from
+		jy_driver_info
+		where
+		driver_id=#{0}
+	</select>
+
+    <select id="appGetAgingAllTime" resultType="String">
+
+		SELECT
+		getAgingDate(jso.updatetime,jd.receivetime,jso.aging_time,jso.aging_day)
+		FROM jy_shiping_order jso LEFT JOIN jy_drivertoorder jd ON
+		jso.shiping_order_id = jd.order_id
+		where
+		jso.shiping_order_id=#{orderId}
+	</select>
+
+    <select id="appIsnotSignOrder" resultType="int">
+		SELECT count(*) from
+		jy_sign_order jso where order_id = #{0}
+	</select>
+
+    <update id="appUpdateSignShipOrder" parameterType="Sign_order">
+        update jy_sign_order
+        <set>
+            order_number = #{order_number},
+            sign_user = #{sign_user},
+            sign_usernumber = #{sign_usernumber},
+            sign_userphone =
+            #{sign_userphone},
+            sign_result = #{sign_result},
+            actual_number =
+            #{actual_number},
+            defect_number = #{defect_number},
+            copies_number =
+            #{copies_number},
+            sign_remarks = #{sign_remarks},
+            sign_time = now(),
+            sign_name = #{sign_name},
+            sign_username = #{sign_username},
+            sign_number = #{sign_number}
+        </set>
+        where order_id=#{order_id}
+    </update>
+
+    <insert id="appSaveSignShipOrder" parameterType="Sign_order">
+		INSERT INTO
+		jy_sign_order (
+		sign_id,
+		order_id,
+		order_number,
+		sign_user,
+		sign_usernumber,
+		sign_userphone,
+		sign_result,
+		actual_number,
+		defect_number,
+		copies_number,
+		sign_remarks,
+		sign_time,
+		sign_name,
+		sign_username,
+		sign_number
+		)
+		VALUES
+		(
+		#{sign_id},
+		#{order_id},
+		#{order_number},
+		#{sign_user},
+		#{sign_usernumber},
+		#{sign_userphone},
+		#{sign_result},
+		#{actual_number},
+		#{defect_number},
+		#{copies_number},
+		#{sign_remarks},
+		now(),
+		#{sign_name},
+		#{sign_username},
+		#{sign_number}
+		)
+	</insert>
+
+    <update id="appUpdatestate" parameterType="String">
+		UPDATE
+		jy_shiping_order
+		SET shipping_order_state='4',sign_time = now() WHERE
+		shiping_order_id =
+		#{shiping_order_id}
+	</update>
+
+    <insert id="appInsertShippingTime">
+		DELETE FROM jy_shipping_time WHERE
+		shiping_order_id=#{shiping_order_id};
+		INSERT INTO jy_shipping_time
+		(shiping_order_id,shiping_order_num,end_address,receipt_name,auto_sign_time,sign_time,aging_time,custom_name,send_mechanism,receivetime,updatetime,shiping_order_goid,sign_remarks,result)
+		select
+		jpo.shiping_order_id,jpo.shiping_order_num,jpo.end_address,jpo.receipt_name,js.auto_sign_time,js.sign_time,
+		CASE jpo.aging_day WHEN '0' THEN
+		CONCAT(jpo.aging_time,'(当日)') WHEN '1'
+		THEN CONCAT(jpo.aging_time,'(次日)')
+		WHEN '2' THEN
+		CONCAT(jpo.aging_time,'(隔日)') END AS aging_time,
+		jpo.custom_name,jpo.send_mechanism,jd.receivetime,jpo.updatetime,jpo.shiping_order_goid,js.sign_remarks,
+		myFunction(js.sign_time,jd.receivetime,jpo.updatetime,jpo.aging_time,jpo.aging_day)
+		AS result
+		from
+		jy_sign_order js
+		INNER join
+		jy_shiping_order jpo on
+		js.order_id=jpo.shiping_order_id
+		INNER JOIN
+		jy_drivertoorder jd ON
+		jd.order_id=jpo.shiping_order_id
+		where
+		jpo.shiping_order_id
+		=#{shiping_order_id} limit 1
+	</insert>
+
+    <select id="appGetDriverInfoSupp" resultType="Driver">
+		SELECT
+		ji.*,
+		js.suppliers_name as driver_suppliersname
+		FROM
+		jy_driver_info ji
+		LEFT
+		JOIN
+		jy_suppliers js ON js.suppliers_id =
+		ji.driver_suppliers
+		where
+		1=1
+		and ji.driver_suppliers =#{supplerId}
+		ORDER BY
+		ji.driver_createtime ASC
+	</select>
+
+    <select id="appGetSignOrderInfo" resultType="ShippingOrder">
+        SELECT * FROM jy_shiping_order jso INNER JOIN jy_drivertoorder jdt ON
+        jso.shiping_order_id = jdt.order_id
+        WHERE jso.shipping_order_state
+        BETWEEN 2 AND 3 AND jdt.isreceive = '1'
+        AND jdt.driver_id = #{driverId}
+        <include refid="app_signorder_sql"/>
+    </select>
+
+    <select id="appGetAllSignOrderInfo" resultType="ShippingOrder">
+        SELECT * FROM jy_shiping_order jso INNER JOIN jy_drivertoorder jdt ON
+        jso.shiping_order_id = jdt.order_id
+        WHERE jso.shipping_order_state
+        BETWEEN 2 AND 3 AND jdt.isreceive = '1'
+        <include refid="app_signorder_sql"/>
+    </select>
+
+    <sql id="app_signorder_sql">
+        <if test="param3!=null and param3!=''">
+            and jso.shiping_order_num like "%${param3}%"
+        </if>
+        <if test="param4!=null and param4!=''">
+            and jso.send_time &gt;=#{param4}
+        </if>
+        <if test="param5!=null and param5!=''">
+            and jso.send_time &lt;=#{param5}
+        </if>
+        <if test="(param4!=null and param4!='') and (param5!=null and param5!='')">
+            and jso.send_time &gt;=#{param4}
+            and
+            jso.send_time&lt;=#{param5}
+        </if>
+        <if test="param6!=null and param6!=''">
+            and jso.send_mechanism like "%${param6}%"
+        </if>
+        <if test="param7!=null and param7!=''">
+            and jso.receipt_name like "%${param7}%"
+        </if>
+        <if test="param8!=null and param8!=''">
+            and jso.end_address like "%${param8}%"
+        </if>
+        <if test="param9!=null and param9!=''">
+            and jso.shiping_order_goid like "%${param9}%"
+        </if>
+        ORDER BY
+        jso.send_time
+        DESC
+        limit
+        #{param1},#{param2}
+    </sql>
+
+    <select id="appGetReceiveOrderInfo" resultType="ShippingOrder">
+        SELECT * FROM jy_shiping_order jso INNER JOIN jy_drivertoorder jdt ON
+        jso.shiping_order_id = jdt.order_id
+        WHERE jso.shipping_order_state
+        BETWEEN 0 AND 1 AND jdt.isreceive = '0'
+        AND jdt.driver_id = #{driverId}
+        <include refid="app_signorder_sql"/>
+    </select>
+
+    <select id="appAllGetReceiveOrderInfo" resultType="ShippingOrder">
+        SELECT * FROM jy_shiping_order jso INNER JOIN jy_drivertoorder jdt ON
+        jso.shiping_order_id = jdt.order_id
+        WHERE jso.shipping_order_state
+        BETWEEN 0 AND 1 AND jdt.isreceive = '0'
+        <include refid="app_signorder_sql"/>
+    </select>
+
+    <select id="appGetMsgInfo" resultType="MsgModel">
+		SELECT * FROM jy_ordermsg
+		WHERE receiveUserId =#{userId} AND orderMsgState =
+		#{state}
+		ORDER BY
+		orderMsgState ,updatetime DESC
+	</select>
+
+    <select id="appGetMsgCount" resultType="int">
+		SELECT count(*) FROM
+		jy_ordermsg
+		WHERE receiveUserId =#{userId} AND orderMsgState =
+		#{state}
+	</select>
+
+    <update id="appUpdateMsgState">
+		UPDATE jy_ordermsg SET
+		orderMsgState = #{state},
+        receivetime=NOW()
+		WHERE
+		orderMsgId = #{messageId}
+		AND receiveUserId=#{userId}
+	</update>
+
+    <select id="appGetSupplerReverseOrderInfo" resultType="ShippingOrder">
+        SELECT jro.*,jsi.*
+        FROM jy_reverse_order jro
+        LEFT JOIN
+        jy_reverse_signorder jsi ON jsi.order_id =jro.shiping_order_id
+        WHERE
+        jro.order_mechanism
+        =#{supplerIds}
+        <include refid="app_reverseorderinfo_sql"/>
+    </select>
+
+    <select id="appGetDriverReverseOrderInfo" resultType="ShippingOrder">
+        SELECT jro.*,jsi.*
+        FROM jy_reverse_order jro
+        LEFT JOIN
+        jy_reverse_signorder jsi ON jsi.order_id =jro.shiping_order_id
+        WHERE
+        jro.reverse_orderid=#{driverIds}
+        <include refid="app_reverseorderinfo_sql"/>
+    </select>
+
+    <select id="appGetOtherReverseOrderInfo" resultType="ShippingOrder">
+        SELECT jro.*,jsi.*
+        FROM jy_reverse_order jro
+        LEFT JOIN
+        jy_reverse_signorder jsi ON jsi.order_id =jro.shiping_order_id
+        LEFT
+        JOIN jy_customer jcu ON
+        jro.end_mechanism = jcu.customer_name
+        WHERE
+        jcu.customer_id=#{customerId}
+        <include refid="app_reverseorderinfo_sql"/>
+    </select>
+
+    <select id="appGetReverseOrderInfo" resultType="ShippingOrder">
+        SELECT *
+        FROM jy_reverse_order jro
+        LEFT JOIN jy_reverse_signorder jsi ON
+        jsi.order_id =jro.shiping_order_id
+        WHERE
+        1=1
+        <include refid="app_reverseorderinfo_sql"/>
+    </select>
+
+    <sql id="app_reverseorderinfo_sql">
+
+        <if test="param3!=null and param3!=''">
+            and jro.send_time &gt;=#{param3}
+        </if>
+        <if test="param4!=null and param4!=''">
+            and jro.send_time &lt;=#{param4}
+        </if>
+        <if test="param5!=null and param5!=''">
+            and jro.shiping_order_num like "%${param5}%"
+        </if>
+        <if test="param6!=null and param6!=''">
+            and jro.end_mechanism like "%${param6}%"
+        </if>
+        <if test="param7!=null and param7!=''">
+            and jro.custom_name like "%${param7}%"
+        </if>
+        <if test="param8!=null and param8!=''">
+            <if test="param8==0">
+                and jro.shipping_order_state BETWEEN 0 AND 3
+            </if>
+            <if test="param8==4">
+                and jro.shipping_order_state BETWEEN 4 AND 6
+            </if>
+        </if>
+
+
+        ORDER BY
+        jro.shipping_order_state,jro.updatetime DESC
+        limit
+        #{param1},#{param2}
+    </sql>
+
+    <select id="appCheckReverseOrderNum" resultType="int">
+		SELECT COUNT(1)
+		FROM jy_reverse_order jro where
+		jro.shiping_order_num = #{orderNum}
+	</select>
+
+    <insert id="appSaveReverseOrder" parameterType="ShippingOrder">
+        insert into
+        jy_reverse_order
+        (
+        shiping_order_id,
+        shiping_order_num,
+        <if test="goods_weight!=null and goods_weight!=''">
+            goods_weight,
+        </if>
+        <if test="goods_vol!=null and goods_vol!=''">
+            goods_vol,
+        </if>
+        send_station,
+        send_time,
+        end_mechanism,
+        custom_name,
+        custom_tel,
+        receipt_tel,
+        goods_name,
+        goods_num,
+        remarks ,
+        shipping_order_state,
+        creat_type,
+        updatetime,
+        shipping_order,
+        order_mechanism,
+        reverse_orderid,
+        custom_contact
+        )
+        values
+        (
+        #{shiping_order_id},
+        #{shiping_order_num},
+        <if test="goods_weight!=null and goods_weight!=''">
+            #{goods_weight},
+        </if>
+        <if test="goods_vol!=null and goods_vol!=''">
+            #{goods_vol},
+        </if>
+        #{send_station},
+        #{send_time},
+        #{end_mechanism},
+        #{custom_name},
+        #{custom_tel},
+        #{receipt_tel},
+        #{goods_name},
+        #{goods_num},
+        #{remarks},
+        0,
+        #{creat_type},
+        SYSDATE(),
+        #{shipping_order},
+        #{order_mechanism},
+        #{reverse_orderid},
+        #{custom_contact}
+        )
+    </insert>
+
+    <insert id="appSaveSignReverseOrder" parameterType="Sign_order">
+		INSERT INTO
+		jy_reverse_signorder (
+		sign_id,
+		order_id,
+		order_number,
+		sign_user,
+		sign_userphone,
+		sign_result,
+		actual_number,
+		defect_number,
+		sign_remarks,
+		sign_time,
+		sign_username
+		)
+		VALUES
+		(
+		#{sign_id},
+		#{order_id},
+		#{order_number},
+		#{sign_user},
+		#{sign_userphone},
+		#{sign_result},
+		#{actual_number},
+		#{defect_number},
+		#{sign_remarks},
+		now(),
+		#{sign_username}
+		)
+	</insert>
+
+    <select id="appCkeckReverseOrderCount" resultType="int">
+		SELECT
+		COUNT(*)
+		FROM jy_reverse_signorder jrs WHERE jrs.order_id = #{orderId}
+	</select>
+
+    <update id="appUpdateSignReverseOrder">
+		UPDATE jy_reverse_signorder SET sign_user=
+		#{sign_user} ,
+		sign_userphone=#{sign_userphone},
+		sign_result=#{sign_result},
+		actual_number=#{actual_number},defect_number=#{defect_number},
+		sign_remarks=#{defect_number} ,sign_time = NOW()
+		where
+		order_id=#{order_id}
+	</update>
+
+    <insert id="appSaveSignReverseOrderImage">
+        insert into jy_reverseorderimage
+        (image_id,order_id,imageUrl) values
+        <foreach collection="list" item="item" index="index"
+                 separator=",">
+            (#{item.image_id},
+            #{item.order_id},
+            #{item.imageUrl})
+        </foreach>
+    </insert>
+
+    <update id="appUpdateReverseOrderState" parameterType="String">
+		UPDATE
+		jy_reverse_order
+		SET shipping_order_state='4' WHERE
+		shiping_order_id =
+		#{shiping_order_id}
+	</update>
+
+    <insert id="appSaveSignImages">
+        insert into jy_signorderimages
+        (image_id,order_id,imageUrl) values
+        <foreach collection="list" item="item" index="index"
+                 separator=",">
+            (#{item.image_id},
+            #{item.order_id},
+            #{item.imageUrl})
+        </foreach>
+    </insert>
+
+    <select id="appGetCityInfo" resultType="City_info">
+		SELECT * FROM
+		jy_city_info where citye_parent_id=#{citye_parent_id}
+	</select>
+
+    <select id="appGetShipperOrderHistory" resultType="OrderHistory">
+		SELECT * FROM
+		jy_order_history WHERE orders_id=#{orderId} ORDER BY order_arrive_time
+		DESC
+	</select>
+
+    <select id="appGetReverseOrderHistory" resultType="OrderHistory">
+		  SELECT *
+        FROM (SELECT *
+              FROM jy_revserseoder_history
+              WHERE orders_id = #{orderId}
+              UNION
+              SELECT *
+              FROM jy_order_history
+              WHERE orders_id = #{orderId})
+            AS history
+        ORDER BY history.order_arrive_time DESC
+	</select>
+
+    <select id="appGetShipperOrderImages" resultType="ShipperOrderImg">
+		SELECT * FROM
+		jy_signorderimages WHERE order_id =#{orderId}
+	</select>
+
+    <select id="appGetReverseOrderImages" resultType="ShipperOrderImg">
+        SELECT image_id,order_id,imageUrl
+        FROM jy_reverseorderimage
+        WHERE order_id = #{orderId}
+        UNION
+        SELECT image_id,order_id,imageUrl  FROM jy_signorderimages where order_id=#{orderId}
+
+	</select>
+
+    <select id="appGetAbnormalImages" resultType="ShipperOrderImg">
+		SELECT * FROM
+		jy_abnormalimages WHERE abnormalt_id=#{abnormalt_id}
+	</select>
+
+    <insert id="appSaveSuppliers" parameterType="JySuppliers">
+		insert into
+		jy_suppliers
+		(
+		suppliers_id,
+		suppliers_name,
+		suppliers_address,
+		suppliers_people,
+		suppliers_person,
+		suppliers_phone,
+		suppliers_services,
+		suppliers_deadline,
+		suppliers_start_date,
+		suppliers_end_date,
+		suppliers_prove,
+		suppliers_operator,
+		suppliers_operator_date,
+		suppliers_customer,
+		phone_brand,
+		phone_model,
+		suppliers_cartype,
+		suppliers_carnumber,
+		supplie_company
+		)
+		values
+		(
+		#{suppliersId},
+		#{suppliersName},
+		#{suppliersAddress},
+		#{suppliersPeople},
+		#{suppliersPerson},
+		#{suppliersPhone},
+		#{suppliersService},
+		#{suppliersDeadline},
+		#{suppliersStartDate},
+		#{suppliersEndDate},
+		#{suppliersProve},
+		#{suppliersOperator},
+		now(),
+		#{suppliers_customer},
+		#{phone_brand},
+		#{phone_model},
+		#{suppliers_cartype},
+		#{suppliers_carnumber},
+		#{supplie_company}
+		)
+	</insert>
+
+    <insert id="appSaveDriver" parameterType="com.jy.model.Driver">
+        insert into
+        jy_driver_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="driver_id != null">
+                driver_id,
+            </if>
+            <if test="driver_name != null">
+                driver_name,
+            </if>
+            <if test="driver_phone != null">
+                driver_phone,
+            </if>
+            <if test="driver_cardnumber != null">
+                driver_cardnumber,
+            </if>
+            <if test="driver_updatedate != null  and driver_updatedate !=''">
+                driver_updatedate,
+            </if>
+            <if test="driver_updatepeople != null">
+                driver_updatepeople,
+            </if>
+            <if test="driver_createtime != null and driver_createtime !=''">
+                driver_createtime,
+            </if>
+            <if test="driver_suppliers != null">
+                driver_suppliers,
+            </if>
+            <if test="driver_province != null">
+                driver_province,
+            </if>
+            <if test="driver_city != null">
+                driver_city,
+            </if>
+            <if test="driver_county != null">
+                driver_county,
+            </if>
+            <if test="driver_address != null">
+                driver_address,
+            </if>
+            <if test="driver_remarks != null">
+                driver_remarks,
+            </if>
+            <if test="driver_carnumber !=null">
+                driver_carnumber,
+            </if>
+            <if test="driver_cartype !=null">
+                driver_cartype,
+            </if>
+            <if test="driver_phonemodel !=null">
+                driver_phonemodel,
+            </if>
+            <if test="driver_phonebrand !=null">
+                driver_phonebrand
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="driver_id != null">
+                #{driver_id},
+            </if>
+            <if test="driver_name != null">
+                #{driver_name},
+            </if>
+            <if test="driver_phone != null">
+                #{driver_phone},
+            </if>
+            <if test="driver_cardnumber != null">
+                #{driver_cardnumber},
+            </if>
+            <if test="driver_updatedate != null  and driver_updatedate !=''">
+                #{driver_updatedate},
+            </if>
+            <if test="driver_updatepeople != null">
+                #{driver_updatepeople},
+            </if>
+            <if test="driver_createtime != null and driver_createtime !=''">
+                now(),
+            </if>
+            <if test="driver_suppliers != null">
+                #{driver_suppliers},
+            </if>
+            <if test="driver_province != null">
+                #{driver_province},
+            </if>
+            <if test="driver_city != null">
+                #{driver_city},
+            </if>
+            <if test="driver_county != null">
+                #{driver_county},
+            </if>
+            <if test="driver_address != null">
+                #{driver_address},
+            </if>
+            <if test="driver_remarks != null">
+                #{driver_remarks},
+            </if>
+            <if test="driver_carnumber !=null">
+                #{driver_carnumber},
+            </if>
+            <if test="driver_cartype !=null">
+                #{driver_cartype},
+            </if>
+            <if test="driver_phonemodel !=null">
+                #{driver_phonemodel},
+            </if>
+            <if test="driver_phonebrand !=null">
+                #{driver_phonebrand}
+            </if>
+        </trim>
+    </insert>
+
+    <insert id="appSaveSupplersCityInfo" parameterType="java.util.List">
+        INSERT INTO jy_supperlis_city_info
+        (id,suppliersid,suppliers_province,suppliers_city,suppliers_county)
+        VALUES
+        <foreach collection="list" index="index" item="item"
+                 separator=",">
+            (
+            #{item.id},#{item.suppliersId},#{item.driver_province},#{item.driver_city},#{item.driver_county}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="appSaveDriverCityInfo" parameterType="java.util.List">
+        INSERT INTO jy_driver_info_cityinfo
+        (id,driver_id,driver_province,driver_city,driver_county) VALUES
+        <foreach collection="list" index="index" item="item"
+                 separator=",">
+            (
+            #{item.id},#{item.driver_id},#{item.driver_province},#{item.driver_city},#{item.driver_county}
+            )
+        </foreach>
+    </insert>
+
+    <update id="appUpdateDriver" parameterType="com.jy.model.Driver">
+        update
+        jy_driver_info
+        <set>
+            <if test="driver_name != null">
+                driver_name = #{driver_name,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_phone != null">
+                driver_phone = #{driver_phone,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_cardnumber != null">
+                driver_cardnumber =
+                #{driver_cardnumber,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_updatedate != null  and driver_updatedate !=''">
+                driver_updatedate = now(),
+            </if>
+            <if test="driver_updatepeople != null">
+                driver_updatepeople =
+                #{driver_updatepeople,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_suppliers != null">
+                driver_suppliers = #{driver_suppliers,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_province != null">
+                driver_province = #{driver_province,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_city != null">
+                driver_city = #{driver_city,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_county != null">
+                driver_county = #{driver_county,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_address != null">
+                driver_address = #{driver_address,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_remarks != null">
+                driver_remarks = #{driver_remarks,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_carnumber !=null">
+                driver_carnumber = #{driver_carnumber,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_cartype !=null">
+                driver_cartype = #{driver_cartype,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_phonemodel !=null">
+                driver_phonemodel =
+                #{driver_phonemodel,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_phonebrand !=null">
+                driver_phonebrand = #{driver_phonebrand,jdbcType=VARCHAR}
+            </if>
+        </set>
+        where driver_id = #{driver_id,jdbcType=VARCHAR}
+    </update>
+
+    <update id="appUpdateSuppliers" parameterType="JySuppliers">
+        update jy_suppliers sup
+        <set>
+            sup.suppliers_name=#{suppliersName},
+            sup.suppliers_address=#{suppliersAddress},
+            sup.suppliers_people=#{suppliersPeople},
+            sup.suppliers_person=#{suppliersPerson},
+            sup.suppliers_phone=#{suppliersPhone},
+            sup.suppliers_services=#{suppliersService},
+            sup.suppliers_deadline=#{suppliersDeadline},
+            sup.suppliers_start_date=#{suppliersStartDate},
+            sup.suppliers_end_date=#{suppliersEndDate},
+            sup.suppliers_prove=#{suppliersProve},
+            sup.suppliers_operator=#{suppliersOperator},
+            sup.suppliers_operator_date=#{suppliersOperatorDate},
+            sup.driver_province=#{driver_province},
+            sup.driver_city=#{driver_city},
+            sup.driver_county=#{driver_county},
+            sup.suppliers_customer=#{suppliers_customer},
+            sup.phone_brand=#{phone_brand},
+            sup.phone_model=#{phone_model},
+            sup.suppliers_cartype=#{suppliers_cartype},
+            sup.suppliers_carnumber=#{suppliers_carnumber},
+            sup.supplie_company=#{supplie_company}
+
+        </set>
+        where sup.suppliers_id = #{suppliersId}
+    </update>
+    <select id="appReverseGetCustomersInfo" resultType="Customer">
+		SELECT * FROM
+		jy_customer jcu
+		WHERE
+		jcu.customer_name LIKE '%${customersName}%'
+	</select>
+
+    <select id="appGetUserInfo" resultType="User" parameterType="User">
+		SELECT
+		CASE jus.flag
+		WHEN '1' THEN jdi.driver_phone
+		WHEN '2' THEN
+		jsu.suppliers_phone
+		WHEN '3' THEN jcu.customer_tel
+		WHEN '4' THEN
+		jcu.customer_tel
+		END as userPhone,jus.*
+		FROM jy_user jus
+		LEFT JOIN
+		jy_suppliers jsu ON jsu.suppliers_id = jus.suppliers_id
+		LEFT JOIN
+		jy_driver_info jdi ON jdi.driver_id = jus.driver_id
+		LEFT JOIN
+		jy_customer jcu ON jcu.customer_id =jus.customer_id
+		where
+		username=#{username}
+		and password=#{password}
+	</select>
+
+
+    <select id="getAppMenuRole" resultType="String" parameterType="User">
+		SELECT DISTINCT jappm.app_menu_id FROM jy_user jus LEFT JOIN jy_user_role jur
+		ON
+		jus.id = jur.user_role_uid
+		LEFT JOIN jy_appmenu_role jappm ON
+		jur.user_role_rid = jappm.app_role_id
+		LEFT JOIN jy_app_menu jappmenu ON
+		jappmenu.app_menu_id=jappm.app_menu_id
+		WHERE jus.id=#{id}
+		ORDER BY
+		jappmenu.app_menu_order
+	</select>
+
+    <select id="appGetMenuAndRole" resultType="String" parameterType="User">
+		SELECT DISTINCT jappm.app_menu_id FROM jy_user jus LEFT JOIN jy_user_role jur
+		ON
+		jus.id = jur.user_role_uid
+		LEFT JOIN jy_appmenu_role jappm ON
+		jur.user_role_rid = jappm.app_role_id
+		LEFT JOIN jy_app_menu jappmenu ON
+		jappmenu.app_menu_id=jappm.app_menu_id
+		WHERE jus.id=#{userId}
+		AND jappmenu.app_menu_father_id=#{fatherId}
+		ORDER BY
+		jappmenu.app_menu_order
+	</select>
+
+
+    <select id="getOrderMsgCount" resultType="hashmap">
+		SELECT 'orderMsgCount'
+		type ,count(1) number FROM jy_ordermsg WHERE
+		receiveUserId =#{id}
+	</select>
+
+    <sql id="getNumberMessage_sql1">
+		select
+		'shiping_order_day' type, count(*) number from
+		jy_shiping_order ji WHERE
+		1=1
+		and
+		ji.shipping_order_state = 0
+
+	</sql>
+    <sql id="getNumberMessage_sql2">
+		SELECT 'drivertoorder_day' type,COUNT(1) number FROM
+		jy_shiping_order jso INNER JOIN
+		jy_drivertoorder jdt ON
+		jso.shiping_order_id = jdt.order_id
+		WHERE
+		(jso.shipping_order_state
+		BETWEEN 0 AND 1) AND jdt.isreceive = '0'
+	</sql>
+
+    <sql id="getNumberMessage_sql3">
+SELECT
+	'sign_order_day' type,
+	COUNT(1) number
+FROM
+	jy_shiping_order jso
+WHERE
+	(jso.shipping_order_state BETWEEN 2
+AND 3)
+	</sql>
+
+    <sql id="getNumberMessage_sql4">
+		SELECT 'orderMsgCount' type ,count(1) number FROM
+		jy_ordermsg WHERE
+		receiveUserId =#{userId} and orderMsgState='1'
+	</sql>
+    <sql id="getNumberMessage_sql5">
+		SELECT 'abnormalCount' type ,COUNT(1) number FROM
+		jy_abnormalreport janr
+		INNER
+		JOIN
+		jy_shiping_order
+		jso ON
+		jso.shiping_order_id =
+		janr.shiping_order_id
+		where 1=1
+		AND
+		janr.abnormal_result=0
+	</sql>
+
+    <sql id="getNumberMessage_sql6">
+		SELECT 'waybillCount' as type, COUNT(1) FROM jy_waybill_adjustment WHERE applicant_state=0
+	</sql>
+
+
+    <sql id="otherGetNumberMessage_sql6">
+		SELECT 'waybillCount' as type ,COUNT(1) FROM jy_waybill_adjustment WHERE applicant_state=0
+	</sql>
+
+    <select id="getNumberMessage" resultType="hashmap">
+        <include refid="getNumberMessage_sql1"/>
+        UNION ALL
+        <include refid="getNumberMessage_sql2"/>
+        UNION ALL
+        <include refid="getNumberMessage_sql3"/>
+        UNION ALL
+        <include refid="getNumberMessage_sql4"/>
+        UNION ALL
+        <include refid="getNumberMessage_sql5"/>
+        UNION ALL
+        <include refid="getNumberMessage_sql6"/>
+    </select>
+
+
+    <sql id="drivergetNumberMessage_sql1">
+		SELECT 'shiping_order_day' type, 0 number FROM DUAL
+	</sql>
+    <sql id="drivergetNumberMessage_sql2">
+		SELECT 'drivertoorder_day' type ,COUNT(1) number FROM
+		jy_shiping_order jso
+		INNER JOIN jy_drivertoorder jdt ON
+		jso.shiping_order_id = jdt.order_id
+		WHERE jso.shipping_order_state
+		BETWEEN 0 AND 1 AND jdt.isreceive = '0'
+		AND jdt.driver_id = #{driverId}
+	</sql>
+    <sql id="drivergetNumberMessage_sql3">
+
+		SELECT 'sign_order_day' type ,COUNT(1) number FROM
+		jy_shiping_order jso
+		INNER JOIN jy_drivertoorder jdt ON
+		jso.shiping_order_id = jdt.order_id
+		WHERE jso.shipping_order_state
+		BETWEEN 2 AND 3 AND jdt.isreceive = '1'
+		AND jdt.driver_id = #{driverId}
+	</sql>
+    <sql id="drivergetNumberMessage_sql4">
+		SELECT 'orderMsgCount' type ,count(1) number FROM
+		jy_ordermsg WHERE
+		receiveUserId =#{userId} and orderMsgState='1'
+	</sql>
+
+    <sql id="drivergetNumberMessage_sql5">
+		SELECT 'abnormalCount' type ,COUNT(1) number FROM
+		jy_abnormalreport janr
+		INNER
+		JOIN
+		jy_shiping_order
+		jso ON
+		jso.shiping_order_id =
+		janr.shiping_order_id
+		where 1=1
+		AND
+		abnormal_userid = #{userId}
+		AND janr.
+		abnormal_result=1
+		AND
+		shipping_order_state BETWEEN 0 AND 3
+	</sql>
+
+
+    <select id="driverGetNumberMessage" resultType="hashmap">
+
+        <include refid="drivergetNumberMessage_sql1"/>
+        UNION ALL
+        <include refid="drivergetNumberMessage_sql2"/>
+        UNION ALL
+        <include refid="drivergetNumberMessage_sql3"/>
+        UNION ALL
+        <include refid="drivergetNumberMessage_sql4"/>
+        UNION ALL
+        <include refid="drivergetNumberMessage_sql5"/>
+        UNION ALL
+        <include refid="otherGetNumberMessage_sql6"/>
+
+    </select>
+
+    <sql id="supplierGetNumberMessage_sql1">
+        select 'shiping_order_day' type, count(*) number from jy_shiping_order
+        ji where
+        shiping_order_id NOT
+        IN(select dt.order_id from
+        jy_drivertoorder dt)
+        and
+        ji.shipping_order_state = 0
+        AND
+        ji.send_mechanism IN (
+        SELECT
+        jc.customer_name from jy_customer jc
+        LEFT
+        JOIN jy_suppliers jss ON
+        find_in_set(
+        jc.customer_id,jss.suppliers_customer)
+        WHERE
+        jss.suppliers_id=#{suppliers})
+        <if test="list!=null and list.size()>0">
+            AND
+            <foreach collection="list" item="address" index="index"
+                     open="(ji.end_address LIKE" close=")" separator="or ji.end_address LIKE">
+                '%${address}'
+            </foreach>
+        </if>
+
+
+    </sql>
+    <sql id="supplierGetNumberMessage_sql2">
+		SELECT 'drivertoorder_day' type,COUNT(1) number FROM
+		jy_shiping_order jso INNER JOIN jy_drivertoorder jdt ON
+		jso.shiping_order_id = jdt.order_id
+		WHERE jso.shipping_order_state
+		BETWEEN 0 AND 1 AND jdt.isreceive = '0'
+		AND jdt.driver_id = #{driverId}
+	</sql>
+    <sql id="supplierGetNumberMessage_sql3">
+		SELECT 'sign_order_day' type,COUNT(1) number FROM
+		jy_shiping_order jso INNER JOIN jy_drivertoorder jdt ON
+		jso.shiping_order_id = jdt.order_id
+		WHERE jso.shipping_order_state
+		BETWEEN 2 AND 3 AND jdt.isreceive = '1'
+		AND jdt.driver_id = #{driverId}
+	</sql>
+    <sql id="supplierGetNumberMessage_sql4">
+		SELECT 'orderMsgCount' type ,count(1) number FROM
+		jy_ordermsg WHERE
+		receiveUserId =#{userId} and orderMsgState='1'
+	</sql>
+    <sql id="supplierGetNumberMessage_sql5">
+		SELECT 'abnormalCount' type ,COUNT(1) number FROM
+		jy_abnormalreport janr
+		INNER
+		JOIN
+		jy_shiping_order
+		jso ON
+		jso.shiping_order_id =
+		janr.shiping_order_id
+		where 1=1
+		AND
+		abnormal_userid =#{userId}
+		AND janr. abnormal_result=1
+		AND
+		shipping_order_state BETWEEN 0 AND 3
+	</sql>
+
+
+    <select id="supplierGetNumberMessage" resultType="hashmap">
+
+        <include refid="supplierGetNumberMessage_sql1"/>
+        UNION ALL
+        <include refid="supplierGetNumberMessage_sql2"/>
+        UNION ALL
+        <include refid="supplierGetNumberMessage_sql3"/>
+        UNION ALL
+        <include refid="supplierGetNumberMessage_sql4"/>
+        UNION ALL
+        <include refid="supplierGetNumberMessage_sql5"/>
+        UNION ALL
+        <include refid="otherGetNumberMessage_sql6"/>
+
+    </select>
+
+
+    <sql id="otherGetNumberMessage_sql1">
+        <!-- SELECT 'shiping_order_day' type, 0 number FROM DUAL -->
+        SELECT
+        'shiping_order_day' type,
+        COUNT(1) number
+        FROM
+        jy_shiping_order ji
+        LEFT JOIN jy_customer jc ON
+        jc.customer_name LIKE ji.send_mechanism
+        LEFT JOIN jy_user ju ON
+        jc.customer_id=ju.customer_id
+        where
+        shiping_order_id NOT IN(select
+        dt.order_id from jy_drivertoorder dt)
+        and ji.shipping_order_state = 0
+        AND ju.id=#{userId}
+    </sql>
+    <sql id="otherGetNumberMessage_sql2">
+		SELECT 'drivertoorder_day' type, 0 number FROM DUAL
+	</sql>
+    <sql id="otherGetNumberMessage_sql3">
+		SELECT 'sign_order_day' type, 0 number FROM DUAL
+	</sql>
+    <sql id="otherGetNumberMessage_sql4">
+		SELECT 'orderMsgCount' type ,count(1) number FROM
+		jy_ordermsg WHERE
+		receiveUserId =#{userId} and orderMsgState='1'
+	</sql>
+    <sql id="otherGetNumberMessage_sql5">
+		SELECT 'abnormalCount' type ,COUNT(1) number FROM
+		jy_abnormalreport janr
+		INNER
+		JOIN
+		jy_shiping_order
+		jso ON
+		jso.shiping_order_id =
+		janr.shiping_order_id
+		LEFT JOIN jy_customer jcu
+		ON jcu.customer_name = jso.send_mechanism
+		where
+		1=1
+		AND
+		janr.abnormal_result=0
+		AND jcu.customer_id=#{customerId}
+	</sql>
+
+    <select id="otherGetNumberMessage" resultType="hashmap">
+
+        <include refid="otherGetNumberMessage_sql1"/>
+        UNION ALL
+        <include refid="otherGetNumberMessage_sql2"/>
+        UNION ALL
+        <include refid="otherGetNumberMessage_sql3"/>
+        UNION ALL
+        <include refid="otherGetNumberMessage_sql4"/>
+        UNION ALL
+        <include refid="otherGetNumberMessage_sql5"/>
+        UNION ALL
+        <include refid="otherGetNumberMessage_sql6"/>
+
+    </select>
+    <update id="appUpdateCustomerTel">
+		UPDATE jy_customer SET customer_tel = #{customerTel}
+		WHERE customer_id =
+		#{customerId}
+	</update>
+
+    <update id="appUpdateDriverTel">
+		UPDATE jy_driver_info SET driver_phone =
+		#{driverPhone} WHERE driver_id=#{driverId}
+	</update>
+
+    <update id="appUpdateSupplersTel">
+		UPDATE jy_suppliers SET suppliers_phone =
+		#{supplerPhone} WHERE
+		suppliers_id= #{supplerId}
+	</update>
+    <insert id="appSaveMessageInfo">
+        insert jy_orderMsg(
+        orderMsgId,
+        receiveUserName,
+        receiveUserId,
+        orderMsgState,
+        orderMsg,
+        sendUserName,
+        sendUserId,
+        updatetime,
+        orderMsgTitle
+        ) values
+        <foreach collection="list" index="index" item="item"
+                 separator=",">
+            (
+            #{item.orderMsgId},
+            #{item.receiveUserName},
+            #{item.receiveUserId},
+            #{item.orderMsgState},
+            #{item.orderMsg},
+            #{item.sendUserName},
+            #{item.sendUserId},
+            SYSDATE(),
+            #{item.orderMsgTitle}
+            )
+        </foreach>
+    </insert>
+
+    <select id="getGpsInfoCount" resultType="int">
+		SELECT COUNT(1) FROM
+		jy_equipment_info WHERE username =#{username} AND
+		is_binding ='1'
+	</select>
+
+    <select id="appGetLocationTime" resultType="AppVersion">
+		SELECT * FROM
+		jy_app_version
+	</select>
+
+    <select id="appDriverISHaveGps" resultType="int">
+		SELECT COUNT(1) FROM
+		jy_equipment_info jei
+		INNER JOIN
+		jy_user ju ON jei.username =
+		ju.username
+		WHERE
+		ju.driver_id=#{driverId}
+	</select>
+
+    <select id="driverGetUserName" resultType="String">
+		SELECT username FROM jy_user where driver_id =#{driverId}
+
+	</select>
+    <sql id="distributionReverser_where_sql">
+        <if test="send_time!=null and send_time!=''">
+            AND DATE_FORMAT(updatetime,'%Y-%m-%d')&gt;=#{send_time}
+        </if>
+        <if test="end_time!=null and end_time!=''">
+            AND DATE_FORMAT(updatetime,'%Y-%m-%d')&lt;=#{end_time}
+        </if>
+        <if test="end_address!=null and end_address!=''">
+            AND end_address LIKE '%${end_address}%'
+        </if>
+        <if test="send_mechanism!=null and send_mechanism!=''">
+            AND send_mechanism LIKE '%${send_mechanism}%'
+        </if>
+        <if test="custom_contact!=null and custom_contact!=''">
+            AND custom_name LIKE '%${custom_contact}%'
+        </if>
+        <if test="order_type!='' and order_type!=null">
+            AND order_type = #{order_type}
+        </if>
+
+    </sql>
+    <select id="appGetTakingOrderListInfo" resultType="ReverserOrderModel">
+        SELECT t_reverse.* , CASE t_reverse.order_type
+        WHEN 1
+        THEN '调拨'
+        WHEN 0
+        THEN '退货'
+        END AS order_type_name FROM jy_reverse_order t_reverse
+        LEFT JOIN jy_reverse_drivertoorder t_reve_driver
+        ON t_reverse.shiping_order_id = t_reve_driver.order_id
+        WHERE t_reverse.create_type in(0,3,4) AND t_reverse.shipping_order_state =1
+        <include refid="distributionReverser_where_sql"/>
+        ORDER BY t_reverse.updatetime DESC
+        LIMIT #{start},#{length}
+    </select>
+
+    <select id="appDriverGetTakingOrderListInfo" resultType="ReverserOrderModel">
+        SELECT t_reverse.* , CASE t_reverse.order_type
+        WHEN 1
+        THEN '调拨'
+        WHEN 0
+        THEN '退货'
+        END AS order_type_name FROM jy_reverse_order t_reverse
+        LEFT JOIN jy_reverse_drivertoorder t_reve_driver
+        ON t_reverse.shiping_order_id = t_reve_driver.order_id
+        WHERE t_reverse.create_type in(0,3,4) AND t_reverse.shipping_order_state =1
+        AND t_reve_driver.driver_id = #{driverId}
+        <include refid="distributionReverser_where_sql"/>
+        ORDER BY t_reverse.updatetime DESC
+        LIMIT #{start},#{length}
+    </select>
+
+    <sql id="sign_reverser_where_sql">
+        <if test="send_time!='' and send_time!=null">
+            AND send_time &gt;=#{send_time}
+        </if>
+        <if test="end_time!='' and end_time!=null">
+            AND send_time &lt;=#{end_time}
+        </if>
+        <if test="shiping_order_num!=null and shiping_order_num!=''">
+            AND shiping_order_num like '%${shiping_order_num}%'
+        </if>
+        <if test="shipping_order_state!='' and shipping_order_state!=null ">
+            <if test="shipping_order_state==0">
+                and shipping_order_state in(0,1,2)
+            </if>
+            <if test="shipping_order_state==4">
+                and shipping_order_state in(3,4,5,6)
+            </if>
+        </if>
+        <if test="order_type!='' and order_type!=null">
+            AND order_type like '%${order_type}%'
+        </if>
+        <if test="send_mechanism!=null and send_mechanism!=''">
+            AND send_mechanism like '%${send_mechanism}%'
+        </if>
+        <if test="end_address!=null and end_address!=''">
+            AND end_address like '%${end_address}%'
+        </if>
+        <if test="end_mechanism!=null and end_mechanism!=''">
+            AND end_mechanism like '%${end_mechanism}%'
+        </if>
+    </sql>
+
+    <select id="appGetSignReverseOrderInfo" resultType="ReverserOrderModel">
+        SELECT *,CASE order_type
+        WHEN 1
+        THEN '调拨'
+        WHEN 0
+        THEN '退货'
+        END AS order_type_name FROM jy_reverse_order WHERE shipping_order_state=2 AND order_type =0
+        <include refid="sign_reverser_where_sql"/>
+        LIMIT #{start},#{length}
+    </select>
+
+    <select id="customerAppGetSignReverseOrderInfo" resultType="ReverserOrderModel">
+        SELECT *,CASE order_type
+        WHEN 1
+        THEN '调拨'
+        WHEN 0
+        THEN '退货'
+        END AS order_type_name FROM jy_reverse_order
+        WHERE shipping_order_state=2 AND order_type =0
+        AND send_mechanism = (SELECT customer_name FROM jy_customer WHERE customer_id=#{customerId})
+        <include refid="sign_reverser_where_sql"/>
+        LIMIT #{start},#{length}
+    </select>
+
+    <select id="appGetUpdateMessage" resultType="string">
+        SELECT message FROM jy_app_update_message
+	</select>
+
+    <sql id="getReverseNumberMessage_sql1">
+		SELECT 'shiping_order_day' AS type, COUNT(1) number FROM jy_reverse_order WHERE
+		shipping_order_state=0 AND create_type in (0, 3, 4)
+	</sql>
+    <sql id="getReverseNumberMessage_sql2">
+		SELECT 'drivertoorder_day' type,COUNT(1) number FROM
+		jy_reverse_order jso INNER JOIN
+		jy_reverse_drivertoorder jdt ON
+		jso.shiping_order_id = jdt.order_id
+		WHERE
+		jso.shipping_order_state
+		BETWEEN 0 AND 1 AND jdt.isreceive = '0'
+		AND jso.create_type in (0, 3, 4)
+	</sql>
+    <sql id="getReverseNumberMessage_sql3">
+		SELECT 'sign_order_day' type ,COUNT(1) number FROM
+		jy_reverse_order jso
+		WHERE jso.shipping_order_state
+		BETWEEN 2 AND 3
+	</sql>
+
+
+    <select id="getReverseNumberMessage" resultType="hashmap">
+        <include refid="getReverseNumberMessage_sql1"/>
+        UNION ALL
+        <include refid="getReverseNumberMessage_sql2"/>
+        UNION ALL
+        <include refid="getReverseNumberMessage_sql3"/>
+    </select>
+
+    <sql id="driverGetReverseNumberMessage_sql1">
+		SELECT 'shiping_order_day' type, 0 number FROM DUAL
+	</sql>
+    <sql id="driverGetReverseNumberMessage_sql2">
+		SELECT 'drivertoorder_day' type ,COUNT(1) number FROM
+		jy_reverse_order jso
+		INNER JOIN jy_reverse_drivertoorder jdt ON
+		jso.shiping_order_id = jdt.order_id
+		WHERE jso.shipping_order_state
+		BETWEEN 0 AND 1 AND jdt.isreceive = '0'
+		AND jso.create_type in (0, 3, 4)
+		AND jdt.driver_id = #{driverId}
+	</sql>
+    <sql id="driverGetReverseNumberMessage_sql3">
+
+		SELECT 'sign_order_day' type, 0 number FROM DUAL
+	</sql>
+
+    <select id="driverGetReverseNumberMessage" resultType="hashmap">
+        <include refid="driverGetReverseNumberMessage_sql1"/>
+        UNION ALL
+        <include refid="driverGetReverseNumberMessage_sql2"/>
+        UNION ALL
+        <include refid="driverGetReverseNumberMessage_sql3"/>
+    </select>
+
+    <sql id="supplierGetReverseNumberMessage_sql1">
+        select 'shiping_order_day' type, count(1) number from jy_reverse_order
+        ji where
+        shiping_order_id NOT
+        IN(select dt.order_id from
+        jy_reverse_drivertoorder dt)
+        and
+        ji.shipping_order_state = 0
+        AND
+        ji.send_mechanism IN (
+        SELECT
+        jc.customer_name from jy_customer jc
+        LEFT
+        JOIN jy_suppliers jss ON
+        find_in_set(
+        jc.customer_id,jss.suppliers_customer)
+        WHERE
+        jss.suppliers_id=#{suppliers})
+        <if test="list!=null and list.size()>0">
+            AND
+            <foreach collection="list" item="address" index="index"
+                     open="(ji.end_address LIKE" close=")" separator="or ji.end_address LIKE">
+                '%${address}'
+            </foreach>
+        </if>
+
+
+    </sql>
+    <sql id="supplierGetReverseNumberMessage_sql2">
+		SELECT 'drivertoorder_day' type ,COUNT(1) number FROM
+		jy_reverse_order jso
+		INNER JOIN jy_reverse_drivertoorder jdt ON
+		jso.shiping_order_id = jdt.order_id
+		WHERE jso.shipping_order_state
+		BETWEEN 0 AND 1 AND jdt.isreceive = '0'
+		AND jso.create_type in (0, 3, 4)
+		AND jdt.driver_id = #{driverId}
+	</sql>
+    <sql id="supplierGetReverseNumberMessage_sql3">
+		  SELECT 'sign_order_day' type, 0 number FROM DUAL
+	</sql>
+
+    <select id="supplierGetReverseNumberMessage" resultType="hashmap">
+        <include refid="supplierGetReverseNumberMessage_sql1"/>
+        UNION ALL
+        <include refid="supplierGetReverseNumberMessage_sql2"/>
+        UNION ALL
+        <include refid="supplierGetReverseNumberMessage_sql3"/>
+    </select>
+
+
+    <sql id="otherGetReverseNumberMessage_sql1">
+		 SELECT 'shiping_order_day' type, 0 number FROM DUAL
+
+	</sql>
+    <sql id="otherGetReverseNumberMessage_sql2">
+		SELECT 'drivertoorder_day' type, 0 number FROM DUAL
+	</sql>
+    <sql id="otherGetReverseNumberMessage_sql3">
+		SELECT
+		'sign_order_day' type,
+		COUNT(1) number
+		FROM
+		jy_reverse_order ji
+		LEFT JOIN jy_customer jc ON
+		jc.customer_name LIKE ji.send_mechanism
+		LEFT JOIN jy_user ju ON
+		jc.customer_id=ju.customer_id
+		where
+
+		 ji.shipping_order_state 	BETWEEN 2 AND 3
+		  AND ji.order_type =0
+		AND ju.id=#{userId}
+	</sql>
+
+    <select id="otherGetReverseNumberMessage" resultType="hashmap">
+        <include refid="otherGetReverseNumberMessage_sql1"/>
+        UNION ALL
+        <include refid="otherGetReverseNumberMessage_sql2"/>
+        UNION ALL
+        <include refid="otherGetReverseNumberMessage_sql3"/>
+    </select>
+
+    <select id="getMessageCount" resultType="hashmap">
+        <include refid="getNumberMessage_sql4"/>
+        UNION ALL
+        <include refid="getOrderCountMain_sql1"/>
+        UNION ALL
+        <include refid="getOrderCountMain_sql2"/>
+        UNION ALL
+        <include refid="getNumberMessage_sql5"/>
+        UNION ALL
+        <include refid="getNumberMessage_sql6"/>
+
+    </select>
+
+    <select id="getIsAbnormalReportCount" resultType="int">
+		SELECT COUNT(1) FROM jy_shiping_order WHERE shiping_order_id=#{orderId}
+		AND is_abnormal in (1,2)
+	</select>
+
+    <sql id="getOrderCountMain_sql1">
+		SELECT 'orderCount' type, COUNT(1) number FROM jy_shiping_order WHERE shipping_order_state BETWEEN 0 AND 3
+	</sql>
+
+    <sql id="getOrderCountMain_sql2">
+        SELECT 'reverseOrderCount' type, COUNT(1) number  FROM (SELECT 1 FROM jy_reverse_order WHERE shipping_order_state BETWEEN 0 AND 3 AND order_type =0
+        UNION ALL
+        SELECT 1 FROM jy_reverse_order WHERE shipping_order_state BETWEEN 0 AND 1 AND order_type=1) AS rever
+	</sql>
+
+
+    <sql id="customerGetOrderCountMain_sql1">
+        SELECT 'orderCount' AS type,COUNT(1) number  FROM DUAL
+    </sql>
+
+    <sql id="customerGetOrderCountMain_sql2">
+        	SELECT
+		'reverseOrderCount' type,
+		COUNT(1) number
+		FROM
+		jy_reverse_order ji
+		LEFT JOIN jy_customer jc ON
+		jc.customer_name LIKE ji.send_mechanism
+		LEFT JOIN jy_user ju ON
+		jc.customer_id=ju.customer_id
+		where
+		 ji.shipping_order_state 	BETWEEN 2 AND 3
+		  AND ji.order_type =0
+		AND ju.id=#{userId}
+    </sql>
+
+    <select id="customerGetMessageCount" resultType="hashmap">
+        <include refid="getNumberMessage_sql4"/>
+        UNION ALL
+        <include refid="customerGetOrderCountMain_sql1"/>
+        UNION ALL
+        <include refid="customerGetOrderCountMain_sql2"/>
+        UNION ALL
+        <include refid="otherGetNumberMessage_sql5"/>
+    </select>
+
+
+    <sql id="supplierGetOrderCountMain_sql1">
+        SELECT
+        'orderCount' AS type, count(1)   AS number
+FROM
+	(
+		SELECT
+			1
+		FROM
+			jy_shiping_order
+		WHERE
+			shipping_order_state = 0
+		AND send_mechanism IN (
+			SELECT
+				jc.customer_name
+			FROM
+				jy_customer jc
+			LEFT JOIN jy_suppliers jss ON find_in_set(
+				jc.customer_id,
+				jss.suppliers_customer
+			)
+			WHERE
+				jss.suppliers_id =#{suppliers}
+		)
+        <if test="list!=null and list.size()>0">
+            AND
+            <foreach collection="list" item="address" index="index"
+                     open="(end_address LIKE" close=")" separator="or end_address LIKE">
+                '%${address}'
+            </foreach>
+        </if>
+		UNION ALL
+			SELECT
+				1
+			FROM
+				jy_shiping_order jso
+			INNER JOIN jy_drivertoorder jdt ON jso.shiping_order_id = jdt.order_id
+			WHERE
+				jso.shipping_order_state BETWEEN 0 AND 3
+			AND jdt.driver_id = #{driverId}
+	) AS t
+
+    </sql>
+
+    <sql id="supplierGetOrderCountMain_sql2">
+        SELECT 'reverseOrderCount' type,
+        COUNT(1) number FROM (
+select 1  from jy_reverse_order
+		ji where
+		shiping_order_id NOT
+		IN(select dt.order_id from
+		jy_reverse_drivertoorder dt)
+		and
+		ji.shipping_order_state = 0
+		AND
+		ji.send_mechanism IN (
+		SELECT
+		jc.customer_name from jy_customer jc
+		LEFT
+		JOIN jy_suppliers jss ON
+		find_in_set(
+		jc.customer_id,jss.suppliers_customer)
+		WHERE
+		jss.suppliers_id=#{suppliers})
+        <if test="list!=null and list.size()>0">
+            AND
+            <foreach collection="list" item="address" index="index"
+                     open="(end_address LIKE" close=")" separator="or end_address LIKE">
+                '%${address}'
+            </foreach>
+        </if>
+UNION ALL
+SELECT 1 FROM
+		jy_reverse_order jso
+		INNER JOIN jy_reverse_drivertoorder jdt ON
+		jso.shiping_order_id = jdt.order_id
+		WHERE jso.shipping_order_state
+		BETWEEN 0 AND 1 AND jdt.isreceive = '0'
+		AND jso.create_type in (0, 3, 4)
+		AND jdt.driver_id = #{driverId}) AS t
+
+    </sql>
+
+
+    <select id="supplierGetMessageCount" resultType="hashmap">
+        <include refid="getNumberMessage_sql4"/>
+        UNION ALL
+        <include refid="supplierGetOrderCountMain_sql1"/>
+        UNION ALL
+        <include refid="supplierGetOrderCountMain_sql2"/>
+        UNION ALL
+        <include refid="supplierGetNumberMessage_sql5"/>
+    </select>
+
+
+    <sql id="driverGetOrderCountMain_sql1">
+        SELECT 'orderCount' AS type, count(1) AS number FROM
+		jy_shiping_order jso INNER JOIN jy_drivertoorder jdt ON
+		jso.shiping_order_id = jdt.order_id
+		WHERE jso.shipping_order_state
+		BETWEEN 0 AND 3
+		AND jdt.driver_id = #{driverId}
+    </sql>
+
+    <sql id="driverGetOrderCountMain_sql2">
+        SELECT 'reverseOrderCount' type,
+		COUNT(1) number FROM
+		jy_reverse_order jso
+		INNER JOIN jy_reverse_drivertoorder jdt ON
+		jso.shiping_order_id = jdt.order_id
+		WHERE jso.shipping_order_state
+		BETWEEN 0 AND 1 AND jdt.isreceive = '0'
+		AND jso.create_type in (0, 3, 4)
+		AND jdt.driver_id =#{driverId}
+
+    </sql>
+
+    <select id="driverGetMessageCount" resultType="hashmap">
+        <include refid="getNumberMessage_sql4"/>
+        UNION ALL
+        <include refid="driverGetOrderCountMain_sql1"/>
+        UNION ALL
+        <include refid="driverGetOrderCountMain_sql2"/>
+        UNION  ALL
+        <include refid="drivergetNumberMessage_sql5"/>
+    </select>
+
+
+</mapper>

@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.WaybillAdjustmentDao">
+    <sql id="waybillAdjustment_column_sql">
+        wayadjust.id,wayadjust.applicant_message,
+        wayadjust.shiping_order_id,wayadjust.applicant_time,
+        wayadjust.applicant_state,wayadjust.applicant_type,
+        wayadjust.applicant_name,wayadjust.applicant_username,
+        wayadjust.auditor_message,wayadjust.auditor_name,
+        wayadjust.auditor_username,wayadjust.auditor_time,
+        shiporder.shiping_order_num,shiporder.shiping_order_goid,
+        shiporder.send_mechanism,shiporder.end_address,
+        shiporder.send_time,shiporder.receipt_name,shiporder.receipt_tel,
+        shiporder.goods_name,shiporder.goods_num,shiporder.goods_weight,shiporder.goods_vol
+    </sql>
+
+    <sql id="waybillAdjustment_where_sql">
+        <if test="start_time!=null and start_time!=''">
+            AND wayadjust.applicant_time &gt;=#{start_time}
+        </if>
+        <if test="end_time!=null and end_time!=''">
+            AND wayadjust.applicant_time &lt;=#{end_time}
+        </if>
+        <if test="shiping_order_num!=null and shiping_order_num!=''">
+            AND shiporder.shiping_order_num LIKE "%${shiping_order_num}%"
+        </if>
+        <if test="shiping_order_goid!=null and shiping_order_goid!=''">
+            AND shiporder.shiping_order_goid LIKE "%${shiping_order_goid}%"
+        </if>
+        <if test="applicant_state!=null and applicant_state!=''">
+             AND wayadjust.applicant_state = #{applicant_state}
+        </if>
+        <if test="applicant_type!=null and applicant_type!=''">
+            AND  wayadjust.applicant_type = #{applicant_type}
+        </if>
+        <if test="send_mechanism!=null and send_mechanism!=''">
+            AND shiporder.send_mechanism LIKE "%${send_mechanism}%"
+        </if>
+        <if test="end_address!=null and end_address!=''">
+            AND shiporder.end_address LIKE "%${end_address}%"
+        </if>
+        <if test="receipt_name!=null and receipt_name!=''">
+            AND shiporder.receipt_name LIKE "%${receipt_name}%"
+        </if>
+    </sql>
+
+    <sql id="waybillAdjustment_limit_order_sql">
+        ORDER BY wayadjust.applicant_state ASC, wayadjust.applicant_time DESC
+        LIMIT #{rows},#{page}
+    </sql>
+
+
+    <select id="getWaybillAdjustmentListInfo" resultMap="com.jy.mapper.waybillAdjustmentResultMap">
+        SELECT
+        <include refid="waybillAdjustment_column_sql"/>
+        FROM jy_waybill_adjustment wayadjust
+        INNER JOIN jy_shiping_order shiporder
+        ON wayadjust.shiping_order_id = shiporder.shiping_order_id
+        <where>
+            <include refid="waybillAdjustment_where_sql"/>
+        </where>
+        <include refid="waybillAdjustment_limit_order_sql"/>
+    </select>
+
+    <select id="getCountWaybillAdjustment" resultType="int">
+        SELECT COUNT(1) FROM jy_waybill_adjustment wayadjust
+        INNER JOIN jy_shiping_order shiporder
+        ON wayadjust.shiping_order_id = shiporder.shiping_order_id
+        <where>
+            <include refid="waybillAdjustment_where_sql"/>
+        </where>
+    </select>
+
+    <select id="driverGetWaybillAdjustmentListInfo" resultMap="com.jy.mapper.waybillAdjustmentResultMap">
+        SELECT
+        <include refid="waybillAdjustment_column_sql"/>
+        FROM jy_waybill_adjustment wayadjust
+        INNER JOIN jy_shiping_order shiporder
+        ON wayadjust.shiping_order_id = shiporder.shiping_order_id
+        <where>
+            wayadjust.applicant_id = #{userId}
+            <include refid="waybillAdjustment_where_sql"/>
+        </where>
+        <include refid="waybillAdjustment_limit_order_sql"/>
+    </select>
+
+    <select id="driverGetCountWaybillAdjustment" resultType="int">
+        SELECT COUNT(1) FROM jy_waybill_adjustment wayadjust
+        INNER JOIN jy_shiping_order shiporder
+        ON wayadjust.shiping_order_id = shiporder.shiping_order_id
+        <where>
+            wayadjust.applicant_id = #{userId}
+            <include refid="waybillAdjustment_where_sql"/>
+        </where>
+    </select>
+
+    <select id="suppliersGetCountWaybillAdjustment" resultType="int">
+        SELECT COUNT(1) FROM jy_waybill_adjustment wayadjust
+        INNER JOIN jy_shiping_order shiporder
+        ON wayadjust.shiping_order_id = shiporder.shiping_order_id
+        INNER JOIN jy_user juser ON juser.id = wayadjust.applicant_id
+        INNER JOIN jy_driver_info jdriver ON juser.driver_id = jdriver.driver_id
+        <where>
+            jdriver.driver_suppliers = #{suppliersId}
+            <include refid="waybillAdjustment_where_sql"/>
+        </where>
+    </select>
+
+    <select id="suppliersGetWaybillAdjustmentListInfo" resultMap="com.jy.mapper.waybillAdjustmentResultMap">
+        SELECT
+        <include refid="waybillAdjustment_column_sql"/>
+        FROM jy_waybill_adjustment wayadjust
+        INNER JOIN jy_shiping_order shiporder
+        ON wayadjust.shiping_order_id = shiporder.shiping_order_id
+        INNER JOIN jy_user juser ON juser.id = wayadjust.applicant_id
+        INNER JOIN jy_driver_info jdriver ON juser.driver_id = jdriver.driver_id
+        <where>
+            jdriver.driver_suppliers = #{suppliersId}
+            <include refid="waybillAdjustment_where_sql"/>
+        </where>
+        <include refid="waybillAdjustment_limit_order_sql"/>
+    </select>
+
+    <select id="getShppingOrderMessage" resultType="ShippingOrder">
+        SELECT * FROM jy_shiping_order where shiping_order_id=#{orderId};
+    </select>
+
+    <insert id="saveWaybillAdjustmentInfo" parameterType="WaybillAdjustment">
+        INSERT INTO jy_waybill_adjustment (
+        id,
+        shiping_order_id,
+        applicant_name,
+        applicant_id,
+        applicant_username,
+	    applicant_time,
+        applicant_type,
+        applicant_message,
+        applicant_state
+        )VALUES(
+		#{id},
+		#{shiping_order_id},
+		#{applicant_name},
+		#{applicant_id},
+		#{applicant_username},
+		now(),
+		#{applicant_type},
+		#{applicant_message},
+		#{applicant_state}
+		)
+    </insert>
+    <insert id="saveWaybillAdjustment" parameterType="waybillAdjustmentOrder">
+        insert into
+        jy_waybill_adjustment_shiping_order
+        (
+        id,
+        waybill_adjustment_id,
+        shiping_order_id,
+        shiping_order_num,
+        <if test="goods_weight!=null and goods_weight!=''">
+            goods_weight,
+        </if>
+        <if test="goods_vol!=null and goods_vol!=''">
+            goods_vol,
+        </if>
+        <if test="transport_pay!=null and transport_pay!=''">
+            transport_pay,
+        </if>
+        <if test="trade_agency!=null and trade_agency!=''">
+            trade_agency,
+        </if>
+        send_mechanism,
+        send_station,
+        send_time,
+        end_mechanism,
+        end_address,
+        custom_code,
+        custom_name,
+        custom_contact,
+        custom_tel,
+        receipt,
+        receipt_name,
+        receipt_tel,
+        receipt_address,
+        goods_name,
+        goods_packing,
+        goods_num,
+        remarks ,
+        shipping_order_state,
+        creat_type,
+        updatetime,
+        shipping_order,
+        <if test="other_fee!=null and other_fee!=''">
+            other_fee,
+        </if>
+        <if test="deliver_fee!=null and deliver_fee!=''">
+            deliver_fee,
+        </if>
+        <if test="upstairs_fee!=null and upstairs_fee!=''">
+            upstairs_fee,
+        </if>
+        <if test="added_fee!=null and added_fee!=''">
+            added_fee,
+        </if>
+        is_recept,
+        aging_time,
+        topordernumber,
+        downordernumber,
+        aging_day,
+        shiping_order_goid,
+        <if test="driver_province!=null and driver_province!=''">
+            driver_province,
+        </if>
+        <if test="driver_city!=null and driver_city!=''">
+            driver_city,
+        </if>
+        <if test="driver_county!=null and driver_county!=''">
+            driver_county,
+        </if>
+        shiping_yueid
+        )
+        values
+        (
+        #{id},
+        #{waybill_adjustment_id},
+        #{shiping_order_id},
+        #{shiping_order_num},
+        <if test="goods_weight!=null and goods_weight!=''">
+            #{goods_weight},
+        </if>
+        <if test="goods_vol!=null and goods_vol!=''">
+            #{goods_vol},
+        </if>
+        <if test="transport_pay!=null and transport_pay!=''">
+            #{transport_pay},
+        </if>
+        <if test="trade_agency!=null and trade_agency!=''">
+            #{trade_agency},
+        </if>
+        #{send_mechanism},
+        #{send_station},
+        #{send_time},
+        #{end_mechanism},
+        #{end_address},
+        #{custom_code},
+        #{custom_name},
+        #{custom_contact},
+        #{custom_tel},
+        #{receipt},
+        #{receipt_name},
+        #{receipt_tel},
+        #{receipt_address},
+        #{goods_name},
+        #{goods_packing},
+        #{goods_num},
+        #{remarks},
+        0,
+        #{creat_type},
+        SYSDATE(),
+        #{shipping_order},
+        <if test="other_fee!=null and other_fee!=''">
+            #{other_fee},
+        </if>
+        <if test="deliver_fee!=null and deliver_fee!=''">
+            #{deliver_fee},
+        </if>
+        <if test="upstairs_fee!=null and upstairs_fee!=''">
+            #{upstairs_fee},
+        </if>
+        <if test="added_fee!=null and added_fee!=''">
+            #{added_fee},
+        </if>
+        #{is_recept},
+        #{aging_time},
+        #{topordernumber},
+        #{downordernumber},
+        #{aging_day},
+        #{shiping_order_goid},
+        <if test="driver_province != null and driver_province != ''">
+            #{driver_province},
+        </if>
+        <if test="driver_city != null and driver_city!= ''">
+            #{driver_city},
+        </if>
+        <if test="driver_county != null and driver_county!= ''">
+            #{driver_county},
+        </if>
+        #{shiping_yueid}
+        )
+    </insert>
+
+    <insert id="saveWaybillAdjustmentHistoryList" parameterType="java.util.List">
+        INSERT  jy_waybill_adjustment_history (
+        waybill_adjustment_id,
+        waybill_adjustment_tittle,
+        waybill_adjustment_after,
+        waybill_adjustment_before,
+        waybill_adjustment_message
+        )VALUES
+        <foreach collection="list" index="index" item="item" separator=",">
+            (
+            #{waybillAdjustmentId},
+            #{item.waybill_adjustment_tittle},
+            #{item.waybill_adjustment_after},
+            #{item.waybill_adjustment_before},
+            #{item.waybill_adjustment_message}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateOrderState">
+        UPDATE jy_shiping_order SET waybill_state =#{state} WHERE shiping_order_id =#{orderId}
+    </update>
+    <select id="getWaybillAuditInfo"  resultMap="com.jy.mapper.waybillAdjustmentResultMap">
+        SELECT
+        <include refid="waybillAdjustment_column_sql"/>
+        FROM jy_waybill_adjustment wayadjust
+        INNER JOIN jy_shiping_order shiporder
+        ON wayadjust.shiping_order_id = shiporder.shiping_order_id
+        <where>
+            wayadjust.id=#{id}
+        </where>
+    </select>
+
+    <select id="getWaybillAuditHistoryListInfo" resultType="WaybillAdjustmentHistory">
+        SELECT * FROM jy_waybill_adjustment_history WHERE waybill_adjustment_id = #{id}
+    </select>
+
+    <update id="doWaybillAuditInfo" parameterType="WaybillAdjustment">
+        UPDATE jy_waybill_adjustment
+        SET auditor_id = #{auditor_id},
+        auditor_name = #{auditor_name},
+        auditor_username = #{auditor_username},
+        auditor_time = NOW(),
+        auditor_message=#{auditor_message},
+        applicant_state=#{applicant_state}
+        WHERE id=#{id}
+    </update>
+
+    <delete id="deleteSignOrderMessage" >
+        DELETE FROM jy_shipping_time WHERE shiping_order_id=#{orderId};
+        DELETE FROM jy_sign_order WHERE order_id=#{orderId};
+        DELETE FROM jy_signorderimages WHERE order_id=#{orderId};
+    </delete>
+
+    <update id="updateOrderWaybillAudit">
+        UPDATE jy_shiping_order SET shipping_order_state =#{orderState} ,waybill_state= #{waybillState} WHERE shiping_order_id=#{orderId}
+    </update>
+
+    <select id="getWaybillAdjustmentOrderInfo" resultType="WaybillAdjustmentOrder">
+        SELECT * FROM jy_waybill_adjustment_shiping_order WHERE waybill_adjustment_id =#{waybill_adjustment_id}
+    </select>
+</mapper>

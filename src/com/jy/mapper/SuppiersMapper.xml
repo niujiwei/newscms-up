@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.SuppliersAccountDao">
+	<sql id="suppliersaccount_info_sql">
+		<if test="param3!=null and param3!=''">
+			AND js.suppliers_name like '%${param3}%'
+		</if>
+		<if test="param4!=null and param4!=''and (param5==null or param5=='')">
+			AND jso.send_time &gt;=#{param4}
+		</if>
+		<if test="param4!=null and param4!='' and param5!=null and param5!=''">
+			AND jso.send_time &gt;=#{param4}
+			AND jso.send_time
+			&lt;=#{param5}
+		</if>
+		<if test="param5!=null and param5!=''and (param4==null or param4=='')">
+			AND jso.send_time &lt;=#{param5}
+		</if>
+		<if test="param6!=null and param6!=''">
+			AND js.suppliers_address like '%${param6}%'
+		</if>
+		GROUP BY js.suppliers_id
+		HAVING suppliersCount >=1
+		limit
+		#{param1},#{param2}
+
+	</sql>
+
+	<!-- 供应商 查询 -->
+	<select id="getSuppliers" resultType="JySuppliers">
+		SELECT
+		COUNT(jss.shiping_order_id) clearing_state,
+		count(jso.shiping_order_id) suppliersCount,
+		jso.shiping_order_num
+		suppliersOrderNum,
+		js.suppliers_name suppliersName,
+		js.suppliers_address as suppliersAddress,
+		js.suppliers_id suppliersId,
+		min(jso.send_time) suppliersSendTime ,
+		max(jso.send_time) suSendTime,
+		jso.goods_name suppliersGoodsName,
+		sum(jso.goods_num)
+		suppliersGoodsNum,
+		sum(jso.goods_vol) suppliersGoodsVol,
+		sum(jso.trade_agency) suppliersTradeAgency,
+		SUM( jso.upstairs_fee)
+		suppliersUpstairsFee,
+		SUM(jso.deliver_fee) suppliersDeliverFee,
+		SUM(jso.added_fee) suppliersAddedFee,
+		sum(jso.other_fee)
+		suppliersOtherFee,
+		sum(jso.transport_pay) suppliersTransportPay,
+		SUM(jso.trade_agency) suppliersSum,
+		jso.goods_weight
+		suppliersGoodsWeight,
+		GROUP_CONCAT(DISTINCT jdi.driver_id) driverId
+		FROM
+		jy_suppliers js
+		LEFT JOIN jy_driver_info jdi ON
+		jdi.driver_suppliers=js.suppliers_id
+		LEFT JOIN jy_drivertoorder jd ON
+		jd.driver_id=jdi.driver_id
+		LEFT JOIN jy_shiping_order jso ON
+		jso.shiping_order_id=jd.order_id
+		LEFT JOIN jy_shiping_order jss ON
+		jss.shiping_order_id=jd.order_id and
+		jss.clearing_state=0
+		where 2=2
+		<include refid="suppliersaccount_info_sql" />
+	</select>
+	
+	<!-- 供应商 查询 -->
+	<select id="supplierGetSuppliers" resultType="JySuppliers">
+		SELECT
+		COUNT(jss.shiping_order_id) clearing_state,
+		count(jso.shiping_order_id) suppliersCount,
+		jso.shiping_order_num
+		suppliersOrderNum,
+		js.suppliers_name suppliersName,
+		js.suppliers_address as suppliersAddress,
+		js.suppliers_id suppliersId,
+		min(jso.send_time) suppliersSendTime ,
+		max(jso.send_time) suSendTime,
+		jso.goods_name suppliersGoodsName,
+		sum(jso.goods_num)
+		suppliersGoodsNum,
+		sum(jso.goods_vol) suppliersGoodsVol,
+		sum(jso.trade_agency) suppliersTradeAgency,
+		SUM( jso.upstairs_fee)
+		suppliersUpstairsFee,
+		SUM(jso.deliver_fee) suppliersDeliverFee,
+		SUM(jso.added_fee) suppliersAddedFee,
+		sum(jso.other_fee)
+		suppliersOtherFee,
+		sum(jso.transport_pay) suppliersTransportPay,
+		SUM(jso.trade_agency) suppliersSum,
+		jso.goods_weight
+		suppliersGoodsWeight,
+		GROUP_CONCAT(DISTINCT jdi.driver_id) driverId
+		FROM
+		jy_suppliers js
+		LEFT JOIN jy_driver_info jdi ON
+		jdi.driver_suppliers=js.suppliers_id
+		LEFT JOIN jy_drivertoorder jd ON
+		jd.driver_id=jdi.driver_id
+		LEFT JOIN jy_shiping_order jso ON
+		jso.shiping_order_id=jd.order_id
+		LEFT JOIN jy_shiping_order jss ON
+		jss.shiping_order_id=jd.order_id and
+		jss.clearing_state=0
+		where js.suppliers_id=#{supplierId}
+		<include refid="suppliersaccount_info_sql" />
+	</select>
+	<!-- 供应商 记录数 -->
+	<sql id="suppliersaccount_count_sql">
+		<if test="param1!=null and param1!=''">
+			AND js.suppliers_name LIKE "%${param1}%"
+		</if>
+		<if test="param4!=null and param4!=''">
+			AND js.suppliers_address like '%${param4}%'
+		</if>
+	</sql>
+
+	<select id="getSuppliersCount" resultType="int">
+		SELECT COUNT(*)
+		FROM (SELECT
+		*
+		FROM
+		jy_suppliers js
+		where 2=2
+		<include refid="suppliersaccount_count_sql" />
+		) AS ASD
+
+
+	</select>
+	
+	<select id="suppliersGetSuppliersCount" resultType="int">
+		SELECT COUNT(*)
+		FROM (SELECT
+		*
+		FROM
+		jy_suppliers js
+		where js.suppliers_id=#{supplierId}
+		<include refid="suppliersaccount_count_sql" />
+		) AS ASD
+
+
+	</select>
+	<!-- 订单 查询 -->
+	<select id="getShiOreder" resultType="ShippingOrder">
+		select
+		jso.*
+		from
+		jy_shiping_order jso left join
+		jy_drivertoorder jd ON
+		jso.shiping_order_id=jd.order_id
+		left join jy_driver_info jdi on
+		jd.driver_id=jdi.driver_id
+		left join jy_suppliers js on
+		jdi.driver_suppliers=js.suppliers_id
+		where 1=1
+
+		<if test="param3!=null and param3!=''">
+			AND js.suppliers_id like "%${param3}%"
+		</if>
+		<if test="param4!=null and param4!=''">
+			AND jso.shiping_order_num like "%${param4}%"
+		</if>
+		<if test="param5!=null and param5!=''">
+			AND jso.end_address = #{param5}
+		</if>
+		<if test="param6!=null and param6!=''">
+			AND jso.custom_name = #{param6}
+		</if>
+		<if test="param7!=null and param7!=''">
+			AND jso.receipt_name = #{param7}
+		</if>
+		<if test="param8!=null and param8!=''">
+			AND jso.receipt_tel = #{param8}
+		</if>
+		<if test="param9!=null and param9!=''">
+			AND jso.send_mechanism = #{param9}
+		</if>
+		<if test="param10!=null and param10!=''">
+			AND jso.send_time = #{param10}
+		</if>
+
+		<if test="param11!=null and param11!=''">
+
+			AND jso.send_time &gt;=#{param11}
+		</if>
+		<if test="param12!=null and param12!=''">
+			And jso.send_time &lt;=#{param12}
+		</if>
+		<if test="param14!=null and param14!=''">
+			and jso.shiping_order_goid like "%${param14}%"
+		</if>
+		<if test="param15!=null and param15!=''">
+			and jso.clearing_state = #{param15}
+		</if>
+		AND jdi.driver_id in
+		<foreach collection="array" index="index" item="item" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+		GROUP BY jso.shiping_order_id
+		limit #{param1},#{param2}
+	</select>
+	<!-- 订单 记录数 -->
+	<select id="getShiOrederCount" resultType="int">
+		select count(*) from jy_shiping_order jso left join jy_drivertoorder
+		jd ON
+		jso.shiping_order_id=jd.order_id
+		left join jy_driver_info jdi on
+		jd.driver_id=jdi.driver_id
+		left join
+		jy_suppliers js on
+		jdi.driver_suppliers=js.suppliers_id
+		where 1=1
+		<if test="param1!=null and param1!=''">
+			AND js.suppliers_id like "%${param1}%"
+		</if>
+		<if test="param2!=null and param2!=''">
+			AND jso.shiping_order_num = #{param2}
+		</if>
+		<if test="param3!=null and param3!=''">
+			AND jso.end_address = #{param3}
+		</if>
+		<if test="param4!=null and param4!=''">
+			AND jso.custom_name = #{param4}
+		</if>
+		<if test="param5!=null and param5!=''">
+			AND jso.receipt_name = #{param5}
+		</if>
+		<if test="param6!=null and param6!=''">
+			AND jso.receipt_tel = #{param6}
+		</if>
+		<if test="param7!=null and param7!=''">
+			AND jso.send_mechanism = #{param7}
+		</if>
+		<if test="param8!=null and param8!=''">
+			AND jso.send_time = #{param8}
+		</if>
+		<if test="param9!=null and param9!=''">
+			AND jso.send_time &gt;=#{param9}
+		</if>
+		<if test="param10!=null and param10!=''">
+			And jso.send_time &lt;=#{param10}
+		</if>
+		<if test="param12!=null and param12!=''">
+			and jso.shiping_order_goid like "%${param12}%"
+		</if>
+		<if test="param13!=null and param13!=''">
+			and jso.clearing_state = #{param13}
+		</if>
+		AND jdi.driver_id in
+		<foreach collection="array" index="index" item="item" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+	<!-- 订单 导出 -->
+	<select id="getOutSuppOrder" resultType="ShippingOrder">
+		select
+		IFNULL(jso.deliver_fee,0)
+		+IFNULL(jso.upstairs_fee,0)
+		+IFNULL(jso.added_fee,0)
+		+IFNULL(jso.other_fee,0)as heji,
+		jso.shiping_order_num,jso.shiping_order_goid,jso.send_mechanism,jso.goods_num,jso.deliver_fee,jso.upstairs_fee,jso.added_fee,
+		jso.other_fee,jso.remarks,jso.updatetime,jd.receivetime,jstt.auto_sign_time,jstt.sign_time,jstt.aging_time,jstt.result,jstt.sign_remarks,
+		jso.end_address,jso.receipt_name,jso.end_mechanism,jso.goods_name,jso.goods_weight,jso.goods_vol,(SELECT
+		GROUP_CONCAT(jabr.abnormal_message) FROM jy_abnormalreport jabr WHERE
+		shiping_order_id=jso.shiping_order_id
+		) AS abnormal_name
+		from
+		jy_shiping_order jso
+		LEFT JOIN jy_shipping_time jstt ON
+		jstt.shiping_order_id=jso.shiping_order_id
+		left join
+		jy_drivertoorder jd ON
+		jso.shiping_order_id=jd.order_id
+		left join
+		jy_driver_info jdi on
+		jd.driver_id=jdi.driver_id
+		left join jy_suppliers
+		js on
+		jdi.driver_suppliers=js.suppliers_id
+		where
+		1=1
+		<if test="param1!=null and param1!=''">
+			AND js.suppliers_name = #{param1}
+		</if>
+		<if test="param2!=null and param2!=''and (param3==null or param3=='')">
+			AND jso.send_time &gt;=#{param2}
+		</if>
+		<if test="param2!=null and param2!='' and param3!=null and param3!=''">
+			AND jso.send_time &gt;=#{param2}
+			AND jso.send_time
+			&lt;=#{param3}
+		</if>
+		<if test="param3!=null and param3!=''and (param2==null or param2=='')">
+			AND jso.send_time &lt;=#{param3}
+		</if>
+		<if test="param4!=null and param4!=''">
+			AND jso.send_mechanism =#{param4}
+		</if>
+		<if test="param5!=null and param5!=''">
+			AND js.suppliers_id =#{param5}
+		</if>
+	</select>
+	<!-- 导出 -->
+	<select id="getOutClass" resultType="JySuppliers">
+		SELECT
+		DISTINCT DISTINCT js.suppliers_name,
+		js.suppliers_name
+		suppliersName,
+		sum(
+		IFNULL(jso.deliver_fee,0)
+		+IFNULL(jso.upstairs_fee,0)
+		+IFNULL(jso.added_fee,0)
+		+IFNULL(jso.other_fee,0)) as suppliersSum
+
+		FROM
+		jy_suppliers js
+		LEFT JOIN
+		jy_driver_info jdi ON
+		jdi.driver_suppliers=js.suppliers_id
+		LEFT JOIN
+		jy_drivertoorder jd ON
+		jd.driver_id=jdi.driver_id
+		LEFT JOIN
+		jy_shiping_order jso ON
+		jso.shiping_order_id=jd.order_id
+		LEFT JOIN
+		jy_shiping_order jss ON
+		jss.shiping_order_id=jd.order_id and
+		jss.clearing_state=0
+		where 1=1
+		<if test="param1!=null and param1!=''">
+			AND js.suppliers_name = #{param1}
+		</if>
+		<if test="param2!=null and param2!=''and (param3==null or param3=='')">
+			AND jso.send_time &gt;=#{param2}
+		</if>
+		<if test="param2!=null and param2!='' and param3!=null and param3!=''">
+			AND jso.send_time &gt;=#{param2}
+			AND jso.send_time
+			&lt;=#{param3}
+		</if>
+		<if test="param3!=null and param3!=''and (param2==null or param2=='')">
+			AND jso.send_time &lt;=#{param3}
+		</if>
+	</select>
+	<!-- -->
+	<select id="getClearingState" resultType="ShippingOrder">
+		select clearing_state
+		from jy_shiping_order
+	</select>
+	<select id="getOutHeji" resultType="ShippingOrder">
+		SELECT
+		IFNULL(SUM(jso.goods_vol),0) AS goods_vol,
+		IFNULL(SUM(jso.goods_weight),0) AS goods_weight,
+		IFNULL(sum(jso.trade_agency),0) trade_agency,
+		IFNULL(SUM(jso.upstairs_fee),0) upstairs_fee,
+		IFNULL(SUM(jso.deliver_fee),0) deliver_fee,
+		IFNULL(SUM(jso.added_fee),0) added_fee,
+		IFNULL(sum(jso.other_fee),0)
+		other_fee,
+		IFNULL(sum(jso.goods_num),0) goods_num,
+		IFNULL(sum(jso.transport_pay),0) transport_pay,
+		sum(
+		IFNULL(jso.deliver_fee,0)
+		+IFNULL(jso.upstairs_fee,0)
+		+IFNULL(jso.added_fee,0)
+		+IFNULL(jso.other_fee,0)) as heji
+		FROM
+		jy_suppliers js
+		LEFT JOIN jy_driver_info jdi ON
+		jdi.driver_suppliers=js.suppliers_id
+		LEFT JOIN jy_drivertoorder jd ON
+		jd.driver_id=jdi.driver_id
+		LEFT JOIN jy_shiping_order jso ON
+		jso.shiping_order_id=jd.order_id
+		LEFT JOIN jy_shiping_order jss ON
+		jss.shiping_order_id=jd.order_id and
+		jss.clearing_state=0
+		where 2=2
+		<if test="param1!=null and param1!=''">
+			AND js.suppliers_name = #{param1}
+		</if>
+		<if test="param2!=null and param2!=''and (param3==null or param3=='')">
+			AND jso.send_time &gt;=#{param2}
+		</if>
+		<if test="param2!=null and param2!='' and param3!=null and param3!=''">
+			AND jso.send_time &gt;=#{param2}
+			AND jso.send_time
+			&lt;=#{param3}
+		</if>
+		<if test="param3!=null and param3!=''and (param2==null or param2=='')">
+			AND jso.send_time &lt;=#{param3}
+		</if>
+		<if test="param4!=null and param4!=''">
+			AND jso.send_mechanism =#{param4}
+		</if>
+		<if test="param5!=null and param5!=''">
+			AND js.suppliers_id =#{param5}
+		</if>
+	</select>
+
+	<!-- 结算状态 修改 -->
+	<update id="settleSupp" parameterType="java.util.Arrays">
+		UPDATE jy_shiping_order jsos set jsos.clearing_state = 1
+		where
+		jsos.shiping_order_id IN (
+		SELECT sd.* FROM(
+		(select
+		jso.shiping_order_id
+		from
+		jy_shiping_order jso left join
+		jy_drivertoorder jd ON
+		jso.shiping_order_id=jd.order_id
+		left join
+		jy_driver_info jdi on
+		jd.driver_id=jdi.driver_id
+		left join jy_suppliers
+		js on
+		jdi.driver_suppliers=js.suppliers_id
+		where jdi.driver_id in
+
+		<foreach collection="array" index="index" item="item" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+
+		AND jso.send_time &gt;=#{param2}
+
+		And jso.send_time &lt;=#{param3}
+
+		)) AS
+		sd)
+	</update>
+	<!-- 添加日志 -->
+	<insert id="saveOrderSuppli" parameterType="java.util.List">
+		INSERT
+		jy_order_history
+		(
+		order_history_id,
+		orders_id,
+		order_arrive_time,
+		goods_arrive_remakes
+		)
+		VALUES
+		<foreach collection="list" index="index" item="item"
+			separator=",">
+			(
+			#{item.order_history_id},
+			#{item.orders_id},
+			#{item.order_arrive_time},
+			#{item.goods_arrive_remakes}
+			)
+		</foreach>
+	</insert>
+	<!-- 日志录入 -->
+	<select id="getShi" resultType="ShippingOrder">
+
+		select
+		jso.*
+		from
+		jy_shiping_order jso left join
+		jy_drivertoorder jd ON
+		jso.shiping_order_id=jd.order_id
+		left join jy_driver_info jdi on
+		jd.driver_id=jdi.driver_id
+		left join jy_suppliers js on
+		jdi.driver_suppliers=js.suppliers_id
+		where jdi.driver_id in
+
+		<foreach collection="array" index="index" item="item" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+		and jso.clearing_state=0
+		AND jso.send_time &gt;=#{param2}
+
+		And
+		jso.send_time &lt;=#{param3}
+	</select>
+	<select id="getClearing" resultType="JySuppliers">
+		SELECT
+		js.suppliers_id suppliersId,
+		COUNT(jso.shiping_order_id)
+		clearing_state
+		FROM
+		jy_suppliers js
+		LEFT JOIN jy_driver_info jdi ON
+		jdi.driver_suppliers=js.suppliers_id
+		LEFT JOIN jy_drivertoorder jd ON
+		jd.driver_id=jdi.driver_id
+		LEFT JOIN jy_shiping_order jso ON
+		jso.shiping_order_id=jd.order_id and
+		jso.clearing_state=0
+		where
+		clearing_state=0
+
+
+		<if test="param1!=null and param1!=''">
+			AND js.suppliers_name = #{param1}
+		</if>
+		<if test="param2!=null and param2!=''and (param3==null or param3=='')">
+			AND jso.send_time &gt;=#{param2}
+		</if>
+		<if test="param2!=null and param2!='' and param3!=null and param3!=''">
+			AND jso.send_time &gt;=#{param2}
+			AND jso.send_time
+			&lt;=#{param3}
+		</if>
+		<if test="param3!=null and param3!=''and (param2==null or param2=='')">
+			AND jso.send_time &lt;=#{param3}
+		</if>
+	</select>
+	<!-- 供应商 查询 -->
+	<select id="otherGetSupplierss" resultType="JySuppliers">
+		SELECT
+		COUNT(jss.shiping_order_id) clearing_state,
+		count(jso.shiping_order_id) suppliersCount,
+		jso.shiping_order_num
+		suppliersOrderNum,
+		js.suppliers_name suppliersName,
+		js.suppliers_address as suppliersAddress,
+		js.suppliers_id suppliersId,
+		min(jso.send_time) suppliersSendTime ,
+		max(jso.send_time) suSendTime,
+		jso.goods_name suppliersGoodsName,
+		sum(jso.goods_num)
+		suppliersGoodsNum,
+		sum(jso.goods_vol) suppliersGoodsVol,
+		sum(jso.trade_agency) suppliersTradeAgency,
+		SUM( jso.upstairs_fee)
+		suppliersUpstairsFee,
+		SUM(jso.deliver_fee) suppliersDeliverFee,
+		SUM(jso.added_fee) suppliersAddedFee,
+		sum(jso.other_fee)
+		suppliersOtherFee,
+		sum(jso.transport_pay) suppliersTransportPay,
+		SUM(jso.trade_agency) suppliersSum,
+		jso.goods_weight
+		suppliersGoodsWeight,
+		GROUP_CONCAT(DISTINCT jdi.driver_id) driverId
+		FROM
+		jy_suppliers js
+		LEFT JOIN jy_driver_info jdi ON
+		jdi.driver_suppliers=js.suppliers_id
+		LEFT JOIN jy_drivertoorder jd ON
+		jd.driver_id=jdi.driver_id
+		LEFT JOIN jy_shiping_order jso ON
+		jso.shiping_order_id=jd.order_id
+		LEFT JOIN jy_shiping_order jss ON
+		jss.shiping_order_id=jd.order_id and
+		jss.clearing_state=0
+		LEFT JOIN
+		jy_customer jc ON FIND_IN_SET(jc.customer_id
+		,js.suppliers_customer)
+		LEFT JOIN jy_user ju ON ju.customer_id = jc.customer_id WHERE
+		ju.id=#{user_id}
+		<include refid="suppliersaccount_info_sql" />
+	</select>
+	<!-- 供应商 记录数 -->
+	<select id="otherGetSupplierCount" resultType="int">
+		SELECT COUNT(*)
+		FROM (SELECT
+		js.*
+		FROM
+		jy_suppliers js
+		LEFT JOIN
+		jy_customer jc ON FIND_IN_SET(jc.customer_id
+		,js.suppliers_customer)
+		LEFT JOIN jy_user ju ON ju.customer_id = jc.customer_id WHERE
+		ju.id=#{user_id}
+		<include refid="suppliersaccount_count_sql" />
+		) AS ASD
+	</select>
+
+	<select id="getCustomer" resultType="Customer">
+		SELECT * FROM jy_customer WHERE customer_id = #{customerId}
+	</select>
+</mapper>

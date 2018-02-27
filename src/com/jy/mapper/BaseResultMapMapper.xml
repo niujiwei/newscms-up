@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.mapper">
+	<!-- 订单resultMap-->
+	<resultMap id="orderColumnResultMap" type="com.jy.model.ShippingOrder">
+		<result column="shiping_order_num" property="shiping_order_num" />
+		<result column="shiping_order_goid" property="shiping_order_goid" />
+		<result column="shipping_order_state" property="shipping_order_state" />
+		<result column="send_mechanism" property="send_mechanism" />
+		<result column="send_station" property="send_station" />
+		<result column="send_time" property="send_time" />
+		<result column="end_mechanism" property="end_mechanism" />
+		<result column="end_address" property="end_address" />
+		<result column="custom_code" property="custom_code" />
+		<result column="custom_name" property="custom_name" />
+		<result column="custom_contact" property="custom_contact" />
+		<result column="custom_tel" property="custom_tel" />
+		<result column="receipt" property="receipt" />
+		<result column="receipt_name" property="receipt_name" />
+		<result column="receipt_tel" property="receipt_tel" />
+		<result column="receipt_address" property="receipt_address" />
+		<result column="goods_name" property="goods_name" />
+		<result column="goods_packing" property="goods_packing" />
+		<result column="goods_num" property="goods_num" />
+		<result column="goods_weight" property="goods_weight" />
+		<result column="goods_vol" property="goods_vol" />
+		<result column="remarks" property="remarks" />
+		<result column="creat_type" property="creat_type" />
+		<result column="updatetime" property="updatetime" />
+		<result column="shipping_order" property="shipping_order" />
+		<result column="is_recept" property="is_recept" />
+		<result column="is_recept_time" property="is_recept_time" />
+		<result column="transport_pay" property="transport_pay" />
+		<result column="trade_agency" property="trade_agency" />
+		<result column="added_fee" property="added_fee" />
+		<result column="is_allot" property="is_allot" />
+		<result column="deliver_fee" property="deliver_fee" />
+		<result column="upstairs_fee" property="upstairs_fee" />
+		<result column="is_receive" property="is_receive" />
+		<result column="aging_time" property="aging_time" />
+		<result column="aging_day" property="aging_day" />
+		<result column="aging_alltime" property="aging_alltime" />
+		<result column="clearing_state" property="clearing_state" />
+		<result column="customer_settlement_state" property="customer_settlement_state" />
+		<result column="topordernumber" property="topordernumber" />
+		<result column="downordernumber" property="downordernumber" />
+		<result column="shiping_yueid" property="shiping_yueid" />
+		<result column="driver_province" property="driver_province" />
+		<result column="driver_city" property="driver_city" />
+		<result column="driver_county" property="driver_county" />
+		<result column="other_recept_time" property="other_recept_time" />
+		<result column="is_abnormal" property="is_abnormal" />
+	</resultMap>
+
+	<resultMap id="shippingOrderResultMap" type="com.jy.model.ShippingOrder" extends="orderColumnResultMap">
+		<id column="shiping_order_id" property="shiping_order_id" />
+	</resultMap>
+
+	<!-- 异常反馈图片 resultMap-->
+	<resultMap id="abnormalImagesResultMap" type="com.jy.model.AbnormalImages">
+		<id column="image_id" property="image_id" />
+		<result column="order_id" property="order_id" />
+		<result column="imageUrl" property="imageUrl" />
+		<result column="abnormalt_id" property="abnormalt_id" />
+	</resultMap>
+
+	<!-- 异常上报 resultMap-->
+	<resultMap type="com.jy.model.AbnormalReport" id="abnormalReportResultMap">
+		<id column="id" property="id" />
+		<result column="shiping_order_id" property="shiping_order_id" />
+		<result column="abnormal_type" property="abnormal_type" />
+		<result column="abnormal_message" property="abnormal_message" />
+		<result column="abnormal_time" property="abnormal_time" />
+		<result column="abnormal_num" property="abnormal_num" />
+		<result column="abnormal_name" property="abnormal_name" />
+		<result column="abnormal_supperid" property="abnormal_supperid" />
+		<result column="abnormal_driverid" property="abnormal_driverid" />
+		<result column="abnormal_remark" property="abnormal_remark" />
+		<result column="abnormal_result" property="abnormal_result" />
+		<result column="abnormal_resultremark" property="abnormal_resultremark" />
+		<result column="abnormal_resultuser" property="abnormal_resultuser" />
+		<result column="abnormal_resulttime" property="abnormal_resulttime" />
+		<association property="shippingOrder" javaType="com.jy.model.ShippingOrder"
+		resultMap="shippingOrderResultMap"/>
+		<collection property="abnormalImages" ofType="com.jy.model.AbnormalImages"
+					resultMap="abnormalImagesResultMap"/>
+	</resultMap>
+
+	<!-- 运单调整之后订单 resultMap-->
+	<resultMap id="waybillAdjustmentOrderResultMap" type="com.jy.model.WaybillAdjustmentOrder"
+	extends="orderColumnResultMap">
+		<id column="id" property="id"></id>
+		<result column="waybill_adjustment_id" property="waybill_adjustment_id"></result>
+	</resultMap>
+	
+	<resultMap id="waybillAdjustmentHistoryResultMap" type="com.jy.model.WaybillAdjustmentHistory">
+		<id column="id" property="id"></id>
+		<result column="waybill_adjustment_id" property="waybill_adjustment_id"></result>
+		<result column="waybill_adjustment_message" property="waybill_adjustment_message"></result>
+	</resultMap>
+
+	<resultMap id="waybillAdjustmentResultMap" type="com.jy.model.WaybillAdjustment">
+		<id column="id" property="id"/>
+		<result column="shiping_order_id" property="shiping_order_id"/>
+		<result column="applicant_name" property="applicant_name"/>
+		<result column="applicant_username" property="applicant_username"/>
+		<result column="applicant_time" property="applicant_time"/>
+		<result column="applicant_type" property="applicant_type"/>
+		<result column="applicant_message" property="applicant_message"/>
+		<result column="auditor_name" property="auditor_name"/>
+		<result column="auditor_username" property="auditor_username"/>
+		<result column="auditor_time" property="auditor_time"/>
+		<result column="auditor_message" property="auditor_message"/>
+		<result column="applicant_state" property="applicant_state"/>
+		<association property="shippingOrder" javaType="com.jy.model.ShippingOrder"
+					 resultMap="shippingOrderResultMap"/>
+		<association property="waybillAdjustmentOrder"
+					 javaType="com.jy.model.WaybillAdjustmentOrder"
+					 resultMap="waybillAdjustmentOrderResultMap"/>
+		<collection property="waybillAdjustmentHistories"
+					ofType="com.jy.model.WaybillAdjustmentHistory"
+					resultMap="waybillAdjustmentHistoryResultMap"></collection>
+	</resultMap>
+</mapper>

@@ -1,0 +1,844 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.SubsidyInfoDao">
+    <sql id="subsidy_info_col_sql">
+            CASE t_sub_info.state
+            WHEN '2' THEN
+            '通过'
+            WHEN '3' THEN
+            '不通过'
+            ELSE
+            ''
+            END AS whether_through,
+            CASE delivery_date
+            WHEN '' THEN
+            t_order.send_time
+            WHEN NULL THEN
+            t_order.send_time
+            ELSE
+            delivery_date
+            END AS delivery_date,
+            t_sub_info.id,
+            t_sub_info.shiping_order_num,
+            t_sub_info.shiping_order_id,
+            t_sub_info.super_far_subsidy,
+            t_sub_info.upstairs_subsidy,
+            t_sub_info.super_volume_subsidy,
+            t_sub_info.other_subsidy,
+            t_sub_info.remarks,
+            t_sub_info.state,
+            t_sub_info.create_time,
+            t_sub_info.customer_subsidy,
+            t_sub_info.customer_remarks,
+            t_sub_info.admin_subsidy,
+            t_sub_info.admin_remarks
+	</sql>
+    <sql id="z_order_col_sql">
+            t_order.shiping_order_goid,
+            t_order.send_mechanism,
+            t_order.receipt_name,
+            t_order.goods_num,
+            t_order.end_address,
+            t_order.end_mechanism ,
+            t_shi_time.sign_time,
+            t_shi_time.result
+    </sql>
+    <sql id="n_order_col_sql">
+            t_order.shiping_order_goid,
+            t_order.send_mechanism,
+            t_order.receipt_name,
+            t_order.goods_num,
+            t_order.end_address,
+            t_order.end_mechanism,
+            --
+            t_shi_time.sign_time,
+            '' AS result
+    </sql>
+
+    <sql id="subsidy_info_where_sql">
+        <if test="shiping_order_num!='' and shiping_order_num!=null">
+            and t_sub_info.shiping_order_num like '%${shiping_order_num}%'
+        </if>
+        <if test="shiping_order_goid!='' and shiping_order_goid!=null">
+            and t_sub_info.shiping_order_goid like '%${shiping_order_goid}%'
+        </if>
+        <if test="send_mechanism!='' and send_mechanism!=null">
+            and t_order.send_mechanism like'%${send_mechanism}%'
+        </if>
+        <if test="end_address!='' and end_address!=null">
+            and t_order.end_address like'%${end_address}%'
+        </if>
+        <if test="receipt_name!='' and receipt_name!=null">
+            and t_order.receipt_name like'%${receipt_name}%'
+        </if>
+        <if test="end_mechanism!='' and end_mechanism!=null">
+            and t_order.shiping_order_goid like'%${end_mechanism}%'
+        </if>
+        <if test="result!='' and result!=null">
+            and t_shi_time.result like '%${end_mechanism}%'
+        </if>
+        <if test="state!='' and state!=null">
+            and t_sub_info.state in (${state})
+        </if>
+        <if test="start_time!=null and start_time!=''">
+            and t_order.send_time &gt;=#{start_time}
+        </if>
+        <if test="end_time!=null and end_time!=''">
+            and t_order.send_time &lt;=#{end_time}
+        </if>
+        <if test="(start_time!=null and start_time!='') and (end_time!=null and end_time!='')">
+            and t_order.send_time &gt;=#{start_time}
+            and
+            t_order.send_time&lt;=#{end_time}
+        </if>
+    </sql>
+    <sql id="subsidy_info_order_limit_sql">
+       GROUP BY t_order.id
+		ORDER BY t_order.create_time  DESC,state ASC
+		 LIMIT #{start},#{length}
+	</sql>
+    <sql id="coloumn_info_sql">
+        t_order.*,MAX(t_history1.create_time) AS customer_time,MAX(t_history.create_time)AS admin_time
+    </sql>
+
+
+    <select id="getSubsidyInfoList" resultType="SubsidyInfoModel">
+       SELECT <include refid="coloumn_info_sql"/>
+        FROM ((SELECT
+        <include refid="subsidy_info_col_sql"/>,
+        <include refid="z_order_col_sql"/>
+        FROM
+        jy_subsidy_info t_sub_info
+        LEFT JOIN jy_shiping_order t_order ON t_sub_info.shiping_order_id = t_order.shiping_order_id
+        LEFT JOIN jy_shipping_time t_shi_time ON t_shi_time.shiping_order_id = t_order.shiping_order_id
+        WHERE
+        t_sub_info.order_type = 'z'
+        <include refid="subsidy_info_where_sql"/>
+       )
+        UNION ALL
+        (SELECT
+        <include refid="subsidy_info_col_sql"/>,
+        <include refid="n_order_col_sql"/>
+        FROM
+        jy_subsidy_info t_sub_info
+        LEFT JOIN jy_reverse_order t_order ON t_sub_info.shiping_order_id = t_order.shiping_order_id
+        LEFT JOIN reverse_order_view t_shi_time ON t_shi_time.shiping_order_id = t_order.shiping_order_id
+        WHERE
+        t_sub_info.order_type = 'n'
+        <include refid="subsidy_info_where_sql"/>
+        )
+        ) AS t_order
+        LEFT JOIN jy_subsidy_history  t_history ON t_history.subsidy_id=t_order.id AND t_history.type=0
+        LEFT JOIN jy_subsidy_history t_history1 ON t_history1.subsidy_id=t_order.id AND t_history1.type in(3,4)
+        <include refid="subsidy_info_order_limit_sql"/>
+    </select>
+
+
+    <select id="supplierGetSubsidyInfoList" resultType="SubsidyInfoModel">
+        SELECT
+        <include refid="coloumn_info_sql"/>
+        FROM ((SELECT
+        <include refid="subsidy_info_col_sql"/>,
+        <include refid="z_order_col_sql"/>
+        FROM
+        jy_subsidy_info t_sub_info
+        LEFT JOIN jy_shiping_order t_order ON t_sub_info.shiping_order_id = t_order.shiping_order_id
+        LEFT JOIN jy_shipping_time t_shi_time ON t_shi_time.shiping_order_id = t_order.shiping_order_id
+        WHERE
+        t_sub_info.order_type = 'z'
+        AND t_order.send_mechanism IN (
+        SELECT
+        jc.customer_name from jy_customer jc
+        LEFT JOIN jy_suppliers
+        jss ON
+        find_in_set(
+        jc.customer_id,jss.suppliers_customer)
+        WHERE
+        jss.suppliers_id=#{suppliersId})
+        AND
+        <foreach collection="list" item="address" index="index"
+                 open="(t_order.end_address LIKE" close=")" separator="or t_order.end_address LIKE">
+            '%${address}'
+        </foreach>
+        <include refid="subsidy_info_where_sql"/>
+       )
+        UNION ALL
+        ( SELECT
+        <include refid="subsidy_info_col_sql"/>,
+        <include refid="n_order_col_sql"/>
+        FROM
+        jy_subsidy_info t_sub_info
+        LEFT JOIN jy_reverse_order t_order ON t_sub_info.shiping_order_id = t_order.shiping_order_id
+        LEFT JOIN reverse_order_view t_shi_time ON t_shi_time.shiping_order_id = t_order.shiping_order_id
+        WHERE
+        t_sub_info.order_type = 'n'
+        AND t_order.suppliers_id=#{suppliersId}
+        <include refid="subsidy_info_where_sql"/>
+       )
+        ) AS t_order
+        LEFT JOIN jy_subsidy_history  t_history ON t_history.subsidy_id=t_order.id AND t_history.type=0
+        LEFT JOIN jy_subsidy_history t_history1 ON t_history1.subsidy_id=t_order.id AND t_history1.type in(3,4)
+        <include refid="subsidy_info_order_limit_sql"/>
+    </select>
+
+    <select id="otherGetSubsidyInfoList" resultType="SubsidyInfoModel">
+        SELECT
+        <include refid="coloumn_info_sql"/>
+        FROM ((SELECT
+        <include refid="subsidy_info_col_sql"/>,
+        <include refid="z_order_col_sql"/>
+        FROM
+        jy_subsidy_info t_sub_info
+        LEFT JOIN jy_shiping_order t_order ON t_sub_info.shiping_order_id = t_order.shiping_order_id
+        LEFT JOIN jy_shipping_time t_shi_time ON t_shi_time.shiping_order_id = t_order.shiping_order_id
+        WHERE
+        t_sub_info.order_type = 'z'
+        AND t_order.send_mechanism IN (
+        SELECT jcu.customer_name FROM jy_customer jcu
+        WHERE
+        jcu.customer_id=#{customer_id})
+        <include refid="subsidy_info_where_sql"/>
+        )
+        UNION ALL
+        ( SELECT
+        <include refid="subsidy_info_col_sql"/>,
+        <include refid="n_order_col_sql"/>
+        FROM
+        jy_subsidy_info t_sub_info
+        LEFT JOIN jy_reverse_order t_order ON t_sub_info.shiping_order_id = t_order.shiping_order_id
+        LEFT JOIN reverse_order_view t_shi_time ON t_shi_time.shiping_order_id = t_order.shiping_order_id
+        WHERE
+        t_sub_info.order_type = 'n'
+        AND
+        t_order.send_mechanism IN (
+        SELECT jcu.customer_name FROM jy_customer jcu
+        WHERE
+        jcu.customer_id=#{customer_id})
+        <include refid="subsidy_info_where_sql"/>
+
+        )) AS t_order
+        LEFT JOIN jy_subsidy_history  t_history ON t_history.subsidy_id=t_order.id AND t_history.type=0
+        LEFT JOIN jy_subsidy_history t_history1 ON t_history1.subsidy_id=t_order.id AND t_history1.type in(3,4)
+        <include refid="subsidy_info_order_limit_sql"/>
+
+    </select>
+
+    <select id="getSubsidyInfoCount" resultType="int">
+        SELECT COUNT(1) FROM (SELECT
+        t_sub_info.id
+        FROM
+        jy_subsidy_info t_sub_info
+        LEFT JOIN jy_shiping_order t_order ON t_sub_info.shiping_order_id = t_order.shiping_order_id
+        LEFT JOIN jy_shipping_time t_shi_time ON t_shi_time.shiping_order_id = t_order.shiping_order_id
+        WHERE
+        t_sub_info.order_type = 'z'
+        <include refid="subsidy_info_where_sql"/>
+        UNION ALL
+        SELECT
+        t_sub_info.id
+        FROM
+        jy_subsidy_info t_sub_info
+        LEFT JOIN jy_reverse_order t_order ON t_sub_info.shiping_order_id = t_order.shiping_order_id
+        LEFT JOIN reverse_order_view t_shi_time ON t_shi_time.shiping_order_id = t_order.shiping_order_id
+        WHERE
+        t_sub_info.order_type = 'n'
+        <include refid="subsidy_info_where_sql"/>
+        ) AS t_order
+    </select>
+    <select id="supplierGetSubsidyInfoCount" resultType="int">
+        SELECT count(1) FROM (SELECT
+        t_sub_info.id
+        FROM
+        jy_subsidy_info t_sub_info
+        LEFT JOIN jy_shiping_order t_order ON t_sub_info.shiping_order_id = t_order.shiping_order_id
+        LEFT JOIN jy_shipping_time t_shi_time ON t_shi_time.shiping_order_id = t_order.shiping_order_id
+        WHERE
+        t_sub_info.order_type = 'z'
+        AND t_order.send_mechanism IN (
+        SELECT
+        jc.customer_name from jy_customer jc
+        LEFT JOIN jy_suppliers
+        jss ON
+        find_in_set(
+        jc.customer_id,jss.suppliers_customer)
+        WHERE
+        jss.suppliers_id=#{suppliersId})
+        AND
+        <foreach collection="list" item="address" index="index"
+                 open="(t_order.end_address LIKE" close=")" separator="or t_order.end_address LIKE">
+            '%${address}'
+        </foreach>
+        <include refid="subsidy_info_where_sql"/>
+        UNION ALL
+        SELECT
+        t_sub_info.id
+        FROM
+        jy_subsidy_info t_sub_info
+        LEFT JOIN jy_reverse_order t_order ON t_sub_info.shiping_order_id = t_order.shiping_order_id
+        LEFT JOIN reverse_order_view t_shi_time ON t_shi_time.shiping_order_id = t_order.shiping_order_id
+        WHERE
+        t_sub_info.order_type = 'n'
+        AND t_order.suppliers_id=#{suppliersId}
+        <include refid="subsidy_info_where_sql"/>
+        ) AS t_order
+    </select>
+    <select id="otherGetSubsidyInfoCount" resultType="int">
+        SELECT count(1) FROM (SELECT
+        t_sub_info.id
+        FROM
+        jy_subsidy_info t_sub_info
+        LEFT JOIN jy_shiping_order t_order ON t_sub_info.shiping_order_id = t_order.shiping_order_id
+        LEFT JOIN jy_shipping_time t_shi_time ON t_shi_time.shiping_order_id = t_order.shiping_order_id
+        WHERE
+        t_sub_info.order_type = 'z'
+        AND t_order.send_mechanism IN (
+        SELECT jcu.customer_name FROM jy_customer jcu
+        WHERE
+        jcu.customer_id=#{customer_id})
+        <include refid="subsidy_info_where_sql"/>
+        UNION ALL
+        SELECT
+        t_sub_info.id
+        FROM
+        jy_subsidy_info t_sub_info
+        LEFT JOIN jy_reverse_order t_order ON t_sub_info.shiping_order_id = t_order.shiping_order_id
+        LEFT JOIN reverse_order_view t_shi_time ON t_shi_time.shiping_order_id = t_order.shiping_order_id
+        WHERE
+        t_sub_info.order_type = 'n'
+        AND
+        t_order.send_mechanism IN (
+        SELECT jcu.customer_name FROM jy_customer jcu
+        WHERE
+        jcu.customer_id=#{customer_id})
+        <include refid="subsidy_info_where_sql"/>
+
+        ) AS t_order
+    </select>
+
+    <insert id="batchInsertSubsidyInfo">
+        INSERT INTO jy_subsidy_info (id,shiping_order_num,shiping_order_goid,
+        shiping_order_id,delivery_date,super_far_subsidy,upstairs_subsidy,
+        super_volume_subsidy,other_subsidy,remarks,state,customer_subsidy,
+        customer_remarks,admin_subsidy,admin_remarks,create_time,order_type)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id},#{item.shiping_order_num},#{item.shiping_order_goid},
+            #{item.shiping_order_id},#{item.delivery_date},#{item.super_far_subsidy},#{item.upstairs_subsidy},
+            #{item.super_volume_subsidy},#{item.other_subsidy},#{item.remarks},#{item.state},#{item.customer_subsidy},
+            #{item.customer_remarks},#{item.admin_subsidy},#{item.admin_remarks},now(),#{item.order_type})
+        </foreach>
+    </insert>
+
+    <update id="bathUpdateSubsidyInfo">
+        <foreach collection="list" item="subsidy" index="index" separator=";">
+            UPDATE jy_subsidy_info
+            <trim prefix="set" suffixOverrides=",">
+                <if test="subsidy.shiping_order_num!=null and subsidy.shiping_order_num!=''">
+                    shiping_order_num = #{subsidy.shiping_order_num},
+                </if>
+
+                <if test="subsidy.shiping_order_goid!=null and subsidy.shiping_order_goid!=''">
+                    shiping_order_goid = #{subsidy.shiping_order_goid},
+                </if>
+
+                <if test="subsidy.shiping_order_id!=null and subsidy.shiping_order_id!=''">
+                    shiping_order_id = #{subsidy.shiping_order_id},
+                </if>
+
+                <if test="subsidy.delivery_date!=null and subsidy.delivery_date!=''">
+                    delivery_date = #{subsidy.delivery_date},
+                </if>
+
+                <if test="subsidy.super_far_subsidy!=null and subsidy.super_far_subsidy!=''">
+                    super_far_subsidy = #{subsidy.super_far_subsidy},
+                </if>
+
+                <if test="subsidy.upstairs_subsidy!=null and subsidy.upstairs_subsidy!=''">
+                    upstairs_subsidy = #{subsidy.upstairs_subsidy},
+                </if>
+                <if test="subsidy.super_volume_subsidy!=null and subsidy.super_volume_subsidy!=''">
+                    super_volume_subsidy = #{subsidy.super_volume_subsidy},
+                </if>
+                <if test="subsidy.other_subsidy!=null and subsidy.other_subsidy!=''">
+                    other_subsidy = #{subsidy.other_subsidy},
+                </if>
+                <if test="subsidy.remarks!=null and subsidy.remarks!=''">
+                    remarks = #{subsidy.remarks},
+                </if>
+                <if test="subsidy.state!=null and subsidy.state!=''">
+                    state = #{subsidy.state},
+                </if>
+                <if test="subsidy.customer_subsidy!=null and subsidy.customer_subsidy!=''">
+                    customer_subsidy = #{subsidy.customer_subsidy},
+                </if>
+                <if test="subsidy.customer_remarks!=null and subsidy.customer_remarks!=''">
+                    customer_remarks = #{subsidy.customer_remarks},
+                </if>
+                <if test="subsidy.admin_subsidy!=null and subsidy.admin_subsidy!=''">
+                    admin_subsidy = #{subsidy.admin_subsidy},
+                </if>
+                <if test="subsidy.admin_remarks!=null and subsidy.admin_remarks!=''">
+                    admin_remarks = #{subsidy.admin_remarks},
+                </if>
+            </trim>
+            <where>
+                id = #{subsidy.id}
+            </where>
+        </foreach>
+    </update>
+
+    <delete id="deleteSubsidyInfo">
+        DELETE FROM
+        jy_subsidy_info
+        WHERE id IN
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <insert id="saveSubsidyHistory">
+        INSERT INTO jy_subsidy_history (id,subsidy_id,user_name,user_real_name,
+        shiping_order_num,message,create_time,type)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id},#{item.subsidy_id},#{item.user_name},
+            #{item.user_real_name},#{item.shiping_order_num},#{item.message},
+            now(),#{item.type} )
+        </foreach>
+    </insert>
+
+    <select id="getShippingOrderInfo" resultType="ShippingOrder">
+        SELECT * FROM ((
+        SELECT
+        <include refid="addOrder_cloumn_sql"/>,
+        'z' AS order_type
+        FROM jy_shiping_order
+        <where>
+            <if test="shiping_order_num!=null and shiping_order_num!=''">
+                AND shiping_order_num = #{shiping_order_num}
+            </if>
+            <if test="shiping_order_goid!=null and shiping_order_goid!=''">
+                AND shiping_order_goid=#{shiping_order_goid}
+            </if>
+        </where>)
+        UNION ALL
+        ( SELECT
+        <include refid="addOrder_cloumn_sql"/>,
+        'n' AS order_type
+        FROM
+        jy_reverse_order
+        <where>
+            <if test="shiping_order_num!=null and shiping_order_num!=''">
+                AND shiping_order_num = #{shiping_order_num}
+            </if>
+            <if test="shiping_order_goid!=null and shiping_order_goid!=''">
+                AND shiping_order_goid=#{shiping_order_goid}
+            </if>
+        </where>)
+        ) AS t_order
+    </select>
+
+    <select id="getSubsidyInfoModelList" resultType="SubsidyInfoModel">
+        SELECT * FROM jy_subsidy_info
+        WHERE
+        shiping_order_id in (SELECT shiping_order_id FROM jy_shiping_order
+        <where>
+            <if test="shiping_order_num!=null and shiping_order_num!=''">
+                AND shiping_order_num = #{shiping_order_num}
+            </if>
+            <if test="shiping_order_goid!=null and shiping_order_goid!=''">
+                AND shiping_order_goid= #{shiping_order_goid}
+            </if>
+        </where>
+        UNION ALL
+        SELECT shiping_order_id FROM jy_reverse_order
+        <where>
+            <if test="shiping_order_num!=null and shiping_order_num!=''">
+                AND shiping_order_num = #{shiping_order_num}
+            </if>
+            <if test="shiping_order_goid!=null and shiping_order_goid!=''">
+                AND shiping_order_goid= #{shiping_order_goid}
+            </if>
+        </where>
+        )
+
+    </select>
+
+    <select id="getSubsidyInfoModelByIds" resultType="SubsidyInfoModel">
+        SELECT  <include refid="coloumn_info_sql"/>  FROM (SELECT
+        <include refid="subsidy_info_col_sql"/>,
+        <include refid="z_order_col_sql"/>
+        FROM
+        jy_subsidy_info t_sub_info
+        LEFT JOIN jy_shiping_order t_order ON t_sub_info.shiping_order_id = t_order.shiping_order_id
+        LEFT JOIN jy_shipping_time t_shi_time ON t_shi_time.shiping_order_id = t_order.shiping_order_id
+        WHERE
+        t_sub_info.order_type = 'z'
+        AND t_sub_info.id IN
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        UNION ALL
+        SELECT
+        <include refid="subsidy_info_col_sql"/>,
+        <include refid="n_order_col_sql"/>
+        FROM
+        jy_subsidy_info t_sub_info
+        LEFT JOIN jy_reverse_order t_order ON t_sub_info.shiping_order_id = t_order.shiping_order_id
+        LEFT JOIN reverse_order_view t_shi_time ON t_shi_time.shiping_order_id = t_order.shiping_order_id
+        WHERE
+        t_sub_info.order_type = 'n'
+        AND t_sub_info.id IN
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        ) AS t_order
+
+        LEFT JOIN jy_subsidy_history  t_history ON t_history.subsidy_id=t_order.id AND t_history.type=0
+        LEFT JOIN jy_subsidy_history t_history1 ON t_history1.subsidy_id=t_order.id AND t_history1.type in(3,4)
+        GROUP by t_order.id
+
+    </select>
+
+    <select id="getSubsidyInfoModelById" resultType="SubsidyInfoModel">
+        SELECT
+        <include refid="subsidy_info_col_sql"/>,
+        t_sub_info.customer_subsidy,t_sub_info.customer_remarks,
+        t_sub_info.admin_subsidy,t_sub_info.admin_remarks
+        FROM
+        jy_subsidy_info t_sub_info
+        LEFT JOIN jy_shiping_order t_order ON t_sub_info.shiping_order_id = t_order.shiping_order_id
+        LEFT JOIN jy_shipping_time t_shi_time ON t_shi_time.shiping_order_id = t_order.shiping_order_id
+        WHERE id =#{id}
+    </select>
+
+    <sql id="addOrder_where_sql">
+        <if test="startTime!=null and startTime!=''">
+            AND send_time &gt;= #{startTime}
+        </if>
+        <if test="endTime!=null and endTime!=''">
+            AND send_time &lt;= #{endTime}
+        </if>
+        <if test="end_address!=null and end_address!=''">
+            AND end_address LIKE '%${end_address}%'
+        </if>
+        <if test="send_mechanism!=null and send_mechanism!=''">
+            AND send_mechanism LIKE '%${send_mechanism}%'
+        </if>
+        <if test="shiping_order_num!=null and shiping_order_num!=''">
+            AND shiping_order_num LIKE '%${shiping_order_num}%'
+        </if>
+        <if test="shiping_order_goid!=null and shiping_order_goid!=''">
+            AND shiping_order_goid  LIKE '%${shiping_order_goid}%'
+        </if>
+    </sql>
+
+    <sql id="addOrder_cloumn_sql">
+		shiping_order_id,
+		shiping_order_goid,
+		shiping_order_num,
+		send_time,
+		end_address,
+		send_mechanism,
+		custom_contact,
+		custom_tel,
+		goods_num,
+
+		send_station
+	</sql>
+    <select id="getAddOrderInfo" resultType="ShippingOrder">
+        SELECT * FROM ((
+        SELECT
+        <include refid="addOrder_cloumn_sql"/>,
+        'z' AS order_type
+        FROM jy_shiping_order
+        <where>
+            <include refid="addOrder_where_sql"/>
+        </where>
+       )
+        UNION ALL
+        ( SELECT
+        <include refid="addOrder_cloumn_sql"/>,
+        'n' AS order_type
+        FROM
+        jy_reverse_order
+        <where>
+            <include refid="addOrder_where_sql"/>
+        </where>
+        )
+        ) AS t_order
+        ORDER BY t_order.send_time DESC
+        LIMIT #{start},#{length}
+    </select>
+
+    <select id="getAddOrderCount" resultType="int">
+        SELECT COUNT(1) FROM (
+        SELECT shiping_order_id
+        FROM jy_shiping_order
+        <where>
+            <include refid="addOrder_where_sql"/>
+        </where>
+        UNION ALL
+        SELECT
+        shiping_order_id
+        FROM
+        jy_reverse_order
+        <where>
+            <include refid="addOrder_where_sql"/>
+        </where>
+        ) AS t_order
+    </select>
+
+    <select id="supplierAddOrderInfo" resultType="ShippingOrder">
+        SELECT * FROM ((
+        SELECT
+        <include refid="addOrder_cloumn_sql"/>,
+        'z' AS order_type
+        FROM jy_shiping_order jso
+        <where>
+            jso.send_mechanism IN (
+            SELECT
+            jc.customer_name from jy_customer jc
+            LEFT JOIN jy_suppliers
+            jss ON
+            find_in_set(
+            jc.customer_id,jss.suppliers_customer)
+            WHERE
+            jss.suppliers_id=#{suppliersId})
+            <if test="list!=null and list.size()>0">
+                AND
+                <foreach collection="list" item="address" index="index"
+                         open="(jso.end_address LIKE" close=")" separator="or jso.end_address LIKE">
+                    '%${address}'
+                </foreach>
+            </if>
+            <include refid="addOrder_where_sql"/>
+        </where>
+       )
+        UNION ALL
+        ( SELECT
+        <include refid="addOrder_cloumn_sql"/>,
+        'n' AS order_type
+        FROM
+        jy_reverse_order
+        <where>
+            suppliers_id=#{suppliersId}
+            <include refid="addOrder_where_sql"/>
+        </where>
+        )
+        ) AS t_order
+        ORDER BY t_order.send_time DESC
+        LIMIT #{start},#{length}
+    </select>
+
+
+    <select id="supplierGetAddOrderCount" resultType="int">
+        SELECT count(1) FROM (
+        SELECT
+        shiping_order_id
+        FROM jy_shiping_order jso
+        <where>
+            jso.send_mechanism IN (
+            SELECT
+            jc.customer_name from jy_customer jc
+            LEFT JOIN jy_suppliers
+            jss ON
+            find_in_set(
+            jc.customer_id,jss.suppliers_customer)
+            WHERE
+            jss.suppliers_id=#{suppliersId})
+            <if test="list!=null and list.size()>0">
+                AND
+                <foreach collection="list" item="address" index="index"
+                         open="(jso.end_address LIKE" close=")" separator="or jso.end_address LIKE">
+                    '%${address}'
+                </foreach>
+            </if>
+            <include refid="addOrder_where_sql"/>
+        </where>
+        UNION ALL
+        SELECT
+        shiping_order_id
+        FROM
+        jy_reverse_order
+        <where>
+            suppliers_id=#{suppliersId}
+            <include refid="addOrder_where_sql"/>
+        </where>
+        ) AS t_order
+    </select>
+
+
+    <select id="otherGetAddOrderInfo" resultType="ShippingOrder">
+        SELECT * FROM ((
+        SELECT
+        <include refid="addOrder_cloumn_sql"/>,
+        'z' AS order_type
+        FROM jy_shiping_order
+        <where>
+            send_mechanism IN (
+            SELECT jcu.customer_name FROM jy_customer jcu
+            WHERE
+            jcu.customer_id=#{customer_id})
+            <include refid="addOrder_where_sql"/>
+        </where>
+       )
+        UNION ALL
+        (SELECT
+        <include refid="addOrder_cloumn_sql"/>,
+        'n' AS order_type
+        FROM
+        jy_reverse_order
+        <where>
+            send_mechanism IN (
+            SELECT jcu.customer_name FROM jy_customer jcu
+            WHERE
+            jcu.customer_id=#{customer_id})
+            <include refid="addOrder_where_sql"/>
+        </where>
+       )
+        ) AS t_order
+        ORDER BY t_order.send_time DESC
+        LIMIT #{start},#{length}
+    </select>
+
+    <select id="otherGetAddOrderInfoCount" resultType="int">
+        SELECT count(1) FROM (
+        SELECT
+        shiping_order_id
+        FROM jy_shiping_order
+        <where>
+            send_mechanism IN (
+            SELECT jcu.customer_name FROM jy_customer jcu
+            WHERE
+            jcu.customer_id=#{customer_id})
+            <include refid="addOrder_where_sql"/>
+        </where>
+
+        UNION ALL
+        SELECT
+        shiping_order_id
+        FROM
+        jy_reverse_order
+        <where>
+            send_mechanism IN (
+            SELECT jcu.customer_name FROM jy_customer jcu
+            WHERE
+            jcu.customer_id=#{customer_id})
+            <include refid="addOrder_where_sql"/>
+        </where>
+
+        ) AS t_order
+    </select>
+
+    <select id="driverGetAddOrderInfo" resultType="ShippingOrder">
+        SELECT * FROM ((
+        SELECT
+        <include refid="addOrder_cloumn_sql"/>,
+        'z' AS order_type
+        FROM jy_shiping_order jso
+        LEFT JOIN jy_drivertoorder jd ON
+        jd.order_id = jso.shiping_order_id
+        <where>
+            jd.driver_id=#{driverId}
+            <include refid="addOrder_where_sql"/>
+        </where>
+        )
+        UNION ALL
+        SELECT
+        <include refid="addOrder_cloumn_sql"/>,
+        'n' AS order_type
+        FROM
+        jy_reverse_order
+        <where>
+            driver_id=#{driverId}
+            <include refid="addOrder_where_sql"/>
+        </where>
+
+        ) AS t_order
+        ORDER BY t_order.send_time DESC
+        LIMIT #{start},#{length}
+    </select>
+
+    <select id="driverGetAddOrderCount" resultType="int">
+        SELECT count(1) FROM (
+        SELECT
+        shiping_order_id
+        FROM jy_shiping_order jso
+        LEFT JOIN jy_drivertoorder jd ON
+        jd.order_id = jso.shiping_order_id
+        <where>
+            jd.driver_id=#{driverId}
+            <include refid="addOrder_where_sql"/>
+        </where>
+        UNION ALL
+        SELECT
+        shiping_order_id
+        FROM
+        jy_reverse_order
+        <where>
+            driver_id=#{driverId}
+            <include refid="addOrder_where_sql"/>
+        </where>
+
+        ) AS t_order
+    </select>
+
+
+    <select id="getShppingOrderMessage" resultType="ShippingOrder">
+        SELECT
+        shiping_order_id,
+        shiping_order_goid,
+        shiping_order_num,
+        send_time,
+        end_address,
+        send_mechanism,
+        custom_contact,
+        custom_tel,
+        goods_num,
+        send_station,
+        'z' AS order_type,
+        receipt_name
+        FROM jy_shiping_order
+        WHERE shiping_order_id=#{id}
+        LIMIT 1
+        UNION ALL
+        SELECT 	shiping_order_id,
+        shiping_order_goid,
+        shiping_order_num,
+        send_time,
+        end_address,
+        send_mechanism,
+        custom_contact,
+        custom_tel,
+        goods_num,
+        send_station,
+        'n' AS order_type,
+        receipt_name
+        FROM jy_reverse_order
+        WHERE shiping_order_id=#{id}
+        LIMIT 1
+    </select>
+
+    <update id="adminCancelAudit">
+UPDATE jy_subsidy_info SET admin_remarks='' ,admin_subsidy='',state='1'
+WHERE state in(2,3) AND id in
+        (
+        <foreach collection="list" item="item" index="index" separator=",">
+           #{item}
+        </foreach>
+        )
+    </update>
+
+    <update id="customerCancelAudit">
+        UPDATE jy_subsidy_info SET customer_remarks='' ,customer_subsidy='',state='0'
+        WHERE state =1  AND id in
+        (
+        <foreach collection="list" item="item" index="index" separator=",">
+            #{item}
+        </foreach>
+        )
+    </update>
+
+</mapper>

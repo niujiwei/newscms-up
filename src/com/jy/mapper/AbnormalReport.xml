@@ -1,0 +1,685 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.AbnormalReportDao">
+	<resultMap type="com.jy.model.AbnormalReport" id="abnormalReport_ResultMap">
+		<id column="id" property="id" />
+		<result column="shiping_order_id" property="shiping_order_id" />
+		<result column="abnormal_type" property="abnormal_type" />
+		<result column="abnormal_message" property="abnormal_message" />
+		<result column="abnormal_time" property="abnormal_time" />
+		<result column="abnormal_num" property="abnormal_num" />
+		<result column="abnormal_name" property="abnormal_name" />
+		<result column="abnormal_supperid" property="abnormal_supperid" />
+		<result column="abnormal_driverid" property="abnormal_driverid" />
+		<result column="abnormal_remark" property="abnormal_remark" />
+		<result column="abnormal_result" property="abnormal_result" />
+		<result column="abnormal_resultremark" property="abnormal_resultremark" />
+		<result column="abnormal_resultuser" property="abnormal_resultuser" />
+		<result column="abnormal_resulttime" property="abnormal_resulttime" />
+		<association property="shippingOrder" javaType="com.jy.model.ShippingOrder">
+			<id column="shiping_order_id" property="shiping_order_id" />
+			<result column="shiping_order_num" property="shiping_order_num" />
+			<result column="shiping_order_goid" property="shiping_order_goid" />
+			<result column="shipping_order_state" property="shipping_order_state" />
+			<result column="send_mechanism" property="send_mechanism" />
+			<result column="send_station" property="send_station" />
+			<result column="send_time" property="send_time" />
+			<result column="end_mechanism" property="end_mechanism" />
+			<result column="end_address" property="end_address" />
+			<result column="custom_code" property="custom_code" />
+			<result column="custom_name" property="custom_name" />
+			<result column="custom_contact" property="custom_contact" />
+			<result column="custom_tel" property="custom_tel" />
+			<result column="receipt" property="receipt" />
+			<result column="receipt_name" property="receipt_name" />
+			<result column="receipt_tel" property="receipt_tel" />
+			<result column="receipt_address" property="receipt_address" />
+			<result column="goods_name" property="goods_name" />
+			<result column="goods_packing" property="goods_packing" />
+			<result column="goods_num" property="goods_num" />
+			<result column="goods_weight" property="goods_weight" />
+			<result column="goods_vol" property="goods_vol" />
+			<result column="remarks" property="remarks" />
+			<result column="creat_type" property="creat_type" />
+			<result column="updatetime" property="updatetime" />
+			<result column="shipping_order" property="shipping_order" />
+			<result column="is_recept" property="is_recept" />
+			<result column="is_recept_time" property="is_recept_time" />
+			<result column="transport_pay" property="transport_pay" />
+			<result column="trade_agency" property="trade_agency" />
+			<result column="added_fee" property="added_fee" />
+			<result column="is_allot" property="is_allot" />
+			<result column="deliver_fee" property="deliver_fee" />
+			<result column="upstairs_fee" property="upstairs_fee" />
+			<result column="is_receive" property="is_receive" />
+			<result column="aging_time" property="aging_time" />
+			<result column="aging_day" property="aging_day" />
+			<result column="aging_alltime" property="aging_alltime" />
+			<result column="clearing_state" property="clearing_state" />
+			<result column="customer_settlement_state" property="customer_settlement_state" />
+			<result column="topordernumber" property="topordernumber" />
+			<result column="downordernumber" property="downordernumber" />
+			<result column="shiping_yueid" property="shiping_yueid" />
+			<result column="driver_province" property="driver_province" />
+			<result column="driver_city" property="driver_city" />
+			<result column="driver_county" property="driver_county" />
+			<result column="other_recept_time" property="other_recept_time" />
+			<result column="is_abnormal" property="is_abnormal" />
+		</association>
+		<collection property="abnormalImages" ofType="com.jy.model.AbnormalImages">
+			<id column="image_id" property="image_id" />
+			<result column="order_id" property="order_id" />
+			<result column="imageUrl" property="imageUrl" />
+			<result column="abnormalt_id" property="abnormalt_id" />
+		</collection>
+	</resultMap>
+
+	<!-- 供应商查询地址 -->
+	<select id="getAddressSupperlies" resultType="string">
+		select
+		concat_ws('',jcii.cityname,jciii.cityname) from
+		jy_supperlis_city_info
+		jsci LEFT
+		JOIN jy_city_info jci ON
+		jsci.suppliers_province =
+		jci.citycode AND
+		city_type= '1' LEFT JOIN
+		jy_city_info jcii ON
+		jsci.suppliers_city
+		=jcii.citycode AND
+		jcii.city_type='2'
+		LEFT JOIN
+		jy_city_info jciii ON
+		jciii.citycode=jsci.suppliers_county AND
+		jciii.city_type='3' WHERE
+		jsci.suppliersid=#{_parameter}
+	</select>
+	<!-- 查询条件总记录数 -->
+	<sql id="abnormalReportOrderInfo">
+		AND ji.shipping_order_state BETWEEN '0' AND '3'
+		<if test="param3!=null and param3!=''">
+			and ji.send_time &gt;=#{param3}
+		</if>
+		<if test="param13!=null and param13!=''">
+			and ji.send_time &lt;=#{param13}
+		</if>
+		<if
+			test="(param3!=null and param3!='') and (param13!=null and param13!='')">
+			and ji.send_time &gt;=#{param3}
+			and
+			ji.send_time&lt;=#{param13}
+		</if>
+		<if test="param4!=null and param4!=''">
+			and ji.shiping_order_num like "%${param4}%"
+		</if>
+		<if test="param5!=null and param5!=''">
+			and ji.send_mechanism like "%${param5}%"
+		</if>
+		<if test="param6!=null and param6!=''">
+			and ji.end_address like "%${param6}%"
+		</if>
+		<if test="param7!=null and param7!=''">
+			and ji.custom_name like "%${param7}%"
+		</if>
+
+		<if test="param8!=null and param8!=''">
+			and ji.receipt_name like "%${param8}%"
+		</if>
+		<if test="param9!=null and param9!=''">
+			and ji.receipt_tel like "%${param9}%"
+		</if>
+		<if test="param10!=null and param10!=''">
+			and ji.topordernumber like "%${param10}%"
+		</if>
+		<if test="param11!=null and param11!=''">
+			and ji.downordernumber like "%${param11}%"
+		</if>
+		<if test="param12!=null and param12!=''">
+			and ji.shiping_order_goid like "%${param12}%"
+		</if>
+		ORDER BY
+		ji.updatetime
+		DESC
+		limit
+		#{param1},#{param2}
+	</sql>
+
+	<!-- 运单查询总条数 -->
+	<sql id="abnormalReportOrderCount">
+		AND
+		ji.shipping_order_state BETWEEN '0' AND '3'
+		<if test="param1!=null and param1!=''">
+			and ji.send_time &gt;=#{param1}
+		</if>
+		<if test="param11!=null and param11!=''">
+			and ji.send_time &lt;=#{param11}
+		</if>
+		<if
+			test="(param1!=null and param1!='') and (param11!=null and param11!='')">
+			and ji.send_time &gt;=#{param1}
+			and
+			ji.send_time&lt;=#{param11}
+		</if>
+		<if test="param2!=null and param2!=''">
+			and ji.shiping_order_num like "%${param2}%"
+		</if>
+		<if test="param3!=null and param3!=''">
+			and ji.send_mechanism like "%${param3}%"
+		</if>
+		<if test="param4!=null and param4!=''">
+			and ji.end_address like "%${param4}%"
+		</if>
+		<if test="param5!=null and param5!=''">
+			and ji.custom_name like "%${param5}%"
+		</if>
+
+		<if test="param6!=null and param6!=''">
+			and ji.receipt_name like "%${param6}%"
+		</if>
+		<if test="param7!=null and param7!=''">
+			and ji.receipt_tel like "%${param7}%"
+		</if>
+		<if test="param8!=null and param8!=''">
+			and ji.topordernumber like "%${param8}%"
+		</if>
+		<if test="param9!=null and param9!=''">
+			and ji.downordernumber like "%${param9}%"
+		</if>
+		<if test="param10!=null and param10!=''">
+			and ji.shiping_order_goid like "%${param10}%"
+		</if>
+	</sql>
+
+	<select id="driverGetShipOrder" resultType="int">
+		select COUNT(ji.shiping_order_id) from jy_shiping_order ji
+		LEFT JOIN
+		jy_drivertoorder jd ON jd.order_id = ji.shiping_order_id
+		LEFT JOIN
+		jy_driver_info jdi ON jdi.driver_id = jd.driver_id
+		WHERE jdi.driver_id=
+		#{param12}
+		<include refid="abnormalReportOrderCount" />
+	</select>
+
+	<select id="suppliersGetShipOrder" resultType="int">
+		select COUNT(*) FROM jy_shiping_order ji
+		WHERE ji.send_mechanism IN (
+		SELECT
+		jc.customer_name from jy_customer jc
+		LEFT JOIN jy_suppliers jss
+		ON
+		find_in_set(
+		jc.customer_id,jss.suppliers_customer)
+		WHERE
+		jss.suppliers_id=#{param12})
+		AND
+		<foreach collection="list" item="address" index="index"
+			open="(ji.end_address LIKE" close=")" separator="or ji.end_address LIKE">
+			'%${address}'
+		</foreach>
+		<include refid="abnormalReportOrderCount" />
+	</select>
+
+	<select id="otherGetShipOrder" resultType="int">
+		SELECT COUNT(*) from jy_shiping_order ji LEFT JOIN
+		jy_department jd ON
+		jd.department_name LIKE ji.send_mechanism
+		LEFT JOIN
+		jy_user ju ON ju.did
+		= jd.department_id WHERE ju.id=#{param12}
+		<include refid="abnormalReportOrderCount" />
+	</select>
+
+	<select id="getShipOrder" resultType="int">
+		select count(*) from jy_shiping_order ji where
+		1=1
+		<include refid="abnormalReportOrderCount" />
+	</select>
+
+	<select id="driverGetShipperOrderInfo" resultType="ShippingOrder">
+		select ji.* from jy_shiping_order ji
+		LEFT JOIN jy_drivertoorder jd ON
+		jd.order_id = ji.shiping_order_id
+		LEFT JOIN jy_driver_info jdi ON
+		jdi.driver_id = jd.driver_id
+		WHERE jdi.driver_id= #{param14}
+		<include refid="abnormalReportOrderInfo" />
+	</select>
+
+	<select id="suppliersGetShipperOrderInfo" resultType="ShippingOrder">
+		select ji.* FROM jy_shiping_order ji
+		WHERE ji.send_mechanism IN (
+		SELECT
+		jc.customer_name from jy_customer jc
+		LEFT JOIN jy_suppliers jss
+		ON
+		find_in_set(
+		jc.customer_id,jss.suppliers_customer)
+		WHERE
+		jss.suppliers_id=#{param14})
+		AND
+		<foreach collection="list" item="address" index="index"
+			open="(ji.end_address LIKE" close=")" separator="or ji.end_address LIKE">
+			'%${address}'
+		</foreach>
+		<include refid="abnormalReportOrderInfo" />
+	</select>
+
+	<select id="otherGetShipOrderInfo" resultType="ShippingOrder">
+		SELECT ji.* from jy_shiping_order ji LEFT JOIN jy_department jd ON
+		jd.department_name LIKE ji.send_mechanism
+		LEFT JOIN jy_user ju ON
+		ju.did =
+		jd.department_id WHERE ju.id=#{param14}
+		<include refid="abnormalReportOrderInfo" />
+	</select>
+
+	<select id="getShipOrderInfo" resultType="ShippingOrder">
+		SELECT
+		ji.*
+		FROM
+		jy_shiping_order ji
+		where
+		1=1
+		<include refid="abnormalReportOrderInfo" />
+	</select>
+
+	<select id="getShipOrderMsg" resultType="ShippingOrder">
+		SELECT * FROM
+		jy_shiping_order jso WHERE
+		jso.shiping_order_id=#{shiping_order_id}
+	</select>
+
+	<insert id="saveAbnormalReport" parameterType="AbnormalReport">
+		INSERT INTO
+		jy_abnormalreport
+		(id,shiping_order_id,abnormal_type,abnormal_type_name,abnormal_message,abnormal_time,abnormal_num,abnormal_name,abnormal_supperid,abnormal_driverid,abnormal_remark,abnormal_userid)
+		VALUES
+		(#{id},#{shiping_order_id},#{abnormal_type},#{abnormal_type_name},#{abnormal_message},now(),#{abnormal_num},#{abnormal_name},#{abnormal_supperid},#{abnormal_driverid},#{abnormal_remark},#{abnormal_userid})
+
+	</insert>
+
+	<insert id="saveOrderHistory" parameterType="java.util.List">
+		INSERT
+		jy_order_history
+		(
+		order_history_id,
+		orders_id,
+		order_arrive_time,
+		goods_arrive_remakes
+		)
+		VALUES
+		<foreach collection="list" index="index" item="item"
+			separator=",">
+			(
+			#{item.order_history_id},
+			#{item.orders_id},
+			#{item.order_arrive_time},
+			#{item.goods_arrive_remakes}
+			)
+		</foreach>
+	</insert>
+
+	<update id="updateIsAbnormal">
+		update jy_shiping_order SET is_abnormal =#{flag}
+		WHERE
+		shiping_order_id=#{shippingOrderId}
+	</update>
+
+	<insert id="saveAbnormalImage">
+		INSERT INTO jy_abnormalimages
+		(image_id,order_id,abnormalt_id,imageUrl)
+		VALUES
+		<foreach collection="list" item="item" index="index"
+			separator=",">
+			(#{item.image_id},#{item.order_id},#{item.abnormalt_id},#{item.imageUrl})
+		</foreach>
+	</insert>
+
+	<select id="getSupplersId" resultType="string">
+		SELECT driver_suppliers
+		from jy_driver_info where driver_id=#{drverId}
+	</select>
+
+	<!-- 异常反馈查询条件 -->
+	<sql id="abnormalReportInfo">
+		<if test="param3!=null and param3!=''">
+			AND janr.abnormal_time &gt;=#{param3}
+		</if>
+		<if test="param4!=null and param4!=''">
+			AND janr.abnormal_time &lt;=#{param4}
+		</if>
+		<if test="(param3!=null and param3!='') and (param4!=null and param4!='')">
+			AND janr.abnormal_time &gt;=#{param3}
+			AND
+			janr.abnormal_time&lt;=#{param4}
+		</if>
+		<if test="param5!=null and param5!=''">
+			AND jso.shiping_order_num like "%${param5}%"
+		</if>
+		<if test="param6!=null and param6!=''">
+			AND jso.shiping_order_goid like "%${param6}%"
+		</if>
+		<if test="param7!=null and param7!=''">
+			AND janr.abnormal_result = #{param7}
+		</if>
+		<if test="param8!=null and param8!=''">
+			AND janr.abnormal_type = #{param8}
+		</if>
+
+		<if test="param9!=null and param9!=''">
+			AND jso.end_address like '%${param9}%'
+		</if>
+		<if test="param10!=null and param10!=''">
+			AND jso.receipt_name like '%${param10}%'
+		</if>
+		<if test="param11!=null and param11!=''">
+			AND jso.send_mechanism like '%${param11}%'
+		</if>
+		ORDER BY janr.abnormal_time DESC ,abnormal_result
+		LIMIT #{param1},#{param2}
+	</sql>
+
+	<!-- 异常反馈查询总条数条件 -->
+	<sql id="abnormalReportCount">
+		<if test="param1!=null and param1!=''">
+			AND janr.abnormal_time &gt;=#{param1}
+		</if>
+		<if test="param2!=null and param2!=''">
+			AND janr.abnormal_time &lt;=#{param2}
+		</if>
+		<if test="(param1!=null and param1!='') and (param2!=null and param2!='')">
+			AND janr.abnormal_time &gt;=#{param1}
+			AND
+			janr.abnormal_time&lt;=#{param2}
+		</if>
+		<if test="param3!=null and param3!=''">
+			AND jso.shiping_order_num like "%${param3}%"
+		</if>
+		<if test="param4!=null and param4!=''">
+			AND jso.shiping_order_goid like "%${param4}%"
+		</if>
+		<if test="param5!=null and param5!=''">
+			AND janr.abnormal_result = #{param5}
+		</if>
+		<if test="param6!=null and param6!=''">
+			AND janr.abnormal_type = #{param6}
+		</if>
+
+		<if test="param7!=null and param7!=''">
+			AND jso.end_address like '%${param7}%'
+		</if>
+		<if test="param8!=null and param8!=''">
+			AND jso.receipt_name like '%${param8}%'
+		</if>
+		<if test="param9!=null and param9!=''">
+			AND jso.send_mechanism like '%${param9}%'
+		</if>
+	</sql>
+
+	<select id="getAbnormalReport" resultMap="abnormalReport_ResultMap">
+		SELECT janr.*,jso.* FROM jy_abnormalreport janr INNER
+		JOIN
+		jy_shiping_order
+		jso ON jso.shiping_order_id =
+		janr.shiping_order_id
+		where 1=1
+		<include refid="abnormalReportInfo" />
+	</select>
+
+	<select id="getAbnormalReportCount" resultType="int">
+		SELECT COUNT(1)
+		FROM jy_abnormalreport janr INNER JOIN jy_shiping_order
+		jso
+		ON jso.shiping_order_id = janr.shiping_order_id
+		where 1=1
+		<include refid="abnormalReportCount" />
+	</select>
+
+	<select id="otherGetAbnormalReport" resultMap="abnormalReport_ResultMap">
+		SELECT janr.*,jso.* FROM jy_abnormalreport janr INNER
+		JOIN
+		jy_shiping_order
+		jso ON jso.shiping_order_id =
+		janr.shiping_order_id
+		LEFT JOIN jy_customer jc ON jc.customer_name = jso.send_mechanism
+		where jc.customer_id= #{param12}
+		<include refid="abnormalReportInfo" />
+	</select>
+
+	<select id="otherGetAbnormalReportCount" resultType="int">
+		SELECT count(1) FROM jy_abnormalreport janr INNER
+		JOIN
+		jy_shiping_order
+		jso ON jso.shiping_order_id =
+		janr.shiping_order_id
+		LEFT JOIN
+		jy_customer jc ON jc.customer_name = jso.send_mechanism
+		where
+		jc.customer_id= #{param10}
+		<include refid="abnormalReportCount" />
+	</select>
+
+	<select id="deriverGetAbnormalReport" resultMap="abnormalReport_ResultMap">
+		SELECT janr.*,jso.* FROM jy_abnormalreport janr INNER
+		JOIN
+		jy_shiping_order
+		jso ON jso.shiping_order_id =
+		janr.shiping_order_id
+		where janr.abnormal_driverid=#{param12}
+		<include refid="abnormalReportInfo" />
+	</select>
+
+	<select id="driverGetAbnormalReportCount" resultType="int">
+		SELECT count(1) FROM jy_abnormalreport janr INNER
+		JOIN
+		jy_shiping_order
+		jso ON jso.shiping_order_id =
+		janr.shiping_order_id
+		where
+		janr.abnormal_driverid=#{param10}
+		<include refid="abnormalReportCount" />
+	</select>
+
+	<select id="suppliersGetAbnormalReport" resultMap="abnormalReport_ResultMap">
+		SELECT janr.*,jso.* FROM jy_abnormalreport janr INNER
+		JOIN
+		jy_shiping_order
+		jso ON jso.shiping_order_id =
+		janr.shiping_order_id
+		where janr.abnormal_supperid=#{param12}
+		<include refid="abnormalReportInfo" />
+	</select>
+
+	<select id="suppliersGetAbnormalReportCount" resultType="int">
+		SELECT count(1) FROM jy_abnormalreport janr INNER
+		JOIN
+		jy_shiping_order
+		jso ON jso.shiping_order_id =
+		janr.shiping_order_id
+		where
+		janr.abnormal_supperid=#{param10}
+		<include refid="abnormalReportCount" />
+	</select>
+
+	<select id="showAbnormalImg" resultType="AbnormalImages">
+		SELECT * FROM
+		jy_abnormalimages where abnormalt_id = #{id}
+	</select>
+
+	<select id="exceptionHandling" resultMap="abnormalReport_ResultMap">
+		SELECT
+		jabim.*,jabno.*,jso.* FROM jy_abnormalreport
+		jabno INNER JOIN
+		jy_shiping_order jso
+		ON jabno.shiping_order_id =
+		jso.shiping_order_id
+		LEFT JOIN jy_abnormalimages jabim ON
+		jabim.abnormalt_id = jabno.id
+		WHERE jabno.id= #{id}
+	</select>
+
+	<update id="updateAbnormalState">
+		UPDATE jy_abnormalreport SET
+		abnormal_result='1',
+		abnormal_resultremark=#{abnormal_resultremark},
+		abnormal_resultuser=#{userName},
+		abnormal_resulttime=now()
+		WHERE
+		id=#{id}
+	</update>
+
+	<select id="getAbnormalOrderNum" resultType="int">
+		SELECT COUNT(*) FROM
+		jy_abnormalreport
+		jabr WHERE
+		jabr.shiping_order_id=#{orderId} AND
+		jabr.abnormal_result='0'
+	</select>
+
+	<update id="updateOrederAbnormal">
+		UPDATE jy_shiping_order SET is_abnormal ='3' WHERE
+		shiping_order_id=#{orderId}
+	</update>
+
+	<select id="getChannelIds" resultType="string">
+		SELECT channelId FROM
+		jy_user ju WHERE ju.id
+		=#{abnormal_driverid} OR
+		ju.suppliers_id=#{abnormal_supperid}
+	</select>
+	
+	<select id="getChannelIdsTwo" resultType="string">
+		 SELECT channelId FROM
+		jy_user ju WHERE ju.id =(
+	SELECT jap.abnormal_userid FROM jy_abnormalreport jap WHERE jap.id=#{abnormalreportId})
+	</select>
+
+	<!-- 导出显示信息 -->
+	<sql id="abnormaloutputmessage">
+		janr.id,jso.shiping_order_num,jso.shiping_order_goid,jso.send_mechanism,jso.end_address,jso.receipt_tel,jso.receipt_name,
+		janr.abnormal_message,janr.abnormal_resultremark,janr.abnormal_remark,janr.abnormal_name,janr.abnormal_time,janr.abnormal_num,
+		janr.abnormal_resultuser
+	</sql>
+	<!-- 导出查询条件 -->
+	<sql id="outputAbnormalInfo">
+		<if test="array!=null and array.length!=0">
+			and a.id in
+			<foreach collection="array" index="index" item="item" open="("
+				separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="array==null or array.length==0">
+			<if test="param1!=null and param1!=''">
+				AND a.abnormal_time &gt;=#{param1}
+			</if>
+			<if test="param2!=null and param2!=''">
+				AND a.abnormal_time &lt;=#{param2}
+			</if>
+			<if test="(param1!=null and param1!='') and (param2!=null and param2!='')">
+				AND a.abnormal_time &gt;=#{param1}
+				AND
+				a.abnormal_time&lt;=#{param2}
+			</if>
+			<if test="param3!=null and param3!=''">
+				AND a.shiping_order_num like "%${param3}%"
+			</if>
+			<if test="param4!=null and param4!=''">
+				AND a.shiping_order_goid like "%${param4}%"
+			</if>
+			<if test="param5!=null and param5!=''">
+				AND a.abnormal_result = #{param5}
+			</if>
+			<if test="param6!=null and param6!=''">
+				AND a.abnormal_type = #{param6}
+			</if>
+
+			<if test="param7!=null and param7!=''">
+				AND a.end_address like '%${param7}%'
+			</if>
+			<if test="param8!=null and param8!=''">
+				AND a.receipt_name like '%${param8}%'
+			</if>
+			<if test="param9!=null and param9!=''">
+				AND a.send_mechanism like '%${param9}%'
+			</if>
+		</if>
+	</sql>
+
+	<select id="outputAbnormalReport" resultType="AbnormalReportFile">
+		SELECT (@rowNO :=
+		@rowNo+1) AS rowno,a.* from (SELECT
+		<include refid="abnormaloutputmessage" />
+		FROM jy_abnormalreport janr INNER
+		JOIN
+		jy_shiping_order
+		jso ON
+		jso.shiping_order_id =
+		janr.shiping_order_id
+		where 1=1) a,(select @rowNO
+		:=0) b
+		where 1=1
+		<include refid="outputAbnormalInfo" />
+	</select>
+
+	<select id="otherOutputAbnormalReport" resultType="AbnormalReportFile">
+		SELECT (@rowNO :=
+		@rowNo+1) AS rowno,a.*from (
+		SELECT
+		<include refid="abnormaloutputmessage" />
+		FROM jy_abnormalreport janr INNER
+		JOIN
+		jy_shiping_order
+		jso ON
+		jso.shiping_order_id =
+		janr.shiping_order_id
+		LEFT JOIN jy_customer jc ON
+		jc.customer_name = jso.send_mechanism
+		where jc.customer_id= #{user_id}
+		) a,(select @rowNO
+		:=0) b
+		where 1=1
+		<include refid="outputAbnormalInfo" />
+	</select>
+
+	<select id="driverOutputAbnormalReport" resultType="AbnormalReportFile">
+		SELECT (@rowNO :=
+		@rowNo+1) AS rowno,a.*from (
+		SELECT
+		<include refid="abnormaloutputmessage" />
+		FROM jy_abnormalreport janr INNER
+		JOIN
+		jy_shiping_order
+		jso ON
+		jso.shiping_order_id =
+		janr.shiping_order_id
+		where
+		janr.abnormal_driverid=#{driverId}
+		) a,(select @rowNO
+		:=0) b
+		where 1=1
+		<include refid="outputAbnormalInfo" />
+	</select>
+
+	<select id="suppliersOutputAbnormalReport" resultType="AbnormalReportFile">
+		SELECT (@rowNO :=
+		@rowNo+1) AS rowno,a.*from (
+		SELECT
+		<include refid="abnormaloutputmessage" />
+		FROM jy_abnormalreport janr INNER
+		JOIN
+		jy_shiping_order
+		jso ON
+		jso.shiping_order_id =
+		janr.shiping_order_id
+		where
+		janr.abnormal_supperid=#{suppliersId}
+		) a,(select @rowNO
+		:=0) b
+		where 1=1
+		<include refid="outputAbnormalInfo" />
+	</select>
+
+</mapper>

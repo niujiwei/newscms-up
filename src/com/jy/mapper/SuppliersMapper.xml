@@ -1,0 +1,532 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.SuppliersDao">
+	<resultMap type="com.jy.model.JySuppliers" id="suppliers">
+		<id column="suppliers_id" property="suppliersId" />
+		<result column="suppliers_name" property="suppliersName" />
+		<result column="suppliers_address" property="suppliersAddress" />
+		<result column="suppliers_people" property="suppliersPeople" />
+		<result column="suppliers_person" property="suppliersPerson" />
+		<result column="suppliers_phone" property="suppliersPhone" />
+		<result column="suppliers_services" property="suppliersService" />
+		<result column="suppliers_deadline" property="suppliersDeadline" />
+		<result column="suppliers_start_date" property="suppliersStartDate" />
+		<result column="suppliers_end_date" property="suppliersEndDate" />
+		<result column="suppliers_prove" property="suppliersProve" />
+		<result column="phone_brand" property="phone_brand" />
+		<result column="department_name" property="department_name" />
+		<result column="phone_model" property="phone_model" />
+		<result column="suppliers_carnumber" property="suppliers_carnumber" />
+		<result column="suppliers_cartype" property="suppliers_cartype" />
+		<result column="suppliers_operator" property="suppliersOperator" />
+		<result column="suppliers_operator_date" property="suppliersOperatorDate" />
+		<result column="supplie_company" property="supplie_company" />
+		<result column="suppliers_customer" property="suppliers_customer" />
+		<result column="supplier_customer_name" property="supplier_customer_name" />
+		<collection property="customer" ofType="Customer">
+			<!-- id：订单明细唯 一标识 property:要将订单明细的唯 一标识 映射到cn.itcast.mybatis.po.Orderdetail的哪个属性 -->
+			<id column="customer_id" property="customer_id" />
+			<result column="customer_name" property="customer_name" />
+		</collection>
+	</resultMap>
+	<sql id="supplersPutOut_info_sql"><!-- 供应商信息导出 -->
+		<if test="array!=null and array.length!=0">
+			and sup.suppliers_id IN
+			<foreach collection="array" index="index" item="item" open="("
+				separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="param1!=null and param1!=''">
+			and sup.suppliers_name like "%${param1}%"
+		</if>
+		<if test="param2!=null and param2!=''">
+			and sup.suppliers_phone like "%${param2}%"
+		</if>
+		<if test="param3!=null and param3!=''">
+			and sup.suppliers_address like "%${param3}%"
+		</if>
+		<if test="param5!=null and param5!=''">
+			AND sup.suppliers_customer=#{param5}
+		</if>
+		order by sup.suppliers_address ASC
+	</sql>
+	<select id="otherGetSuppUserOutPut" resultMap="suppliers">
+		SELECT
+		de.department_name,
+		sup.*,
+		jc.customer_name as
+		supplier_customer_name
+		FROM
+		jy_suppliers sup
+		LEFT JOIN jy_customer jc on
+		FIND_IN_SET(jc.customer_id,sup.suppliers_customer)
+		JOIN jy_user ju ON
+		ju.customer_id= jc.customer_id
+		left join jy_user u on
+		sup.suppliers_id=u.suppliers_id
+		left join jy_department de on
+		de.department_id=u.did
+		WHERE ju.id=#{param4}
+		<include refid="supplersPutOut_info_sql" />
+	</select>
+	<select id="getSuppliersOutPut" resultMap="suppliers">
+		SELECT
+		de.department_name,
+		sup.*,
+		jc.customer_name as
+		supplier_customer_name
+		FROM
+		jy_suppliers sup
+		LEFT JOIN jy_user ju on
+		sup.suppliers_id =
+		ju.suppliers_id
+		LEFT JOIN jy_customer jc on
+		FIND_IN_SET
+		(jc.customer_id,sup.suppliers_customer)
+		left join jy_user u
+		on
+		sup.suppliers_id=u.suppliers_id
+		left join jy_department de on
+		de.department_id=u.did
+		WHERE
+		1=1
+		AND
+		ju.id=#{param4}
+		<include refid="supplersPutOut_info_sql" />
+
+	</select>
+	<select id="getSupplierOutPut" resultMap="suppliers">
+		SELECT
+		de.department_name,
+		sup.*,
+		jc.customer_name as
+		supplier_customer_name
+		FROM
+		jy_suppliers sup
+		LEFT JOIN jy_driver_info jdi
+		ON sup.suppliers_id =
+		jdi.driver_suppliers
+		LEFT JOIN jy_customer jc on
+		FIND_IN_SET
+		(jc.customer_id,sup.suppliers_customer)
+		left join jy_user u
+		on
+		sup.suppliers_id=u.suppliers_id
+		left join jy_department de on
+		de.department_id=u.did
+		WHERE
+		1=1
+		AND
+		jdi.driver_id=#{param4}
+		<include refid="supplersPutOut_info_sql" />
+	</select>
+	<select id="getSuppUserOutPut" resultMap="suppliers">
+		SELECT
+		de.department_name,
+		sup.*,
+		jc.customer_name as
+		supplier_customer_name
+		FROM
+		jy_suppliers sup
+		LEFT JOIN jy_customer jc on
+		FIND_IN_SET
+		(jc.customer_id,sup.suppliers_customer)
+		left join jy_user u
+		on
+		sup.suppliers_id=u.suppliers_id
+		left join jy_department de on
+		de.department_id=u.did
+		WHERE 1=1
+		<include refid="supplersPutOut_info_sql" />
+	</select>
+	<select id="getCartype" resultType="string">
+		SELECT
+		length_name from
+		jy_car_length
+	</select>
+
+	<sql id="supplers_info_sql"><!-- 供应商信息查询条件 -->
+		<if test="param3!=null and param3!=''">
+			and sup.suppliers_name like "%${param3}%"
+		</if>
+		<if test="param4!=null and param4!=''">
+			and sup.suppliers_phone like "%${param4}%"
+		</if>
+		<if test="param5!=null and param5!=''">
+			and sup.suppliers_address like "%${param5}%"
+		</if>
+		<if test="param7!=null and param7!=''">
+			AND sup.suppliers_customer=#{param7}
+		</if>
+
+		order by sup.suppliers_address ASC
+		limit
+		#{param1},#{param2}
+
+	</sql>
+
+	<sql id="suppler_count_sql"><!--供应商总条数信息查询 -->
+		<if test="param1!=null and param1!=''">
+			and sup.suppliers_name like "%${param1}%"
+		</if>
+		<if test="param2!=null and param2!=''">
+			and sup.suppliers_phone like "%${param2}%"
+		</if>
+		<if test="param3!=null and param3!=''">
+			and sup.suppliers_address like "%${param3}%"
+		</if>
+		<if test="param5!=null and param5!=''">
+			AND sup.suppliers_customer=#{param5}
+		</if>
+	</sql>
+
+	<select id="getSuppUser" resultMap="suppliers">
+		SELECT
+		sup.*,
+		(SELECT GROUP_CONCAT(jc.customer_name )FROM jy_customer jc
+		WHERE
+		FIND_IN_SET
+		(jc.customer_id,sup.suppliers_customer))
+		as
+		supplier_customer_name
+		FROM
+		jy_suppliers sup
+		WHERE 1=1
+		<include refid="supplers_info_sql" />
+	</select>
+
+	<select id="getSuppCounUser" resultType="int">
+		SELECT
+		count(*)
+		FROM
+		jy_suppliers sup
+		WHERE
+		1=1
+		<include refid="suppler_count_sql" />
+	</select>
+
+	<select id="getSupplier" resultMap="suppliers">
+		SELECT
+		sup.*,
+		(SELECT GROUP_CONCAT(jc.customer_name )FROM jy_customer jc
+		WHERE
+		FIND_IN_SET
+		(jc.customer_id,sup.suppliers_customer))
+		as
+		supplier_customer_name
+		FROM
+		jy_suppliers sup
+		LEFT JOIN jy_driver_info jdi
+		ON sup.suppliers_id =
+		jdi.driver_suppliers
+		WHERE
+		1=1
+		AND
+		jdi.driver_id=#{param6}
+		<include refid="supplers_info_sql" />
+	</select>
+
+	<select id="getSuppliersCoun" resultType="int">
+		SELECT
+		count(*)
+		FROM
+		jy_suppliers sup
+		LEFT JOIN jy_driver_info jdi ON
+		sup.suppliers_id =
+		jdi.driver_suppliers
+		WHERE
+		1=1
+		AND
+		jdi.driver_id=#{param4}
+		<include refid="suppler_count_sql" />
+	</select>
+
+
+	<select id="getSuppliers" resultMap="suppliers">
+		SELECT
+		sup.*,
+		(SELECT GROUP_CONCAT(jc.customer_name )FROM jy_customer jc
+		WHERE
+		FIND_IN_SET
+		(jc.customer_id,sup.suppliers_customer))
+		as
+		supplier_customer_name
+		FROM
+		jy_suppliers sup
+		LEFT JOIN jy_user ju on
+		sup.suppliers_id =
+		ju.suppliers_id
+		WHERE
+		1=1
+		AND ju.id=#{param6}
+		<include refid="supplers_info_sql" />
+
+	</select>
+	<select id="getSuppliersCount" resultType="int">
+		SELECT
+		count(*)
+		FROM
+		jy_suppliers sup
+		LEFT JOIN jy_user ju on
+		sup.suppliers_id =
+		ju.suppliers_id
+		WHERE
+		1=1
+		AND ju.id=#{param4}
+		<include refid="suppler_count_sql" />
+	</select>
+
+	<insert id="saveSuppliers" parameterType="JySuppliers">
+		insert into
+		jy_suppliers
+		(
+		suppliers_id,
+		suppliers_name,
+		suppliers_address,
+		suppliers_people,
+		suppliers_person,
+		suppliers_phone,
+		suppliers_services,
+		suppliers_deadline,
+		suppliers_start_date,
+		suppliers_end_date,
+		suppliers_prove,
+		suppliers_operator,
+		suppliers_operator_date,
+		suppliers_customer,
+		phone_brand,
+		phone_model,
+		suppliers_cartype,
+		suppliers_carnumber,
+		supplie_company
+		)
+		values
+		(
+		#{suppliersId},
+		#{suppliersName},
+		#{suppliersAddress},
+		#{suppliersPeople},
+		#{suppliersPerson},
+		#{suppliersPhone},
+		#{suppliersService},
+		#{suppliersDeadline},
+		#{suppliersStartDate},
+		#{suppliersEndDate},
+		#{suppliersProve},
+		#{suppliersOperator},
+		#{suppliersOperatorDate},
+		#{suppliers_customer},
+		#{phone_brand},
+		#{phone_model},
+		#{suppliers_cartype},
+		#{suppliers_carnumber},
+		#{supplie_company}
+		)
+	</insert>
+	<select id="getUpdateSuppliers" resultMap="suppliers">
+		SELECT
+		sup.*,
+		jc.customer_name,
+		jc.customer_id
+		FROM
+		jy_suppliers sup
+		LEFT
+		JOIN
+		jy_customer jc on
+		FIND_IN_SET
+		(jc.customer_id,sup.suppliers_customer)
+		where sup.suppliers_id=#{0}
+	</select>
+	<update id="updateSupplierImage">
+		update jy_suppliers
+		<set>
+			suppliers_prove = #{0}
+		</set>
+		where suppliers_id=#{1}
+	</update>
+	<update id="updateSuppliers" parameterType="JySuppliers">
+		update jy_suppliers sup
+		<set>
+			sup.suppliers_name=#{suppliersName},
+			sup.suppliers_address=#{suppliersAddress},
+			sup.suppliers_people=#{suppliersPeople},
+			sup.suppliers_person=#{suppliersPerson},
+			sup.suppliers_phone=#{suppliersPhone},
+			sup.suppliers_services=#{suppliersService},
+			sup.suppliers_deadline=#{suppliersDeadline},
+			sup.suppliers_start_date=#{suppliersStartDate},
+			sup.suppliers_end_date=#{suppliersEndDate},
+			sup.suppliers_prove=#{suppliersProve},
+			sup.suppliers_operator=#{suppliersOperator},
+			sup.suppliers_operator_date=#{suppliersOperatorDate},
+			sup.driver_province=#{driver_province},
+			sup.driver_city=#{driver_city},
+			sup.driver_county=#{driver_county},
+			sup.suppliers_customer=#{suppliers_customer},
+			sup.phone_brand=#{phone_brand},
+			sup.phone_model=#{phone_model},
+			sup.suppliers_cartype=#{suppliers_cartype},
+			sup.suppliers_carnumber=#{suppliers_carnumber},
+			sup.supplie_company=#{supplie_company}
+
+		</set>
+		where sup.suppliers_id = #{suppliersId}
+	</update>
+	<select id="getSpriadd" resultType="JySuppliers">
+		select suppliers_address
+		suppliersAddress,
+		suppliers_id suppliersId
+		from jy_suppliers
+	</select>
+	<delete id="deletesuppliers" parameterType="java.util.Arrays">
+		delete from
+		jy_suppliers
+		where
+		suppliers_id IN
+		<foreach collection="array" index="index" item="item" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	<!-- 协议和订单表的关联保存 <insert id="saveAgreementToorder" parameterType="java.util.List"> 
+		INSERT INTO jy_agreementtoorder (id,agreement_id,order_id) VALUES <foreach 
+		collection="list" index="index" item="item" separator=","> ( #{item.id}, 
+		#{item.agreement_id}, #{item.order_id} ) </foreach> </insert> <insert id="saveCreateAgreement" 
+		parameterType="CreateAgreement"> insert into jy_create_agreement ( agreement_id, 
+		agreement_number, agreement_type, ndp_id, ldp_id, car_number1, car_id, car_name, 
+		all_money, phone_number, remarks_send, create_time, create_user, number, 
+		company_id, company_number, custom_id, send_date, chanage_pay_type, company_tel 
+		) values ( #{agreement_id}, #{agreement_number}, #{agreement_type}, #{ndp_id}, 
+		#{ldp_id}, #{car_number1}, #{car_id}, #{car_name}, #{all_money}, #{phone_number}, 
+		#{remarks_send}, #{create_time}, #{create_user}, #{number}, #{company_id}, 
+		#{company_number}, #{car_id}, #{send_date}, #{chanage_pay_type}, #{company_tel} 
+		) </insert> 移除协议中的运单 <update id="updataZong"> update jy_create_agreement 
+		<set> <if test="param2!=null and param2!=''"> all_money=#{param2} </if> <if 
+		test="param3!=null and param3!=''"> number=number-#{param3} </if> </set> 
+		where agreement_id = #{param1} </update> 移除协议中的运单 <delete id="removeShip" 
+		parameterType="java.util.Arrays"> delete from jy_agreementtoorder where agreement_id 
+		=#{0} and order_id IN <foreach collection="array" index="index" item="item" 
+		open="(" separator="," close=")"> #{item} </foreach> </delete> -->
+	<!-- 牛冀伟新增 -->
+	<insert id="saveSupplersCityInfo" parameterType="java.util.List">
+		INSERT INTO jy_supperlis_city_info
+		(id,suppliersid,suppliers_province,suppliers_city,suppliers_county)
+		VALUES
+		<foreach collection="list" index="index" item="item"
+			separator=",">
+			(
+			#{item.id},#{item.suppliersId},#{item.driver_province},#{item.driver_city},#{item.driver_county}
+			)
+		</foreach>
+	</insert>
+	<select id="getCityInfo" resultType="City_info">
+		SELECT
+		jsci.suppliers_province AS province,jsci.suppliers_city AS
+		city,jsci.suppliers_county AS county from jy_supperlis_city_info jsci
+		WHERE suppliersid=#{0}
+	</select>
+	<delete id="deleteSuppliersCityInfo" parameterType="java.util.Arrays">
+		DELETE from
+		jy_supperlis_city_info WHERE suppliersid
+		IN
+		<foreach collection="array" index="index" item="item" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+
+	<select id="otherGetSuppUser" resultMap="suppliers">
+		SELECT
+		sup.*,
+		jc.customer_name as
+		supplier_customer_name
+		FROM
+		jy_suppliers
+		sup
+		LEFT JOIN jy_customer jc on
+		FIND_IN_SET(jc.customer_id,sup.suppliers_customer)
+		JOIN jy_user ju ON
+		ju.customer_id
+		= jc.customer_id
+		WHERE ju.id=#{param6}
+		<include refid="supplers_info_sql" />
+	</select>
+
+	<select id="otherGetSuppCounUser" resultType="int">
+		SELECT
+		count(*)
+		FROM
+		jy_suppliers sup
+		LEFT JOIN jy_customer jc on
+		FIND_IN_SET(jc.customer_id,sup.suppliers_customer)
+		LEFT
+		JOIN jy_user ju
+		ON
+		ju.customer_id = jc.customer_id
+		WHERE ju.id=#{param4}
+		<include refid="suppler_count_sql" />
+	</select>
+
+	<select id="getCity_Info" resultType="City_info" parameterType="java.util.List">
+		SELECT jci1.citycode AS province,jci2.citycode AS city,jci3.citycode
+		AS
+		county FROM jy_city_info jci1 LEFT JOIN jy_city_info jci2
+		ON
+		jci1.citycode = jci2.citye_parent_id
+		LEFT JOIN jy_city_info jci3 ON
+		jci3.citye_parent_id = jci2.citycode
+		where
+		1=1
+		AND (
+		jci1.citycode IN
+		<foreach collection="province" item="province" index="index"
+			open="(" close=")" separator=",">
+			#{province}
+		</foreach>
+		or jci2.citycode IN
+		<foreach collection="city" item="city" index="index" open="("
+			close=")" separator=",">
+			#{city}
+		</foreach>
+		or jci3.citycode IN
+		<foreach collection="county" item="county" index="index" open="("
+			close=")" separator=",">
+			#{county}
+		</foreach>
+		)
+	</select>
+	<select id="getCity_Info_name" resultType="string">
+		SELECT CONCAT_WS('',jci1.cityname
+		,jci2.cityname,GROUP_CONCAT(jci3.cityname)) AS province FROM
+		jy_city_info jci1 LEFT JOIN jy_city_info jci2
+		ON
+		jci1.citycode =
+		jci2.citye_parent_id
+		LEFT JOIN jy_city_info jci3 ON
+		jci3.citye_parent_id = jci2.citycode
+		where
+		1=1
+		AND (
+		jci1.citycode IN
+		<foreach collection="province" item="province" index="index"
+			open="(" close=")" separator=",">
+			#{province}
+		</foreach>
+		or jci2.citycode IN
+		<foreach collection="city" item="city" index="index" open="("
+			close=")" separator=",">
+			#{city}
+		</foreach>
+		or jci3.citycode IN
+		<foreach collection="county" item="county" index="index" open="("
+			close=")" separator=",">
+			#{county}
+		</foreach>
+		)
+		GROUP BY jci1.citycode,jci2.citycode
+
+	</select>
+</mapper>
+

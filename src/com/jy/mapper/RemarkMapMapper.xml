@@ -1,0 +1,1115 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.RemarkMapDao">
+	<select id="otherGetDeliveryPutOut" resultType="DeliveryCustomer">
+		SELECT *
+		from jy_delivery_customer a
+		LEFT JOIN jy_customer jc ON
+		jc.customer_name = a.delivery_cus_name
+		LEFT JOIN jy_user ju ON
+		ju.customer_id=jc.customer_id WHERE ju.id=#{userId}
+		<include refid="putout_delivery_customer" />
+	</select>
+	<select id="supplersGetDelivery" resultType="DeliveryCustomer">
+		SELECT *
+		from jy_delivery_customer a
+		where 1=1
+		AND
+		<foreach collection="list" item="employeeId" index="index"
+			open="(a.delivery_address LIKE" close=")" separator="or a.delivery_address LIKE">
+			'%${employeeId}%'
+		</foreach>
+		<include refid="putout_delivery_customer" />
+	</select>
+	<select id="getDriverDeliveryC" resultType="DeliveryCustomer">
+		SELECT *
+		from jy_delivery_customer a
+		where 1=1
+	
+		AND
+		<foreach collection="list" item="employeeId" index="index"
+			open="(a.delivery_address LIKE" close=")" separator="or a.delivery_address LIKE">
+			'%${employeeId}%'
+		</foreach>
+		<include refid="putout_delivery_customer" />
+	</select>
+	<select id="getAdminDeliveryC" resultType="DeliveryCustomer">
+		SELECT *
+		from
+		jy_delivery_customer a
+		where 1=1
+		<include refid="putout_delivery_customer" />
+	</select>
+	<sql id="putout_delivery_customer"><!-- 收货客户查询信息条件 -->
+		<if test="array!=null and array.length!=0">
+			and a.delivery_id in
+			<foreach collection="array" index="index" item="item" open="("
+				separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="param1 !=null and param1 != ''">
+			AND a.delivery_name like '%${param1}%'
+		</if>
+		<if test="param2 !=null and param2 != ''">
+			AND a.delivery_tel like '%${param2}%'
+		</if>
+		<if test="param3 !=null and param3 != ''">
+			AND a.delivery_address like '%${param3}%'
+		</if>
+		<if test="param4 !=null and param4 != ''">
+			AND a.delivery_cus_name like '%${param4}%'
+		</if>
+		order by a.delivery_address ASC
+	</sql>
+	<select id="getOutPutAll" resultType="Customer">
+		SELECT c.* from jy_customer c
+		where 1=1
+		<include refid="outPut" />
+	</select>
+	<select id="getOutpPutOther" resultType="Customer">
+		SELECT c.*
+		from jy_customer c
+		LEFT JOIN
+		jy_user ju ON
+		ju.customer_id=c.customer_id WHERE ju.id=#{id}
+		<include refid="outPut" />
+	</select>
+
+	<!-- 发货客户导出 -->
+	<sql id="outPut">
+		<if test="array!=null and array.length!=0">
+			and c.customer_id in
+			<foreach collection="array" index="index" item="item" open="("
+				separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="param1!=null and param1!=''">
+			and c.customer_name like "%${param1}%"
+		</if>
+		<if test="param2!=null and param2!=''">
+			and c.customer_tel like "%${param2}%"
+		</if>
+		<if test="param3!=null and param3!=''">
+			and c.customer_address like "%${param3}%"
+		</if>
+		order by c.customer_createtime DESC
+	</sql>
+	<select id="getDriver_id" resultType="Driver">
+		Select dr.driver_id from
+		jy_drivertoorder dr where dr.order_id=#{order_id}
+	</select>
+
+	<select id="getChannelId" resultType="User">
+		select us.id,us.channelId
+		from jy_user us where us.driver_id=#{driver_id}
+	</select>
+
+	<select id="getShinpingAging_time" resultType="ShippingOrder">
+		SELECT
+		shiping_order_id,aging_alltime,aging_day,aging_time,shiping_order_num
+		from jy_shiping_order where
+		shipping_order_state BETWEEN '2' AND '3'
+	</select>
+
+	<sql id="customer_info_sql"><!-- 发货客户信息查询条件 -->
+		<if test="param3 !=null and param3 != ''">
+			AND a.customer_name like '%${param3}%'
+		</if>
+		<if test="param4 !=null and param4 != ''">
+			AND a.customer_tel like '%${param4}%'
+		</if>
+		<if test="param5 !=null and param5 != ''">
+			AND a.customer_address like '%${param5}%'
+		</if>
+		order by a.customer_createtime ASC
+		limit #{param1},#{param2}
+	</sql>
+
+	<sql id="customer_count_sql"><!-- 发货客户总条数查询条件 -->
+		<if test="param1 !=null">
+			AND a.customer_name like '%${param1}%'
+		</if>
+		<if test="param2 !=null">
+			AND a.customer_tel like '%${param2}%'
+		</if>
+		<if test="param3 !=null">
+			AND a.customer_address like '%${param3}%'
+		</if>
+	</sql>
+
+	<select id="getRemarks" resultType="Customer">
+		SELECT *
+		from jy_customer a
+		where 1=1
+		<include refid="customer_info_sql" />
+	</select>
+
+	<select id="getCount" resultType="int">
+		SELECT count(*)
+		from jy_customer a
+		where 1=1
+		<include refid="customer_count_sql" />
+	</select>
+	<select id="supplierGetCount" resultType="int">
+		SELECT count(1)
+		from jy_customer a
+		LEFT JOIN jy_suppliers t_supp ON find_in_set(
+		a.customer_id,t_supp.suppliers_customer)
+		WHERE t_supp.suppliers_id=
+		(SELECT driver_suppliers FROM jy_driver_info WHERE driver_id=#{driverId})
+		<include refid="customer_count_sql" />
+	</select>
+
+	<select id="supplierGetRemarks" resultType="Customer">
+		SELECT *
+		from jy_customer a
+		LEFT JOIN jy_suppliers t_supp ON find_in_set(
+		a.customer_id,t_supp.suppliers_customer)
+		WHERE t_supp.suppliers_id =
+		(SELECT driver_suppliers FROM jy_driver_info WHERE driver_id=#{driverId})
+		<include refid="customer_info_sql" />
+	</select>
+
+
+	<select id="otherGetCustomer" resultType="Customer">
+		SELECT a.*
+		from jy_customer a
+		LEFT JOIN
+		jy_user ju ON
+		ju.customer_id=a.customer_id WHERE ju.id=#{param6}
+		<include refid="customer_info_sql" />
+	</select>
+
+	<select id="otherGetCustomerCount" resultType="int">
+		SELECT COUNT(*)
+		from jy_customer a
+		LEFT JOIN
+		jy_user ju ON
+		ju.customer_id=a.customer_id WHERE ju.id=#{param4}
+		<include refid="customer_count_sql" />
+	</select>
+
+	<delete id="deleteRemark">
+		delete from jy_customer where customer_id in
+		<foreach collection="array" item="customerId" index="index"
+			open="(" close=")" separator=",">
+			#{customerId}
+		</foreach>
+	</delete>
+
+	<select id="getCustomerbyid" resultType="Customer">
+		<if test="_parameter !=null">
+			SELECT * FROM jy_customer WHERE customer_id=#{_parameter}
+		</if>
+	</select>
+
+	<update id="updateCustomer" parameterType="Customer">
+		update jy_customer set
+		customer_id =#{customer_id},
+		customer_num=#{customer_num},
+		customer_name=#{customer_name},
+		customer_people=#{customer_people},
+		customer_address=#{customer_address},
+		customer_tel=#{customer_tel},
+		customer_business=#{customer_business},
+		customer_profile=#{customer_profile},
+		customer_experience=#{customer_experience},
+		customer_point=#{customer_point},
+		customer_operationtime=SYSDATE(),
+		customer_operation=#{customer_operation}
+		where
+		customer_id=#{customer_id}
+	</update>
+
+	<select id="getTypes" resultType="RemarkType">
+		select * from jy_remark_type
+	</select>
+	<select id="getRange" resultType="RemarkRange">
+		select * from jy_remark_range
+	</select>
+	<select id="getOneRange" resultType="String">
+		select remark_range_name
+		from jy_remark_range where remark_range_id=#{0}
+	</select>
+	<select id="getRemark" resultType="Customer">
+		select * from jy_customer
+		where customer_id=#{0}
+	</select>
+	<select id="checkName" resultType="int">
+		select count(*) from jy_remark
+		where remark_name=#{0}
+	</select>
+	<select id="checkRemark" resultType="int">
+		select count(*) from
+		jy_classline_info where remarkId=#{0}
+	</select>
+	<select id="getRemarkName" resultType="Remark">
+		select * from jy_Remark r
+		<if test="param2=='name'">
+			where r.remark_name like '%${param1}%'
+		</if>
+		<if test="param2=='tel'">
+			where r.remark_tel like '%${param1}%%'
+		</if>
+		<if test="param2=='address'">
+			where r.remark_address like '%${param1}%%'
+		</if>
+	</select>
+	<insert id="addRemark" parameterType="Customer">
+		insert jy_customer(
+		customer_id,
+		customer_num,
+		customer_name,
+		customer_address,
+		customer_tel,
+		customer_point,
+		customer_createtime
+		)values(
+		#{customer_id},
+		#{customer_num},
+		#{customer_name},
+		#{customer_address},
+		#{customer_tel},
+		#{customer_point},
+		SYSDATE())
+	</insert>
+
+	<sql id="delivery_customer_info_sql"><!-- 收货客户查询信息条件 -->
+		<if test="param3 !=null and param3 != ''">
+			AND a.delivery_name like '%${param3}%'
+		</if>
+		<if test="param4 !=null and param4 != ''">
+			AND a.delivery_tel like '%${param4}%'
+		</if>
+		<if test="param5 !=null and param5 != ''">
+			AND a.delivery_address like '%${param5}%'
+		</if>
+		<if test="param7 !=null and param7 != ''">
+			AND a.delivery_cus_name like '%${param7}%'
+		</if>
+		order by a.delivery_address ASC
+		limit #{param1},#{param2}
+
+	</sql>
+
+	<select id="getDeliveryC" resultType="DeliveryCustomer">
+		SELECT *
+		from
+		jy_delivery_customer a
+		where 1=1
+		<include refid="delivery_customer_info_sql" />
+	</select>
+
+	<select id="getDeliveryCustomersdd" resultType="DeliveryCustomer">
+		SELECT *
+		from jy_delivery_customer a
+		LEFT JOIN jy_customer t_customer ON a.delivery_cus_name =
+		t_customer.customer_name
+		LEFT JOIN jy_suppliers t_supp ON find_in_set(
+		t_customer.customer_id,t_supp.suppliers_customer)
+		WHERE t_supp.suppliers_id=(SELECT driver_suppliers FROM jy_driver_info WHERE driver_id=#{driverId})
+		AND
+		<foreach collection="list" item="employeeId" index="index"
+			open="(a.delivery_address LIKE" close=")" separator="or a.delivery_address LIKE">
+			'%${employeeId}%'
+		</foreach>
+		<include refid="delivery_customer_info_sql" />
+	</select>
+
+	<select id="supplersGetDeliveryInfoddd" resultType="DeliveryCustomer">
+		SELECT *
+		from jy_delivery_customer a
+		where 1=1
+		AND
+		<foreach collection="list" item="employeeId" index="index"
+			open="(a.delivery_address LIKE" close=")" separator="or a.delivery_address LIKE">
+			'%${employeeId}%'
+		</foreach>
+		<include refid="delivery_customer_info_sql" />
+	</select>
+
+	<select id="otherGetDeliveryC" resultType="DeliveryCustomer">
+		SELECT a.*
+		from jy_delivery_customer a
+		LEFT JOIN jy_customer jc ON
+		jc.customer_name = a.delivery_cus_name
+		LEFT JOIN jy_user ju ON
+		ju.customer_id=jc.customer_id WHERE ju.id=#{param6}
+		<include refid="delivery_customer_info_sql" />
+	</select>
+
+
+	<sql id="delivery_customer_count_sql"><!-- 收货客户条数信息条件 -->
+		<if test="param1 !=null">
+			AND a.delivery_name like '%${param1}%'
+		</if>
+		<if test="param2 !=null">
+			AND a.delivery_tel like '%${param2}%'
+		</if>
+		<if test="param3 !=null">
+			AND a.delivery_address like '%${param3}%'
+		</if>
+		<if test="param5 !=null and param5 != ''">
+			AND a.delivery_cus_name like '%${param5}%'
+		</if>
+	</sql>
+
+	<select id="getDeliveryCon" resultType="int">
+		SELECT count(*)
+		from
+		jy_delivery_customer a
+		where 1=1
+		<include refid="delivery_customer_count_sql" />
+	</select>
+
+	<select id="getDeliveryCountdd" resultType="int">
+		SELECT count(1)
+		from jy_delivery_customer a
+		LEFT JOIN jy_customer t_customer ON a.delivery_cus_name =
+		t_customer.customer_name
+		LEFT JOIN jy_suppliers t_supp ON find_in_set(
+		t_customer.customer_id,t_supp.suppliers_customer)
+		WHERE t_supp.suppliers_id=(SELECT driver_suppliers FROM jy_driver_info WHERE driver_id=#{driverId})
+		<include refid="delivery_customer_count_sql" />
+		AND
+		<foreach collection="list" item="employeeId" index="index"
+			open="(a.delivery_address LIKE" close=")" separator="or a.delivery_address LIKE">
+			'%${employeeId}%'
+		</foreach>
+	</select>
+
+	<select id="supplersGetDeliveryCountddd" resultType="int">
+		SELECT count(*)
+		from jy_delivery_customer a
+		where 1=1
+		<include refid="delivery_customer_count_sql" />
+		AND
+		<foreach collection="list" item="employeeId" index="index"
+			open="(a.delivery_address LIKE" close=")" separator="or a.delivery_address LIKE">
+			'%${employeeId}%'
+		</foreach>
+	</select>
+
+	<select id="otherGetDeliveryCon" resultType="int">
+		SELECT COUNT(*)
+		from jy_delivery_customer a
+		LEFT JOIN jy_customer jc ON
+		jc.customer_name = a.delivery_cus_name
+		LEFT JOIN jy_user ju ON
+		ju.customer_id=jc.customer_id WHERE ju.id=#{param4}
+		<include refid="delivery_customer_count_sql" />
+	</select>
+
+	<select id="getDeliveryCustomers" resultType="DeliveryCustomer">
+		SELECT *
+		from jy_delivery_customer a
+		where 1=1
+		<if test="param3 !=null and param3 != ''">
+			AND a.delivery_name like '%${param3}%'
+		</if>
+		<if test="param4 !=null and param4 != ''">
+			AND a.delivery_tel like '%${param4}%'
+		</if>
+		<if test="param5 !=null and param5 != ''">
+			AND a.delivery_address like '%${param5}%'
+		</if>
+		AND a.delivery_address in
+		(select concat_ws('',jci.cityname
+		,jcii.cityname,jciii.cityname) from
+		jy_driver_info_cityinfo jdic
+		LEFT
+		JOIN jy_city_info jci ON jdic.driver_province = jci.citycode AND
+		city_type= '1' LEFT JOIN jy_city_info jcii ON jdic.driver_city
+		=jcii.citycode
+		AND jcii.city_type='2'
+		LEFT JOIN jy_city_info jciii ON
+		jciii.citycode=jdic.driver_county AND
+		jciii.city_type='3' WHERE
+		jdic.driver_id=#{param6})
+
+		order by a.delivery_address ASC
+		limit
+		#{param1},#{param2}
+	</select>
+
+
+
+
+	<update id="updateRemark" parameterType="Remark">
+		update jy_customer set
+		customer_num=#{customer_num},
+		customer_name=#{customer_name},
+		customer_address=#{customer_address},
+		customer_tel=#{customer_tel},
+		customer_point=#{customer_point}
+		where customer_id=#{customer_id}
+
+	</update>
+	<update id="updateLocationRemarkCustomer" parameterType="DeliveryCustomer">
+		update
+		jy_delivery_customer set
+		delivery_operationtime=SYSDATE(),<!-- 定位保存后加了个操作时间 -->
+		delivery_point=#{delivery_point},
+		delivery_radius=#{delivery_radius},
+		delivery_areaType=#{delivery_areaType},
+		delivery_address=#{delivery_address}
+		where delivery_id=#{delivery_id}
+	</update>
+
+	<select id="getDeliveryCount" resultType="int">
+		SELECT count(*)
+		from jy_delivery_customer a
+		where 1=1
+		<if test="param1 !=null">
+			AND a.delivery_id like '%${param1}%'
+		</if>
+		<if test="param2 !=null">
+			AND a.delivery_tel like '%${param2}%'
+		</if>
+		<if test="param3 !=null">
+			AND a.delivery_address like '%${param3}%'
+		</if>
+		AND a.delivery_address in
+		(select concat_ws('',jci.cityname
+		,jcii.cityname,jciii.cityname) from
+		jy_driver_info_cityinfo jdic
+		LEFT
+		JOIN jy_city_info jci ON jdic.driver_province = jci.citycode AND
+		city_type= '1' LEFT JOIN jy_city_info jcii ON jdic.driver_city
+		=jcii.citycode
+		AND jcii.city_type='2'
+		LEFT JOIN jy_city_info jciii ON
+		jciii.citycode=jdic.driver_county AND
+		jciii.city_type='3' WHERE
+		jdic.driver_id=#{param4})
+
+
+	</select>
+	<select id="getModifyPeople" resultType="String">
+		SELECT user_name FROM
+		jy_user where id=#{0}
+	</select>
+
+	<delete id="deleteDeliveryCustomer">
+		delete from jy_delivery_customer where delivery_id
+		in
+		<foreach collection="array" item="deCustomerId" index="index"
+			open="(" close=")" separator=",">
+			#{deCustomerId}
+		</foreach>
+	</delete>
+	<select id="getcustomer_num" resultType="int">
+		<if test="_parameter !=null">
+			SELECT COUNT(*) FROM(
+			SELECT c.customer_num as NUM FROM
+			jy_customer c
+			UNION ALL
+			SELECT d.delivery_num as NUM FROM
+			jy_delivery_customer d ) ss WHERE
+			NUM=#{_parameter}
+		</if>
+	</select>
+	<select id="getcustomer_name" resultType="int">
+		<if test="_parameter !=null">
+			SELECT COUNT(*) FROM(
+			SELECT c.customer_name as NAME FROM
+			jy_customer c
+			UNION ALL
+			SELECT d.delivery_name as NAME FROM
+			jy_delivery_customer d )ss WHERE
+			NAME=#{_parameter}
+		</if>
+	</select>
+	<insert id="saveCustomer" parameterType="Customer">
+		insert into jy_customer(
+		customer_id,
+		customer_num,
+		customer_name,
+		customer_people,
+		customer_address,
+		customer_tel,
+		customer_business,
+		customer_profile,
+		customer_experience,
+		customer_point,
+		customer_operationtime,
+		customer_operation,
+		customer_createtime
+		)values(
+		#{customer_id},
+		#{customer_num},
+		#{customer_name},
+		#{customer_people},
+		#{customer_address},
+		#{customer_tel},
+		#{customer_business},
+		#{customer_profile},
+		#{customer_experience},
+		#{customer_point},
+		#{customer_operationtime},
+		#{customer_operation},
+		SYSDATE()
+		)
+	</insert>
+
+	<insert id="saveDeliveryCustomer" parameterType="DeliveryCustomer">
+		insert into
+		jy_delivery_customer(
+		delivery_id,
+		delivery_num,
+		delivery_name,
+		delivery_people,
+		delivery_address,
+		delivery_tel,
+		delivery_business,
+		delivery_profile,
+		delivery_experience,
+		delivery_point,
+		delivery_operationtime,
+		delivery_operation,
+		delivery_createtime,
+		delivery_cus_name
+		)values(
+		#{delivery_id},
+		#{delivery_num},
+		#{delivery_name},
+		#{delivery_people},
+		#{delivery_address},
+		#{delivery_tel},
+		#{delivery_business},
+		#{delivery_profile},
+		#{delivery_experience},
+		#{delivery_point},
+		#{delivery_operationtime},
+		#{delivery_operation},
+		SYSDATE(),
+		#{delivery_cus_name}
+		)
+	</insert>
+
+	<select id="getDeliveryCustomerbyid" resultType="DeliveryCustomer">
+		<if test="_parameter !=null">
+			SELECT * FROM jy_delivery_customer WHERE
+			delivery_id=#{_parameter}
+		</if>
+	</select>
+	<select id="getDeliveryCustomerbyname" resultType="DeliveryCustomer">
+		<if test="param1 !=null and param2!=null">
+			SELECT * FROM jy_delivery_customer WHERE
+			delivery_name=#{param1} AND delivery_cus_name= #{param2}
+		</if>
+	</select>
+	<!-- 修改收货客户信息 ，去掉了要修改的：delivery_id =#{delivery_id},和 delivery_areaType=#{delivery_areaType}, 
+		delivery_point=#{delivery_point}, delivery_radius = #{delivery_radius}, -->
+	<update id="updateDeliveryCustomer" parameterType="DeliveryCustomer">
+		update
+		jy_delivery_customer set
+		delivery_num=#{delivery_num},
+		delivery_name=#{delivery_name},
+		delivery_people=#{delivery_people},
+		delivery_address=#{delivery_address},
+		delivery_tel=#{delivery_tel},
+		delivery_business=#{delivery_business},
+		delivery_profile=#{delivery_profile},
+		delivery_experience=#{delivery_experience},
+		delivery_operationtime=SYSDATE(),
+		delivery_operation=#{delivery_operation},
+		delivery_cus_name =
+		#{delivery_cus_name}
+		where
+		delivery_id=#{delivery_id}
+	</update>
+	<select id="getCustomersByName" resultType="Customer">
+		SELECT *
+		from
+		jy_customer a
+		where 1=1
+		AND a.customer_name like '%${_parameter}%'
+		order
+		by a.customer_createtime ASC
+	</select>
+	<select id="getsetAging" resultType="Aging">
+		SELECT
+		ja.*,
+		jpi1.areaname as
+		aging_provincename,
+		jpi2.areaname as aging_cityname,
+		jpi3.areaname as
+		aging_countyname,
+		jc.customer_name as cutomer_name
+		FROM
+		jy_aging ja
+		LEFT
+		JOIN
+		j_position_info jpi1 ON jpi1.id = ja.aging_province
+		LEFT JOIN
+		j_position_info jpi2 ON jpi2.id = ja.aging_city
+		LEFT JOIN
+		j_position_info jpi3 ON jpi3.id = ja.aging_county
+		LEFT JOIN
+		jy_customer
+		jc on jc.customer_id=ja.aging_cutomer_id
+		where
+		1=1 and
+		ja.aging_id=#{_parameter}
+	</select>
+
+	<select id="getAgingsUser" resultType="Aging">
+		SELECT
+		ja.*,
+		jc.customer_name as
+		cutomer_name
+		FROM
+		jy_aging ja
+		LEFT JOIN
+		jy_customer jc on
+		jc.customer_id=ja.aging_cutomer_id
+		LEFT JOIN jy_suppliers jsupp ON FIND_IN_SET(jc.customer_id,jsupp.suppliers_customer)
+		LEFT JOIN jy_driver_info jdri ON jdri.driver_suppliers = jsupp.suppliers_id
+		where
+		1=1
+		and
+		ja.aging_address in(select concat_ws('',jci.cityname
+		,jcii.cityname,jciii.cityname) from jy_driver_info_cityinfo jdic LEFT
+		JOIN jy_city_info jci ON jdic.driver_province = jci.citycode AND
+		city_type= '1' LEFT JOIN jy_city_info jcii ON jdic.driver_city
+		=jcii.citycode AND jcii.city_type='2'
+		LEFT JOIN jy_city_info jciii ON
+		jciii.citycode=jdic.driver_county AND
+		jciii.city_type='3' WHERE
+		jdic.driver_id = #{param5})
+		AND jdri.driver_id=#{param5}
+		<include refid="aging_info_sql" />
+	</select>
+
+	<select id="getAgingCountUser" resultType="int">
+		SELECT
+		count(*)
+		FROM
+		jy_aging ja
+		LEFT JOIN
+		jy_customer jc on
+		jc.customer_id=ja.aging_cutomer_id
+		LEFT JOIN jy_suppliers jsupp ON FIND_IN_SET(jc.customer_id,jsupp.suppliers_customer)
+		LEFT JOIN jy_driver_info jdri ON jdri.driver_suppliers = jsupp.suppliers_id
+		where
+		1=1
+		and ja.aging_address in
+		(select concat_ws('',jci.cityname
+		,jcii.cityname,jciii.cityname) from
+		jy_driver_info_cityinfo jdic LEFT
+		JOIN jy_city_info jci ON
+		jdic.driver_province = jci.citycode AND
+		city_type= '1' LEFT JOIN
+		jy_city_info jcii ON jdic.driver_city
+		=jcii.citycode AND
+		jcii.city_type='2'
+		LEFT JOIN jy_city_info jciii ON
+		jciii.citycode=jdic.driver_county AND
+		jciii.city_type='3' WHERE
+		jdic.driver_id = #{param3})
+		AND jdri.driver_id=#{param5}
+		<include refid="aging_count_info" />
+	</select>
+
+	<sql id="aging_info_sql"><!-- 时效管理查询条件 -->
+		<if test="param3!=null and param3!=''">
+			and jc.customer_name like "%${param3}%"
+		</if>
+		<if test="param4!=null and param4!=''">
+			and ja.aging_address like "%${param4}%"
+		</if>
+		ORDER BY
+		ja.aging_address ASC
+		limit #{param1},#{param2}
+	</sql>
+
+	<sql id="aging_count_info"><!--时效管理总条数条件 -->
+		<if test="param1!=null and param1!=''">
+			and jc.customer_name like "%${param1}%"
+		</if>
+		<if test="param2!=null and param2!=''">
+			and ja.aging_address like "%${param2}%"
+		</if>
+	</sql>
+
+	<select id="getAgings" resultType="Aging">
+		SELECT
+		ja.*,
+		jc.customer_name as
+		cutomer_name
+		FROM
+		jy_aging ja
+		LEFT JOIN
+		jy_customer jc on
+		jc.customer_id=ja.aging_cutomer_id
+		where
+		1=1
+		<include refid="aging_info_sql" />
+	</select>
+
+	<select id="getAgingCount" resultType="int">
+		SELECT
+		count(*)
+		FROM
+		jy_aging ja
+		LEFT JOIN
+		jy_customer jc on
+		jc.customer_id=ja.aging_cutomer_id
+		where
+		1=1
+		<include refid="aging_count_info" />
+	</select>
+
+	<insert id="saveAging" parameterType="Aging">
+		insert into jy_aging(
+		aging_id,
+		aging_cutomer_id,
+		aging_province,
+		aging_city,
+		aging_county,
+		aging_address,
+		aging_time,
+		aging_operator,
+		aging_operator_date,
+		aging_day,
+		star_time,
+		end_time
+		)
+		values
+		(
+		#{aging_id},
+		#{aging_cutomer_id},
+		#{aging_province},
+		#{aging_city},
+		#{aging_county},
+		#{aging_address},
+		#{aging_time},
+		#{aging_operator},
+		SYSDATE(),
+		#{aging_day},
+		#{star_time},
+		#{end_time}
+		)
+	</insert>
+	<update id="updateAging" parameterType="Aging">
+		update jy_aging
+		set
+		aging_cutomer_id=#{aging_cutomer_id},
+		aging_province=#{aging_province},
+		aging_city=#{aging_city},
+		aging_county=#{aging_county},
+		aging_address=#{aging_address},
+		aging_time=#{aging_time},
+		aging_operator=#{aging_operator},
+		aging_operator_date=SYSDATE(),
+		aging_day=#{aging_day},
+		star_time=#{star_time},
+		end_time=#{end_time}
+		where
+		aging_id=#{aging_id}
+	</update>
+
+	<delete id="deleteAging">
+		delete from
+		jy_aging
+		where
+		aging_id IN
+		<foreach collection="array" index="index" item="item" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+
+	<select id="saveCheckAging" resultType="int">
+		SELECT COUNT(ja.aging_id)
+		from jy_aging ja WHERE
+		ja.aging_address=#{aging_address} AND
+		ja.aging_cutomer_id=#{aging_cutomer_id}
+		AND ja.star_time=#{star_time}
+		AND ja.end_time=#{end_time}
+	</select>
+
+
+	<select id="supplersGetDeliveryCount" resultType="int">
+		SELECT count(*)
+		from jy_delivery_customer a
+		where 1=1
+		<if test="param1 !=null">
+			AND a.delivery_id like '%${param1}%'
+		</if>
+		<if test="param2 !=null">
+			AND a.delivery_tel like '%${param2}%'
+		</if>
+		<if test="param3 !=null">
+			AND a.delivery_address like '%${param3}%'
+		</if>
+		AND a.delivery_address in
+		(select concat_ws('',jci.cityname
+		,jcii.cityname,jciii.cityname) from jy_supperlis_city_info jsci LEFT
+		JOIN jy_city_info jci ON jsci.suppliers_province = jci.citycode AND
+		city_type= '1' LEFT JOIN jy_city_info jcii ON jsci.suppliers_city
+		=jcii.citycode AND jcii.city_type='2'
+		LEFT JOIN jy_city_info jciii ON
+		jciii.citycode=jsci.suppliers_county AND
+		jciii.city_type='3' WHERE
+		jsci.suppliersid=#{param4})
+	</select>
+
+	<select id="supplersGetDeliveryInfo" resultType="DeliveryCustomer">
+		SELECT *
+		from jy_delivery_customer a
+		where 1=1
+		<if test="param3 !=null and param3 != ''">
+			AND a.delivery_name like '%${param3}%'
+		</if>
+		<if test="param4 !=null and param4 != ''">
+			AND a.delivery_tel like '%${param4}%'
+		</if>
+		<if test="param5 !=null and param5 != ''">
+			AND a.delivery_address like '%${param5}%'
+		</if>
+		AND a.delivery_address in
+		(select concat_ws('',jci.cityname
+		,jcii.cityname,jciii.cityname) from jy_supperlis_city_info jsci LEFT
+		JOIN jy_city_info jci ON jsci.suppliers_province = jci.citycode AND
+		city_type= '1' LEFT JOIN jy_city_info jcii ON jsci.suppliers_city
+		=jcii.citycode AND jcii.city_type='2'
+		LEFT JOIN jy_city_info jciii ON
+		jciii.citycode=jsci.suppliers_county AND
+		jciii.city_type='3' WHERE
+		jsci.suppliersid=#{param6})
+		order by
+		a.delivery_createtime ASC
+		limit
+		#{param1},#{param2}
+	</select>
+
+	<!-- 时效管理 -->
+	<select id="suppliersGetAgingsUser" resultType="Aging">
+		SELECT
+		ja.*,
+		jc.customer_name as
+		cutomer_name
+		FROM
+		jy_aging ja
+		LEFT JOIN
+		jy_customer jc on
+		jc.customer_id=ja.aging_cutomer_id
+		LEFT JOIN jy_suppliers jsupp ON FIND_IN_SET(jc.customer_id,jsupp.suppliers_customer)
+		where
+		1=1
+		and
+		ja.aging_address in (select concat_ws('',jci.cityname
+		,jcii.cityname,jciii.cityname) from jy_supperlis_city_info jsci LEFT
+		JOIN jy_city_info jci ON jsci.suppliers_province = jci.citycode AND
+		city_type= '1' LEFT JOIN jy_city_info jcii ON jsci.suppliers_city
+		=jcii.citycode AND jcii.city_type='2'
+		LEFT JOIN jy_city_info jciii ON
+		jciii.citycode=jsci.suppliers_county AND
+		jciii.city_type='3' WHERE
+		jsci.suppliersid= #{param5})
+		AND jsupp.suppliers_id=#{param5}
+		<include refid="aging_info_sql" />
+	</select>
+
+	<select id="suppliersGetAgingsUserCount" resultType="int">
+		SELECT
+		count(*)
+		FROM
+		jy_aging ja
+		LEFT JOIN
+		jy_customer jc on
+		jc.customer_id=ja.aging_cutomer_id
+		LEFT JOIN jy_suppliers jsupp ON FIND_IN_SET(jc.customer_id,jsupp.suppliers_customer)
+		where
+		1=1
+		and ja.aging_address in
+		(select concat_ws('',jci.cityname
+		,jcii.cityname,jciii.cityname) from
+		jy_supperlis_city_info jsci LEFT
+		JOIN jy_city_info jci ON
+		jsci.suppliers_province = jci.citycode AND
+		city_type= '1' LEFT JOIN
+		jy_city_info jcii ON jsci.suppliers_city
+		=jcii.citycode AND
+		jcii.city_type='2'
+		LEFT JOIN jy_city_info jciii ON
+		jciii.citycode=jsci.suppliers_county AND
+		jciii.city_type='3' WHERE
+		jsci.suppliersid = #{param3})
+		AND jsupp.suppliers_id=#{param3}
+		<include refid="aging_count_info" />
+	</select>
+
+	<select id="getAddressDriver" resultType="string">
+		select concat_ws(''
+		,jcii.cityname,jciii.cityname) from
+		jy_driver_info_cityinfo jdic LEFT
+		JOIN jy_city_info jci ON
+		jdic.driver_province = jci.citycode AND
+		city_type= '1' LEFT JOIN
+		jy_city_info jcii ON jdic.driver_city
+		=jcii.citycode AND
+		jcii.city_type='2'
+		LEFT JOIN jy_city_info jciii ON
+		jciii.citycode=jdic.driver_county AND
+		jciii.city_type='3' WHERE
+		jdic.driver_id =#{_parameter}
+
+	</select>
+
+
+
+
+
+	<select id="getAddressSupperlies" resultType="string">
+		select
+		IFNULL(concat_ws('',jcii.cityname,jciii.cityname),'未找到位置') from
+		jy_supperlis_city_info
+		jsci LEFT
+		JOIN jy_city_info jci ON
+		jsci.suppliers_province =
+		jci.citycode AND
+		city_type= '1' LEFT JOIN
+		jy_city_info jcii ON
+		jsci.suppliers_city
+		=jcii.citycode AND
+		jcii.city_type='2'
+		LEFT JOIN
+		jy_city_info jciii ON
+		jciii.citycode=jsci.suppliers_county AND
+		jciii.city_type='3' WHERE
+		jsci.suppliersid=#{_parameter}
+		UNION ALL
+SELECT '未找到位置'
+	</select>
+
+	<select id="otherGetAgings" resultType="Aging">
+		SELECT
+		ja.*,jc.*,jc.customer_name as cutomer_name
+		FROM
+		jy_aging ja
+		LEFT
+		JOIN
+		jy_customer jc on
+		jc.customer_id=ja.aging_cutomer_id
+		JOIN
+		jy_user
+		ju
+		ON
+		ju.customer_id=jc.customer_id WHERE
+		ju.id=#{param5}
+		<include refid="aging_info_sql" />
+	</select>
+
+	<select id="otherGetAgingCount" resultType="int">
+		SELECT
+		count(*)
+		FROM
+		jy_aging ja
+		LEFT JOIN
+		jy_customer jc on
+		jc.customer_id=ja.aging_cutomer_id
+		LEFT JOIN
+		jy_user ju ON
+		ju.customer_id=jc.customer_id WHERE
+		ju.id=#{param3}
+		<include refid="aging_count_info" />
+	</select>
+
+	<select id="getAgingCityInfo" resultType="string">
+		SELECT
+		concat_ws('',jci.cityname
+		,jcii.cityname,jciii.cityname) from
+		jy_city_info jci
+		LEFT JOIN jy_city_info jcii ON
+		jci.citycode=jcii.citye_parent_id
+		LEFT JOIN
+		jy_city_info jciii ON
+		jcii.citycode=jciii.citye_parent_id
+		WHERE
+		jci.citycode=#{param1} AND
+		jcii.citycode=#{param2} AND
+		jciii.citycode=#{param3} LIMIT 1
+	</select>
+
+	<insert id="customerExcelImport" parameterType="java.util.List">
+		insert into
+		jy_customer(
+		customer_id,
+		customer_num,
+		customer_name,
+		customer_people,
+		customer_address,
+		customer_tel,
+		customer_business,
+		customer_profile,
+		customer_experience,
+		customer_point,
+		customer_operationtime,
+		customer_operation,
+		customer_createtime
+		)values
+		<foreach collection="list" index="index" item="item"
+			separator=",">(
+			#{item.customer_id},
+			#{item.customer_num},
+			#{item.customer_name},
+			#{item.customer_people},
+			#{item.customer_address},
+			#{item.customer_tel},
+			#{item.customer_business},
+			#{item.customer_profile},
+			#{item.customer_experience},
+			#{item.customer_point},
+			SYSDATE(),
+			#{item.customer_operation},
+			SYSDATE()
+			)
+		</foreach>
+	</insert>
+	
+	<select id="getAllCustomers" resultType="Customer">
+	SELECT * FROM jy_customer
+	</select>
+	
+	<insert id="deliveryExcelInfo" parameterType="java.util.List">
+		insert into jy_delivery_customer(
+		delivery_id,
+		delivery_num,
+		delivery_name,
+		delivery_people,
+		delivery_address,
+		delivery_tel,
+		delivery_business,
+		delivery_profile,
+		delivery_experience,
+		delivery_cus_name
+
+		)
+		values
+		<foreach collection="list" index="index" item="item"
+			separator=",">
+			(
+			#{item.delivery_id},
+			#{item.delivery_num},
+			#{item.delivery_name},
+			#{item.delivery_people},
+			#{item.delivery_address},
+			#{item.delivery_tel},
+			#{item.delivery_business},
+			#{item.delivery_profile},
+			#{item.delivery_experience},
+			#{item.delivery_cus_name}
+			)
+		</foreach>
+	</insert>
+
+	<select id="getUpdateLocationRemarkCustomer" resultType="DeliveryCustomer">
+		SELECT * FROM jy_delivery_customer WHERE delivery_operationtime &lt; '2017-04-24 00:00:00' OR delivery_operationtime IS NULL
+	</select>
+</mapper>

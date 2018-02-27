@@ -1,0 +1,851 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.ReverseOrderDao">
+    <insert id="insertReverseOrderInfo">
+        INSERT INTO jy_reverse_order
+        (shiping_order_id, shiping_order_num, shiping_order_goid,
+         send_mechanism, send_station, send_time, end_address, end_mechanism,
+         custom_name, custom_tel, custom_contact,
+         receipt_name, receipt_contact, receipt_tel, goods_name, goods_num,
+         goods_weight, goods_vol, remarks, real_num,
+         shipping_order_state, order_type, time_limitation,
+         create_type, updatetime, remarks_order, shipping_order,
+         suppliers_id, driver_id,receipt_address
+        )
+        VALUES
+            (#{reverserOrder.shiping_order_id}, #{reverserOrder.shiping_order_num}, #{reverserOrder.shiping_order_goid},
+                                                #{reverserOrder.send_mechanism}, #{reverserOrder.send_station},
+                                                #{reverserOrder.send_time}, #{reverserOrder.end_address},
+                                                #{reverserOrder.end_mechanism},
+                                                #{reverserOrder.custom_name}, #{reverserOrder.custom_tel},
+                                                #{reverserOrder.custom_contact},
+                #{reverserOrder.receipt_name}, #{reverserOrder.receipt_contact}, #{reverserOrder.receipt_tel},
+                #{reverserOrder.goods_name}, #{reverserOrder.goods_num},
+                #{reverserOrder.goods_weight}, #{reverserOrder.goods_vol}, #{reverserOrder.remarks},
+                #{reverserOrder.real_num},
+                #{reverserOrder.shipping_order_state}, #{reverserOrder.order_type}, #{reverserOrder.time_limitation},
+             #{reverserOrder.create_type}, now(), #{reverserOrder.remarks_order},
+             #{reverserOrder.shipping_order},
+             #{reverserOrder.suppliers_id}, #{reverserOrder.driver_id},#{reverserOrder.receipt_address}
+            )
+    </insert>
+
+    <insert id="batchInsertReverseOrderInfo">
+        INSERT INTO jy_reverse_order
+        (shiping_order_id, shiping_order_num, shiping_order_goid,
+        send_mechanism, send_station, send_time, end_address, end_mechanism,
+        custom_name, custom_tel, custom_contact,
+        receipt_name, receipt_contact, receipt_tel, goods_name, goods_num,
+        goods_weight, goods_vol, remarks, real_num,
+        shipping_order_state, order_type, time_limitation,
+        create_type, updatetime, remarks_order, shipping_order,
+        suppliers_id, driver_id,receipt_address
+        )
+        VALUES
+        <foreach collection="list" item="reverserOrder" index="index" separator=",">
+          (
+            #{reverserOrder.shiping_order_id}, #{reverserOrder.shiping_order_num}, #{reverserOrder.shiping_order_goid},
+            #{reverserOrder.send_mechanism}, #{reverserOrder.send_station},
+            #{reverserOrder.send_time}, #{reverserOrder.end_address},
+            #{reverserOrder.end_mechanism},
+            #{reverserOrder.custom_name}, #{reverserOrder.custom_tel},
+            #{reverserOrder.custom_contact},
+            #{reverserOrder.receipt_name}, #{reverserOrder.receipt_contact}, #{reverserOrder.receipt_tel},
+            #{reverserOrder.goods_name}, #{reverserOrder.goods_num},
+            #{reverserOrder.goods_weight}, #{reverserOrder.goods_vol}, #{reverserOrder.remarks},
+            #{reverserOrder.real_num},
+            #{reverserOrder.shipping_order_state}, #{reverserOrder.order_type}, #{reverserOrder.time_limitation},
+            #{reverserOrder.create_type}, now(), #{reverserOrder.remarks_order},
+            #{reverserOrder.shipping_order},
+            #{reverserOrder.suppliers_id}, #{reverserOrder.driver_id},#{reverserOrder.receipt_address}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateReverserOrderInfo">
+        UPDATE jy_reverse_order
+        <trim prefix="set" suffixOverrides=",">
+            <if test="reverserOrder.shiping_order_num!='' and reverserOrder.shiping_order_num!=null">
+                shiping_order_num=#{reverserOrder.shiping_order_num},
+            </if>
+            <if test="reverserOrder.shiping_order_goid!='' and reverserOrder.shiping_order_goid!=null">
+                shiping_order_goid=#{reverserOrder.shiping_order_goid},
+            </if>
+            <if test="reverserOrder.send_mechanism!='' and reverserOrder.send_mechanism!=null">
+                send_mechanism=#{reverserOrder.send_mechanism},
+            </if>
+            <if test="reverserOrder.send_station!='' and reverserOrder.send_station!=null">
+                send_station=#{reverserOrder.send_station},
+            </if>
+            <if test="reverserOrder.send_time!='' and reverserOrder.send_time!=null">
+                send_time=#{reverserOrder.send_time},
+            </if>
+            <if test="reverserOrder.end_address!='' and reverserOrder.end_address!=null">
+                end_address=#{reverserOrder.end_address},
+            </if>
+            <if test="reverserOrder.end_mechanism!='' and reverserOrder.end_mechanism!=null">
+                end_mechanism=#{reverserOrder.end_mechanism},
+            </if>
+            <if test="reverserOrder.custom_name!='' and reverserOrder.custom_name!=null">
+                custom_name=#{reverserOrder.custom_name},
+            </if>
+            <if test="reverserOrder.custom_tel!='' and reverserOrder.custom_tel!=null">
+                custom_tel=#{reverserOrder.custom_tel},
+            </if>
+            <if test="reverserOrder.custom_contact!='' and reverserOrder.custom_contact!=null">
+                custom_contact=#{reverserOrder.custom_contact},
+            </if>
+            <if test="reverserOrder.receipt_name!='' and reverserOrder.receipt_name!=null">
+                receipt_name=#{reverserOrder.receipt_name},
+            </if>
+            <if test="reverserOrder.receipt_contact!='' and reverserOrder.receipt_contact!=null">
+                receipt_contact=#{reverserOrder.receipt_contact},
+            </if>
+            <if test="reverserOrder.receipt_tel!='' and reverserOrder.receipt_tel!=null">
+                receipt_tel=#{reverserOrder.receipt_tel},
+            </if>
+            <if test="reverserOrder.goods_name!='' and reverserOrder.goods_name!=null">
+                goods_name=#{reverserOrder.goods_name},
+            </if>
+            <if test="reverserOrder.goods_num!='' and reverserOrder.goods_num!=null">
+                goods_num=#{reverserOrder.goods_num},
+            </if>
+            <if test="reverserOrder.goods_weight!='' and reverserOrder.goods_weight!=null">
+                goods_weight=#{reverserOrder.goods_weight},
+            </if>
+            <if test="reverserOrder.goods_vol!='' and reverserOrder.goods_vol!=null">
+                goods_vol=#{reverserOrder.goods_vol},
+            </if>
+            <if test="reverserOrder.remarks!='' and reverserOrder.remarks!=null">
+                remarks=#{reverserOrder.remarks},
+            </if>
+            <if test="reverserOrder.order_type!='' and reverserOrder.order_type!=null">
+                order_type=#{reverserOrder.order_type},
+            </if>
+            <if test="reverserOrder.create_type!='' and reverserOrder.create_type!=null">
+                create_type=#{reverserOrder.create_type},
+            </if>
+            <if test="reverserOrder.remarks_order!='' and reverserOrder.remarks_order!=null">
+                remarks_order=#{reverserOrder.remarks_order},
+            </if>
+            <if test="reverserOrder.shipping_order_state!='' and reverserOrder.shipping_order_state!=null">
+                shipping_order_state=#{reverserOrder.shipping_order_state},
+            </if>
+            <if test="reverserOrder.time_limitation!='' and reverserOrder.time_limitation!=null">
+                time_limitation=#{reverserOrder.time_limitation},
+            </if>
+            <if test="reverserOrder.real_num!='' and reverserOrder.real_num!=null">
+                real_num=#{reverserOrder.real_num},
+            </if>
+            <if test="reverserOrder.receipt_address!='' and reverserOrder.receipt_address!=null">
+                receipt_address=#{reverserOrder.receipt_address}
+            </if>
+        </trim>
+        WHERE shiping_order_id=#{reverserOrder.shiping_order_id}
+    </update>
+
+    <delete id="deleteReverserOrderInfo">
+        DELETE FROM jy_reverse_order
+        WHERE shiping_order_id IN
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <insert id="saveDistributionReverserOrderInfo">
+        INSERT INTO jy_reverse_drivertoorder
+        (id,driver_id,order_id,updatetime,isreceive)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id},#{item.driver_id},#{item.order_id},now(),0)
+        </foreach>
+    </insert>
+
+    <update id="updateReverserOrderTaking">
+        UPDATE jy_reverse_drivertoorder
+        <trim prefix="set" suffixOverrides=",">
+            isreceive=#{state},
+            receivetime = now(),
+            remark=#{remark}
+        </trim>
+        WHERE <!--driver_id =#{driverId}-->
+        1=1
+        AND order_id =#{orderId}
+    </update>
+
+    <insert id="saveReverserOrderHistory">
+        INSERT INTO jy_revserseoder_history (order_history_id, orders_id, order_arrive_time, goods_arrive_remakes)
+        VALUES
+            (#{history.order_history_id}, #{history.orders_id}, now(), #{history.goods_arrive_remakes})
+    </insert>
+
+    <insert id="saveSignReverserOrderInfo" parameterType="Sign_order">
+        INSERT INTO
+            jy_reverse_signorder (
+                sign_id,
+                order_id,
+                order_number,
+                sign_user,
+                sign_userphone,
+                sign_result,
+                actual_number,
+                defect_number,
+                sign_remarks,
+                sign_time
+            )
+        VALUES
+            (
+                #{sign_id},
+                #{order_id},
+                #{order_number},
+                #{sign_user},
+                #{sign_userphone},
+                #{sign_result},
+                #{actual_number},
+                #{defect_number},
+                #{sign_remarks},
+                now()
+            )
+    </insert>
+
+    <insert id="saveSignReverserOrderImage" parameterType="ShipperOrderImg">
+        INSERT INTO
+            jy_reverseorderimage
+            (
+                image_id,
+                order_id,
+                imageUrl,
+                file_name
+            )
+        VALUES
+            (
+                #{image_id},
+                #{order_id},
+                #{imageUrl},
+                #{file_name}
+            )
+    </insert>
+    <insert id="saveReverserOrderTakingImage" parameterType="ShipperOrderImg">
+        INSERT INTO
+            jy_reverse_taking_image
+            (
+                image_id,
+                taking_id,
+                imageUrl,
+                file_name
+            )
+        VALUES
+            (
+                #{image_id},
+                #{order_id},
+                #{imageUrl},
+                #{file_name}
+            )
+    </insert>
+
+    <insert id="batchSaveTakingReverserOrderImage">
+        INSERT INTO
+        jy_reverse_taking_image
+        (
+        image_id,
+        taking_id,
+        imageUrl,
+        file_name
+        ) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            ( #{item.image_id},
+            #{item.order_id},
+            #{item.imageUrl},
+            #{item.file_name})
+        </foreach>
+    </insert>
+
+    <sql id="reverseOrder_where_sql">
+        <if test="send_time!='' and send_time!=null">
+            AND send_time &gt;=#{send_time}
+        </if>
+        <if test="end_time!='' and end_time!=null">
+            AND send_time &lt;=#{end_time}
+        </if>
+        <if test="shiping_order_num!='' and shiping_order_num!=null">
+            AND shiping_order_num like '%${shiping_order_num}%'
+        </if>
+        <if test="end_address!='' and end_address!=null">
+            AND end_address like '%${end_address}%'
+        </if>
+        <if test="end_mechanism!='' and end_mechanism!=null">
+            AND end_mechanism like '%${end_mechanism}%'
+        </if>
+        <if test="custom_contact!='' and custom_contact!=null">
+            AND custom_contact like '%${custom_contact}%'
+        </if>
+        <if test="order_type!='' and order_type!=null">
+            AND order_type=#{order_type}
+        </if>
+        <if test="receipt_contact!='' and receipt_contact!=null">
+            AND receipt_contact like '%${receipt_contact}%'
+        </if>
+        <if test="send_mechanism!='' and send_mechanism!=null">
+            AND send_mechanism like '%${send_mechanism}%'
+        </if>
+    </sql>
+    <sql id="reverserOrder_limit_sql">
+        ORDER BY updatetime DESC
+        LIMIT #{start}, #{length}
+    </sql>
+
+    <sql id="reverseOrder_column_sql">
+        *, CASE order_type
+        WHEN 1 THEN '调拨'
+        WHEN 0 THEN '退货'
+        END AS order_type_name
+    </sql>
+
+    <select id="getReverserOrderModelInfo" resultType="ReverserOrderModel">
+        SELECT
+        <include refid="reverseOrder_column_sql"/>
+        FROM jy_reverse_order
+        <where>
+            <include refid="reverseOrder_where_sql"/>
+        </where>
+        <include refid="reverserOrder_limit_sql"/>
+    </select>
+
+
+    <select id="driverGetReverserOrderModelInfo" resultType="ReverserOrderModel">
+        SELECT
+        <include refid="reverseOrder_column_sql"/>
+        FROM jy_reverse_order
+        <where>
+            AND driver_id=#{driverId}
+            <include refid="reverseOrder_where_sql"/>
+        </where>
+        <include refid="reverserOrder_limit_sql"/>
+    </select>
+
+    <select id="supplierGetReverserOrderModelInfo" resultType="ReverserOrderModel">
+        SELECT
+        <include refid="reverseOrder_column_sql"/>
+        FROM jy_reverse_order
+        <where>
+            AND suppliers_id=#{supplierId}
+            <include refid="reverseOrder_where_sql"/>
+        </where>
+        <include refid="reverserOrder_limit_sql"/>
+    </select>
+
+    <select id="customerGetReverserOrderModelInfo" resultType="ReverserOrderModel">
+        SELECT
+        <include refid="reverseOrder_column_sql"/>
+        FROM jy_reverse_order
+        <where>
+            AND send_mechanism=
+            (SELECT customer_name FROM jy_customer where customer_id=#{customerId})
+            <include refid="reverseOrder_where_sql"/>
+        </where>
+        <include refid="reverserOrder_limit_sql"/>
+    </select>
+
+
+    <select id="getReverserOrderModelCount" resultType="int">
+        SELECT COUNT(1) FROM jy_reverse_order
+        <where>
+            <include refid="reverseOrder_where_sql"/>
+        </where>
+    </select>
+
+    <select id="driverGetReverserOrderModelCount" resultType="int">
+        SELECT COUNT(1) FROM jy_reverse_order
+        <where>
+            AND driver_id=#{driverId}
+            <include refid="reverseOrder_where_sql"/>
+        </where>
+    </select>
+
+    <select id="supplierGetReverserOrderModelCount" resultType="int">
+        SELECT COUNT(1) FROM jy_reverse_order
+        <where>
+            AND suppliers_id=#{supplierId}
+            <include refid="reverseOrder_where_sql"/>
+        </where>
+    </select>
+
+    <select id="customerGetReverserOrderModelCount" resultType="int">
+        SELECT COUNT(1) FROM jy_reverse_order
+        <where>
+            AND send_mechanism=
+            (SELECT customer_name FROM jy_customer where customer_id=#{customerId})
+            <include refid="reverseOrder_where_sql"/>
+        </where>
+    </select>
+
+
+    <select id="getDriverSupplierId" resultType="Driver">
+        SELECT *
+        FROM jy_driver_info
+        WHERE driver_id = #{diverId}
+    </select>
+
+    <select id="getCustomer" resultType="Customer">
+        SELECT *
+        FROM jy_customer
+        WHERE customer_id = #{customerId}
+    </select>
+
+    <sql id="distributionReverser_where_sql">
+        <if test="send_time!=null and send_time!=''">
+            AND DATE_FORMAT(updatetime,'%Y-%m-%d')&gt;=#{send_time}
+        </if>
+        <if test="end_time!=null and end_time!=''">
+            AND DATE_FORMAT(updatetime,'%Y-%m-%d')&lt;=#{end_time}
+        </if>
+        <if test="end_address!=null and end_address!=''">
+            AND end_address LIKE '%${end_address}%'
+        </if>
+        <if test="send_mechanism!=null and send_mechanism!=''">
+            AND send_mechanism LIKE '%${send_mechanism}%'
+        </if>
+        <if test="custom_contact!=null and custom_contact!=''">
+            AND custom_contact LIKE '%${custom_contact}%'
+        </if>
+        <if test="order_type!='' and order_type!=null">
+            AND order_type = #{order_type}
+        </if>
+
+    </sql>
+
+    <select id="getDistributionReverserOrderModel" resultType="ReverserOrderModel">
+        SELECT
+        <include refid="reverseOrder_column_sql"/>
+        FROM jy_reverse_order
+        WHERE create_type in (0, 3, 4) AND shipping_order_state = 0
+        <include refid="distributionReverser_where_sql"/>
+        LIMIT #{start},#{length}
+    </select>
+    <select id="supplierGetDistributionReverserOrderModel" resultType="ReverserOrderModel">
+        SELECT
+        <include refid="reverseOrder_column_sql"/>
+        FROM jy_reverse_order
+        WHERE create_type in (0, 3, 4) AND shipping_order_state = 0
+        AND send_mechanism IN (
+        SELECT
+        jc.customer_name from jy_customer jc
+        LEFT JOIN jy_suppliers jss ON
+        find_in_set(
+        jc.customer_id,jss.suppliers_customer)
+        WHERE
+        jss.suppliers_id=#{supplierId})
+
+        <if test="list!=null and list.size()>0">
+            AND
+            <foreach collection="list" item="address" index="index"
+                     open="(end_address LIKE" close=")" separator="or end_address LIKE">
+                '%${address}'
+            </foreach>
+        </if>
+        <include refid="distributionReverser_where_sql"/>
+        LIMIT #{start},#{length}
+    </select>
+
+    <select id="getDistributionReverserOrderModelCount" resultType="int">
+        SELECT count(1) FROM jy_reverse_order
+        WHERE create_type in(0,3,4) AND shipping_order_state =0
+        <include refid="distributionReverser_where_sql"/>
+    </select>
+
+    <select id="supplierGetDistributionReverserOrderCount" resultType="int">
+        SELECT count(1) FROM jy_reverse_order
+        WHERE create_type in(0,3,4) AND shipping_order_state =0
+        AND send_mechanism IN (
+        SELECT
+        jc.customer_name from jy_customer jc
+        LEFT JOIN jy_suppliers jss ON
+        find_in_set(
+        jc.customer_id,jss.suppliers_customer)
+        WHERE
+        jss.suppliers_id=#{supplierId})
+
+        <if test="list!=null and list.size()>0">
+            AND
+            <foreach collection="list" item="address" index="index"
+                     open="(end_address LIKE" close=")" separator="or end_address LIKE">
+                '%${address}'
+            </foreach>
+        </if>
+        <include refid="distributionReverser_where_sql"/>
+    </select>
+
+
+    <insert id="saveReverserOrderHistoryList">
+        INSERT INTO jy_revserseoder_history (order_history_id,orders_id,order_arrive_time,goods_arrive_remakes)
+        VALUES
+        <foreach collection="list" item="history" index="index" separator=",">
+            (#{history.order_history_id},#{history.orders_id},now(),#{history.goods_arrive_remakes})
+        </foreach>
+    </insert>
+
+    <update id="updateReverserOrderState">
+        UPDATE jy_reverse_order SET
+        shipping_order_state =#{state},
+        suppliers_id =#{supplierId},
+        driver_id = #{driverId}
+        where
+        shiping_order_id IN
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="getTakingReverserOrderModel" resultType="ReverserOrderModel">
+        SELECT t_reverse.* , CASE t_reverse.order_type
+        WHEN 1
+        THEN '调拨'
+        WHEN 0
+        THEN '退货'
+        END AS order_type_name FROM jy_reverse_order t_reverse
+        LEFT JOIN jy_reverse_drivertoorder t_reve_driver
+        ON t_reverse.shiping_order_id = t_reve_driver.order_id
+        WHERE t_reverse.create_type in(0,3,4) AND t_reverse.shipping_order_state =1
+        AND t_reve_driver.driver_id = #{driverId}
+        <include refid="distributionReverser_where_sql"/>
+        LIMIT #{start},#{length}
+    </select>
+
+    <select id="getTakingReverserOrderModelCount" resultType="int">
+        SELECT count(1) FROM jy_reverse_order t_reverse
+        LEFT JOIN jy_reverse_drivertoorder t_reve_driver
+        ON t_reverse.shiping_order_id = t_reve_driver.order_id
+        WHERE t_reverse.create_type in(0,3,4)
+        AND t_reverse.shipping_order_state =1
+        AND t_reve_driver.driver_id = #{driverId}
+        <include refid="distributionReverser_where_sql"/>
+    </select>
+
+    <delete id="deleteDistributionReverseOrder">
+        DELETE FROM jy_reverse_drivertoorder WHERE driver_id=#{driverId}
+        AND order_id IN
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="getReverserOrderModel" resultType="ReverserOrderModel">
+        SELECT *
+        FROM jy_reverse_order t_rev_order
+            LEFT JOIN jy_reverseorder_city t_rev_city ON t_rev_city.order_id = t_rev_order.shiping_order_id
+
+        WHERE shiping_order_id = #{id}
+        LIMIT 1
+
+    </select>
+
+    <sql id="sign_reverser_where_sql">
+        <if test="send_time!='' and send_time!=null">
+            AND send_time &gt;=#{send_time}
+        </if>
+        <if test="end_time!='' and end_time!=null">
+            AND send_time &lt;=#{end_time}
+        </if>
+        <if test="shiping_order_num!=null and shiping_order_num!=''">
+            AND shiping_order_num like '%${shiping_order_num}%'
+        </if>
+        <if test="shipping_order_state!='' and shipping_order_state!=null ">
+            <if test="shipping_order_state==0">
+                and shipping_order_state in(0,1,2)
+            </if>
+            <if test="shipping_order_state==4">
+                and shipping_order_state in(3,4,5,6)
+            </if>
+        </if>
+        <if test="order_type!='' and order_type!=null">
+            AND order_type like '%${order_type}%'
+        </if>
+        <if test="send_mechanism!=null and send_mechanism!=''">
+            AND send_mechanism like '%${send_mechanism}%'
+        </if>
+        <if test="end_address!=null and end_address!=''">
+            AND end_address like '%${end_address}%'
+        </if>
+        <if test="end_mechanism!=null and end_mechanism!=''">
+            AND end_mechanism like '%${end_mechanism}%'
+        </if>
+    </sql>
+    <sql id="sign_reverse_column_sql">
+        *, CASE order_type
+        WHEN 1
+        THEN '调拨'
+        WHEN 0
+        THEN '退货'
+        END AS order_type_name,
+        CASE shipping_order_state
+        WHEN '0' THEN '已发运'
+        WHEN '1' THEN '已分配'
+        WHEN '2' THEN '已接单'
+        WHEN '3' THEN '围栏签收'
+        WHEN '4' THEN '已签收'
+        WHEN '5'
+        THEN '已签收'
+        WHEN '6' THEN '已签收'
+        END AS shipping_order_statestr
+    </sql>
+    <sql id="sign_reverser_limit_sql">
+        ORDER BY sign_time DESC
+        LIMIT #{start},#{length}
+    </sql>
+
+    <select id="getSignReverserOrderModel" resultType="ReverserOrderModel">
+        SELECT
+        <include refid="sign_reverse_column_sql"/>
+        FROM reverse_order_view
+        WHERE 1=1
+        <include refid="sign_reverser_where_sql"/>
+        <include refid="sign_reverser_limit_sql"/>
+    </select>
+
+    <select id="getSignReverserOrderCount" resultType="int">
+        SELECT COUNT(1)
+        FROM
+        reverse_order_view
+        WHERE 1=1
+        <include refid="sign_reverser_where_sql"/>
+    </select>
+
+    <select id="driverGetSignReverserOrderCount" resultType="int">
+        SELECT
+        COUNT(1)
+        FROM
+        reverse_order_view
+        WHERE driver_id=#{driverId}
+        <include refid="sign_reverser_where_sql"/>
+    </select>
+
+    <select id="driverGetSignReverserOrderModel" resultType="ReverserOrderModel">
+        SELECT
+        <include refid="sign_reverse_column_sql"/>
+        FROM reverse_order_view
+        WHERE driver_id=#{driverId}
+        <include refid="sign_reverser_where_sql"/>
+        <include refid="sign_reverser_limit_sql"/>
+    </select>
+
+    <select id="supplierGetSignReverserOrderCount" resultType="int">
+        SELECT
+        COUNT(1)
+        FROM
+        reverse_order_view
+        WHERE suppliers_id=#{suppliersId}
+        <include refid="sign_reverser_where_sql"/>
+    </select>
+
+    <select id="supplierGetSignReverserOrderModel" resultType="ReverserOrderModel">
+        SELECT
+        <include refid="sign_reverse_column_sql"/>
+        FROM reverse_order_view
+        WHERE suppliers_id=#{suppliersId}
+        <include refid="sign_reverser_where_sql"/>
+        <include refid="sign_reverser_limit_sql"/>
+    </select>
+
+    <select id="customerGetSignReverserOrderCount" resultType="int">
+        SELECT
+        COUNT(1)
+        FROM
+        reverse_order_view
+        WHERE send_mechanism=
+        (SELECT customer_name FROM jy_customer where customer_id=#{customerId})
+        <include refid="sign_reverser_where_sql"/>
+    </select>
+
+    <select id="customerGetSignReverserOrderModel" resultType="ReverserOrderModel">
+        SELECT
+        <include refid="sign_reverse_column_sql"/>
+        FROM reverse_order_view
+        WHERE send_mechanism=
+        (SELECT customer_name FROM jy_customer where customer_id=#{customerId})
+        <include refid="sign_reverser_where_sql"/>
+        <include refid="sign_reverser_limit_sql"/>
+    </select>
+
+
+    <insert id="saveReverserOrderCityInfo">
+        INSERT INTO jy_reverseorder_city (id, order_id,
+                                          driver_province, driver_city, driver_county
+            , end_province, end_city, end_county)
+        VALUES (#{reverserOrder.shiping_order_id}, #{reverserOrder.shiping_order_id},
+
+                #{reverserOrder.driver_province}, #{reverserOrder.driver_city}, #{reverserOrder.driver_county},
+                #{reverserOrder.end_province}, #{reverserOrder.end_city}, #{reverserOrder.end_county}
+        )
+    </insert>
+
+    <delete id="deleteReverserOrderCityInfo">
+        DELETE FROM jy_reverseorder_city WHERE id
+        IN
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <update id="updateReverseOrderCityInfo">
+        UPDATE jy_reverseorder_city
+        <trim prefix="set" suffixOverrides=",">
+            <if test="reverserOrder.driver_province!='' and reverserOrder.driver_province!=null">
+                driver_province=#{reverserOrder.driver_province},
+            </if>
+            <if test="reverserOrder.driver_city!='' and reverserOrder.driver_city!=null">
+                driver_city=#{reverserOrder.driver_city},
+            </if>
+            <if test="reverserOrder.driver_county!='' and reverserOrder.driver_county!=null">
+                driver_county=#{reverserOrder.driver_county},
+            </if>
+            <if test="reverserOrder.end_province!='' and reverserOrder.end_province!=null">
+                end_province=#{reverserOrder.end_province},
+            </if>
+            <if test="reverserOrder.end_city!='' and reverserOrder.end_city!=null">
+                end_city=#{reverserOrder.end_city},
+            </if>
+            <if test="reverserOrder.end_county!='' and reverserOrder.end_county!=null">
+                end_county=#{reverserOrder.end_county},
+            </if>
+        </trim>
+        WHERE order_id=#{reverserOrder.shiping_order_id}
+    </update>
+
+    <select id="checkReverseOrderInfoById" resultType="int">
+        SELECT count(1)
+        FROM jy_reverse_signorder
+        WHERE order_id = #{orderId}
+    </select>
+
+    <insert id="saveReverseOrderInfo" parameterType="Sign_order">
+        INSERT INTO
+            jy_reverse_signorder (
+                sign_id,
+                order_id,
+                order_number,
+                sign_user,
+                sign_userphone,
+                sign_result,
+                actual_number,
+                defect_number,
+                sign_remarks,
+                sign_time,
+                sign_username
+            )
+        VALUES
+            (
+                #{sign_id},
+                #{order_id},
+                #{order_number},
+                #{sign_user},
+                #{sign_userphone},
+                #{sign_result},
+                #{actual_number},
+                #{defect_number},
+                #{sign_remarks},
+                now(),
+                #{sign_username}
+            )
+    </insert>
+
+    <update id="updateReverseOrderState" parameterType="String">
+        UPDATE
+            jy_reverse_order
+        SET shipping_order_state = #{state}
+        WHERE
+            shiping_order_id =
+            #{orderId}
+    </update>
+
+    <insert id="saveSignReverseOrderImage">
+        insert into jy_reverseorderimage
+        (image_id,order_id,imageUrl) values
+        <foreach collection="list" item="item" index="index"
+                 separator=",">
+            (#{item.image_id},
+            #{item.order_id},
+            #{item.imageUrl})
+        </foreach>
+    </insert>
+
+
+    <update id="updateSignReverseOrder">
+        UPDATE jy_reverse_signorder
+        SET sign_user      =
+        #{sign_user},
+            sign_userphone = #{sign_userphone},
+            sign_result    = #{sign_result},
+            actual_number  = #{actual_number}, defect_number = #{defect_number},
+            sign_remarks   = #{defect_number}, sign_time = NOW()
+        WHERE
+            order_id = #{order_id}
+    </update>
+
+    <select id="getSignReverseOrderInfo" resultType="ReverserOrderModel">
+        SELECT
+            <include refid="sign_reverse_column_sql"/>
+        FROM reverse_order_view
+        WHERE shiping_order_id = #{orderId}
+    </select>
+
+    <select id="getSingReverseOrderImg" resultType="ShipperOrderImg">
+        SELECT image_id,order_id,imageUrl
+        FROM jy_reverseorderimage
+        WHERE order_id = #{orderId}
+        UNION
+        SELECT image_id,order_id,imageUrl
+        FROM jy_signorderimages where order_id=
+        #{orderId}
+    </select>
+
+    <select id="getTakingReverseOrderImg" resultType="ShipperOrderImg">
+        SELECT *
+        FROM jy_reverse_taking_image
+        WHERE taking_id = #{orderId}
+    </select>
+
+    <select id="getReverseOrderHistory" resultType="OrderHistory">
+        SELECT *
+        FROM (SELECT *
+              FROM jy_revserseoder_history
+              WHERE orders_id = #{orderId}
+              UNION
+              SELECT *
+              FROM jy_order_history
+              WHERE orders_id = #{orderId})
+            AS history
+        ORDER BY history.order_arrive_time DESC
+    </select>
+
+    <select id="getReverseOrderByIds" resultType="ReverserOrderModel">
+        SELECT
+        <include refid="reverseOrder_column_sql"/>
+        FROM jy_reverse_order
+        WHERE shiping_order_id IN
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getSignReverseOrderByIds" resultType="ReverserOrderModel">
+        SELECT
+        <include refid="sign_reverse_column_sql"/>
+        FROM reverse_order_view
+        WHERE shiping_order_id
+        IN
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getReverseOrderCountByNum" resultType="int">
+        SELECT COUNT(1) FROM jy_reverse_order where
+        1=1
+
+        AND shiping_order_num =#{shiping_order_num}
+        <if test="shiping_order_goid!='' and shiping_order_goid!=null">
+            AND shiping_order_goid=#{shiping_order_goid}
+        </if>
+    </select>
+</mapper>

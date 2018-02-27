@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.WeChartDao">
+	<select id="weChartGetUserCount" resultType="int" parameterType="user">
+		SELECT COUNT(1) FROM jy_wechart_userinfo WHERE openid =#{user.openid}
+		and
+		username !='' AND phone !=''
+	</select>
+
+	<insert id="weChartSaveUserInfo">
+		DELETE FROM jy_wechart_userinfo WHERE
+		openid=#{user.openid};
+		INSERT INTO
+		jy_wechart_userinfo
+		(openid,nickname,sex,province,city,country,headimgurl,username,phone)
+		VALUES
+		(#{user.openid},#{user.nickname},#{user.sex},#{user.province},#{user.city},#{user.country},
+		#{user.headimgurl},#{user.username},#{user.phone})
+	</insert>
+
+	<update id="weChartUpdateUserInfo">
+
+		UPDATE jy_wechart_userinfo SET username =#{username}
+		,phone =#{phone} WHERE openid=#{openid}
+	</update>
+
+	<select id="weChartGetUserInfo" resultType="UserInfo">
+		SELECT * FROM
+		jy_wechart_userinfo WHERE openid=#{openid}
+	</select>
+
+	<select id="weChartOrderInfo" resultType="ShippingOrder">
+		SELECT
+		jso.*
+		FROM
+		jy_shiping_order jso
+		INNER JOIN jy_wechart_userinfo jweuser ON
+		jso.receipt_name=jweuser.username
+		AND
+		LOCATE(jweuser.phone,jso.receipt_tel)
+		WHERE jweuser.openid=#{openid}
+		and jso.comment_state='0' and jso.shipping_order_state>0
+		ORDER BY
+		jso.send_time DESC
+		limit
+		#{page},#{size}
+	</select>
+
+
+
+	<select id="weChartOrderCount" resultType="int">
+		SELECT
+		count(1)
+		FROM
+		jy_shiping_order jso
+		INNER JOIN jy_wechart_userinfo jweuser ON
+		jso.receipt_name=jweuser.username
+		AND
+		LOCATE(jweuser.phone,jso.receipt_tel)
+		WHERE jweuser.openid=#{openid}
+		and jso.comment_state='0'
+	</select>
+
+	<select id="weChartGetOrderMessage" resultType="ShippingOrder">
+		SELECT jso.*
+		,jdin.* FROM jy_shiping_order jso LEFT JOIN jy_drivertoorder
+		jdit ON
+		jso.shiping_order_id = jdit.order_id
+		LEFT JOIN jy_driver_info jdin ON
+		jdin.driver_id = jdit.driver_id
+		WHERE jso.shiping_order_id=#{orderId}
+		LIMIT 1
+	</select>
+
+	<select id="weChartGetOrderHistoryList" resultType="OrderHistory">
+		SELECT * FROM
+		jy_order_history where orders_id =#{orderId}
+		ORDER BY order_arrive_time
+		DESC
+	</select>
+
+	<select id="weChartGetCommentCount" resultType="int">
+		SELECT COUNT(1)
+		FROM jy_comment WHERE shiping_order_id = #{id}
+	</select>
+
+	<insert id="weChartSaveComment">
+		insert into jy_comment
+		(comment_id,shiping_order_id,send_mechanism,driver_id,driver_name,comment_name,comment_phone,remark,xing,
+		comment_data,suppliers_id,nickname,openid)
+		values(#{comment_id},#{shiping_order_id},#{send_mechanism},#{driver_id},#{driver_name},
+		#{comment_name},#{comment_phone},#{remark},#{xing},now(),#{suppliers_id},#{nickname},#{openid})
+
+	</insert>
+
+	<select id="weChartGetSignOrderImages" resultType="ShipperOrderImg">
+		SELECT * FROM
+		jy_signorderimages WHERE order_id =#{orderId}
+	</select>
+
+	<select id="weChartSearchOrderInfo" resultType="ShippingOrder">
+		select * FROM jy_shiping_order WHERE 1=1 and shipping_order_state>0
+		<if test="orderNum!=null and orderNum!=''">
+			AND shiping_order_num =#{orderNum}
+		</if>
+		<if test="orderGoid!=null and orderGoid!=''">
+			AND shiping_order_goid=#{orderGoid}
+		</if>
+	</select>
+
+	<select id="weChartOrderInfoByPhoneAndName" resultType="ShippingOrder">
+		SELECT
+		jso.*
+		FROM
+		jy_shiping_order jso
+		WHERE
+		LOCATE(#{phone},jso.receipt_tel) AND
+		jso.receipt_name=#{username}
+		and jso.comment_state='0' and
+		jso.shipping_order_state>0
+		ORDER BY jso.send_time DESC
+		limit
+		#{page},#{size}
+	</select>
+	<select id="weChartOrderCountByPhoneAndName" resultType="int">
+		SELECT
+		count(1)
+		FROM
+		jy_shiping_order jso
+		WHERE
+		LOCATE(#{phone},jso.receipt_tel)
+		AND
+		jso.receipt_name=#{username}
+		and jso.comment_state='0' and
+		jso.shipping_order_state>0
+	</select>
+</mapper>

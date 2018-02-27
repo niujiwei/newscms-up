@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.MessageManageDao">
+	<resultMap type="com.jy.model.JySuppliers" id="suppliers">
+		<id column="suppliers_id" property="suppliersId" />
+		<result column="suppliers_name" property="suppliersName" />
+		<result column="suppliers_address" property="suppliersAddress" />
+		<result column="suppliers_people" property="suppliersPeople" />
+		<result column="suppliers_person" property="suppliersPerson" />
+		<result column="suppliers_phone" property="suppliersPhone" />
+		<result column="suppliers_services" property="suppliersService" />
+		<result column="suppliers_deadline" property="suppliersDeadline" />
+		<result column="suppliers_start_date" property="suppliersStartDate" />
+		<result column="suppliers_end_date" property="suppliersEndDate" />
+		<result column="suppliers_prove" property="suppliersProve" />
+		<result column="phone_brand" property="phone_brand" />
+		<result column="phone_model" property="phone_model" />
+		<result column="suppliers_carnumber" property="suppliers_carnumber" />
+		<result column="suppliers_cartype" property="suppliers_cartype" />
+		<result column="suppliers_operator" property="suppliersOperator" />
+		<result column="suppliers_operator_date" property="suppliersOperatorDate" />
+		<collection property="customer" ofType="Customer">
+			<!-- id：订单明细唯 一标识 property:要将订单明细的唯 一标识 映射到cn.itcast.mybatis.po.Orderdetail的哪个属性 -->
+			<id column="customer_id" property="customer_id" />
+			<result column="customer_name" property="customer_name" />
+		</collection>
+	</resultMap>
+	<select id="getAllMsgCount" resultType="int">
+		select count(*) from jy_ordermsg o
+		where 1=1
+		<if test="param1!=null and param1!=''">
+			and o.sendUserName like "%${param1}%"
+		</if>
+		<if test="param2!=null and param2!=''">
+			and o.updatetime like "%${param2}%"
+		</if>
+		<if test="param3!=null and param3!=''">
+			and o.orderMsgState like "%${param3}%"
+		</if>
+		<if test="param4!=null and param4!=''">
+			and o.orderMsg like "%${param4}%"
+		</if>
+		<if test="param5!=null and param5!=''">
+			and o.receiveUserName like "%${param5}%"
+		</if>
+		<if test="param6!=null and param6!=''">
+			and o.updatetime &gt;=#{param6}
+		</if>
+		<if test="param7!=null and param7!=''">
+			and o.updatetime &lt;=#{param7}
+		</if>
+		<if test="param8!=null and param8!=''">
+			and o.orderMsgTitle like "%${param8}%"
+		</if>
+	</select>
+	<select id="getAllMsg" resultType="MsgModel">
+		select o.* from jy_ordermsg o
+		WHERE 1=1
+		<if test="param3!=null and param3!=''">
+			and o.sendUserName like "%${param3}%"
+		</if>
+		<if test="param4!=null and param4!=''">
+			and o.updatetime like "%${param4}%"
+		</if>
+		<if test="param5!=null and param5!=''">
+			and o.orderMsgState like "%${param5}%"
+		</if>
+		<if test="param6!=null and param6!=''">
+			and o.orderMsg like "%${param6}%"
+		</if>
+		<if test="param7!=null and param7!=''">
+			and o.receiveUserName like "%${param7}%"
+		</if>
+		<if test="param8!=null and param8!=''">
+			and o.updatetime &gt;=#{param8}
+		</if>
+		<if test="param9!=null and param9!=''">
+			and o.updatetime &lt;=#{param9}
+		</if>
+		<if test="param10!=null and param10!=''">
+			and o.orderMsgTitle like "%${param10}%"
+		</if>
+		order by o.updatetime DESC
+		limit
+		#{param1},#{param2}
+
+	</select>
+	<select id="getdriverUserCount" resultType="int">
+		select count(*) from
+		jy_user u left join jy_driver_info d on
+		u.suppliers_id=d.driver_suppliers
+		left join jy_suppliers s on
+		u.suppliers_id=s.suppliers_id
+		where 1=1
+		and d.driver_id like #{param1}
+		<if test="param2!=null and param2!=''">
+			and u.realname like "%${param2}%"
+		</if>
+	</select>
+	<select id="getdriverUser" resultType="user">
+		select u.*,s.suppliers_phone ,d.driver_phone from
+		jy_user u left join
+		jy_driver_info d
+		on u.driver_id=d.driver_id
+		left join jy_suppliers s on
+		u.suppliers_id=s.suppliers_id
+		where 1=1
+		and d.driver_id = #{param3}
+		<if test="param4!=null and param4!=''">
+			and u.realname like "%${param4}%"
+		</if>
+		
+		limit
+		#{param1},#{param2}
+	</select>
+	<select id="getSuppliersUserCount" resultType="int">
+		select count(*) from
+		jy_user u left join jy_suppliers s on
+		u.suppliers_id=s.suppliers_id
+		left join jy_driver_info d on
+		u.driver_id=d.driver_id
+		where 1=1
+		and d.driver_suppliers = #{param1}
+		and
+		u.id!= #{param2}
+		<if test="param3!=null and param3!=''">
+			and u.realname like "%${param3}%"
+		</if>
+	     <if test="param4!=null and param4!=''">
+			and  d.driver_address LIKE "%${param4}%"
+		</if>
+	</select>
+	<select id="getsuppliers_customer" resultType="string">
+		select
+		suppliers_customer from jy_suppliers where
+		suppliers_id=#{suppliers_id}
+	</select>
+	<select id="getSupplersUser" resultType="User">
+		select CASE u.flag
+		WHEN '0' THEN ''
+		WHEN '1' THEN d.driver_phone
+		WHEN '2' THEN s.suppliers_phone
+		END AS userPhone, d.driver_address AS user_address ,u.username ,u.realname,u.id,u.did,u.flag from
+		jy_user u left join
+		jy_suppliers s on
+		u.suppliers_id=s.suppliers_id
+		left join
+		jy_driver_info d on
+		u.driver_id=d.driver_id
+		where 1=1
+		and
+		d.driver_suppliers =#{param3}
+		and
+		u.id!= #{param4}
+		<if test="param5!=null and param5!=''">
+			and u.realname like "%${param5}%"
+		</if>
+		<if test="param6!=null and param6!=''">
+			AND d.driver_address like "%${param6}%"
+		</if>
+		
+		limit
+		#{param1},#{param2}
+	</select>
+	<select id="getAllUserCount" resultType="int">
+		select count(*) from
+		jy_user u
+		where  u.flag IN (1,2) and u.id != #{param1}
+		<if test="param2!=null and param2!=''">
+			and u.realname like "%${param2}%"
+		</if>
+		<if test="param3!=null and param3!=''">
+			and u.driver_id in (SELECt driver_id FROM jy_driver_info WHERE driver_address LIKE "%${param3}%")
+		</if>
+	</select>
+	<select id="getAllUser" resultType="User">
+		select
+		CASE u.flag
+		WHEN '0' THEN ''
+		WHEN '1' THEN d.driver_phone
+		WHEN '2'
+		THEN s.suppliers_phone
+		WHEN '3' THEN c.customer_tel
+		WHEN '4' THEN
+		c.customer_tel
+		END AS userPhone , d.driver_address AS user_address ,u.username ,u.realname,u.id,u.did,u.flag  from
+		jy_user u left join
+		jy_suppliers s on
+		u.suppliers_id=s.suppliers_id
+		left join jy_driver_info
+		d on
+		u.driver_id=d.driver_id
+		left join
+		jy_customer c on
+		u.customer_id=c.customer_id
+		where u.flag IN (1,2)
+		and u.id != #{param3}
+		<if test="param4!=null and param4!=''">
+			and u.realname like "%${param4}%"
+		</if>
+		<if test="param5!=null and param5!=''">
+			AND d.driver_address like "%${param5}%"
+		</if>
+		limit
+		#{param1},#{param2}
+	</select>
+	<select id="getMessageSuppliersCount" resultType="int">
+		SELECT COUNT(*) FROM jy_user u LEFT JOIN jy_driver_info d ON
+		d.driver_id =
+		u.driver_id
+		LEFT JOIN jy_suppliers s ON
+		d.driver_suppliers
+		= s.suppliers_id
+		WHERE 1=1 AND
+		FIND_IN_SET(#{param2},s.suppliers_customer)
+		<if test="param1!=null and param1!=''">
+			and u.realname like "%${param1}%"
+		</if>
+		<if test="param3!=null and param3!=''">
+			and d.driver_address LIKE "%${param3}%"
+		</if>
+	</select>
+	<update id="updateOrderMsgState">
+		update jy_orderMsg set orderMsgState=#{orderMsgState}
+		where
+		orderMsgId=#{orderMsgId}
+	</update>
+	<select id="getShowMsg" resultType="MsgModel">
+		select o.* from jy_orderMsg o
+		where orderMsgId=#{id}
+	</select>
+	<delete id="deleteMsg" parameterType="java.util.Arrays">
+		delete from jy_orderMsg
+		where orderMsgId=#{id}
+	</delete>
+	<select id="getMsgCount" resultType="int">
+		select count(*) from jy_ordermsg o
+		where (o.sendUserId =#{param1} OR o.receiveUserId=#{param1})
+		<if test="param2!=null and param2!=''">
+			and o.sendUserName like "%${param2}%"
+		</if>
+		<if test="param3!=null and param3!=''">
+			and o.updatetime = #{param3}
+		</if>
+		<if test="param4!=null and param4!=''">
+			and o.orderMsgState =#{param4}"
+		</if>
+		<if test="param5!=null and param5!=''">
+			and o.orderMsg like "%${param5}%"
+		</if>
+		<if test="param6!=null and param6!=''">
+			and o.receiveUserName like "%${param6}%"
+		</if>
+		<if test="param7!=null and param7!=''">
+			and o.updatetime &gt;=#{param7}
+		</if>
+		<if test="param8!=null and param8!=''">
+			and o.updatetime &lt;=#{param8}
+		</if>
+		<if test="param9!=null and param9!=''">
+			and o.orderMsgTitle like "%${param9}%"
+		</if>
+	</select>
+	<select id="getMessage" resultType="MsgModel">
+		select o.* from jy_ordermsg o
+		WHERE o.sendUserId = #{param3}
+		<if test="param4!=null and param4!=''">
+			and o.sendUserName = #{param4}
+		</if>
+		<if test="param5!=null and param5!=''">
+			and o.updatetime = #{param5}
+		</if>
+		<if test="param6!=null and param6!=''">
+			and o.orderMsgState like "${param6}"
+		</if>
+		<if test="param7!=null and param7!=''">
+			and o.orderMsg like "%${param7}%"
+		</if>
+		<if test="param8!=null and param8!=''">
+			and o.receiveUserName like "%${param8}%"
+		</if>
+		<if test="param9!=null and param9!=''">
+			and o.updatetime &gt;=#{param9}
+		</if>
+		<if test="param10!=null and param10!=''">
+			and o.updatetime &lt;=#{param10}
+		</if>
+		<if test="param11!=null and param11!=''">
+			and o.orderMsgTitle like "%${param11}%"
+		</if>
+		
+		UNION	
+        select o.* from jy_ordermsg o
+		WHERE  o.receiveUserId=#{param3}
+		order by updatetime DESC
+		limit
+		#{param1},#{param2}
+	</select>
+	<insert id="sendMsg" parameterType="MsgModel">
+		insert jy_orderMsg(
+		orderMsgId,
+		receiveUserName,
+		receiveUserId,
+		orderMsgState,
+		orderMsg,
+		sendUserName,
+		sendUserId,
+		updatetime,
+		orderMsgTitle
+		)values(
+		#{orderMsgId},
+		#{receiveUserName},
+		#{receiveUserId},
+		#{orderMsgState},
+		#{orderMsg},
+		#{sendUserName},
+		#{sendUserId},
+		SYSDATE(),
+		#{orderMsgTitle}
+		)
+	</insert>
+	<select id="getMessageCount" resultType="int">
+		select count(*) from jy_user u
+		where 1=1
+		<if test="param1!=null and param1!=''">
+			and u.realname like "%${param1}%"
+		</if>
+		<if test="param2!=null and param2!=''">
+			and u.id like "%${param2}%"
+		</if>
+		<if test="param3!=null and param3!=''">
+			and u.user_address like "%${param3}%"
+		</if>
+
+	</select>
+	<select id="getUser_Roler" resultType="Integer">
+		select user_role_rid from
+		jy_user_role where user_role_uid=#{0}
+	</select>
+	<select id="getMessagePeopleID" resultType="User">
+		SELECT
+		u.customer_id,u.suppliers_id,u.driver_id FROM jy_user u WHERE
+		u.id=#{id}
+	</select>
+	<select id="getMessageSuppliersID" resultMap="suppliers">
+		Select s.suppliers_id,s.*
+		from jy_suppliers s
+		where
+		<if test="param3!=null and param3!=''">
+			s.suppliers_customer like "%${param3}%"
+		</if>
+		order by s.suppliers_id ASC
+		limit
+		#{param1},#{param2}
+	</select>
+	<select id="getMessageSuppliersUser" resultType="User">
+		SELECT CASE u.flag
+		WHEN '0' THEN ''
+		WHEN '1' THEN d.driver_phone
+		WHEN '2' THEN s.suppliers_phone
+		END AS userPhone, d.driver_address AS user_address ,u.username ,u.realname,u.id,u.did,u.flag FROM jy_user u LEFT JOIN jy_driver_info d ON
+		d.driver_id =
+		u.driver_id
+		LEFT JOIN jy_suppliers s ON
+		d.driver_suppliers
+		=
+		s.suppliers_id
+		WHERE 1=1 AND
+		FIND_IN_SET(#{param3},s.suppliers_customer)
+		<if test="param4!=null and param4!=''">
+			and u.realname like "%${param4}%"
+		</if>
+		<if test="param5!=null and param5!=''">
+			AND d.driver_address like "%${param5}%"
+		</if>
+		order by u.suppliers_id ASC
+		limit
+		#{param1},#{param2}
+	</select>
+
+	<select id="getMessagerDriverName" resultType="User">
+		Select u.*
+		from jy_user u
+		where 1=1
+		<if test="param1!=null and param1!=''">
+			and u.driver_id like "%${param1}%"
+		</if>
+		<if test="param2!=null and param2!=''">
+			and u.realname like "%${param2}%"
+		</if>
+
+	</select>
+	<select id="getDepartmentTel" resultType="Department">
+		select tel from
+		jy_department where department_id=#{department}
+	</select>
+	<update id="updateMsgState">
+		UPDATE jy_ordermsg SET
+		orderMsgState = #{state},
+        receivetime=NOW()
+		WHERE
+		orderMsgId = #{messageId}
+		AND receiveUserId=#{userId}
+	</update>
+</mapper>

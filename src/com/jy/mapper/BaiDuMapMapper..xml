@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.BaiDuMapDao">
+
+	<resultMap type="Maps" id="Mapsres">
+		<result column="department_name" property="deptname" />
+		<result column="plate_number" property="carno" />
+		<result column="car_owner_name" property="drivename" />
+		<result column="phone_number" property="drivenumber" />
+		<result column="equipment_number" property="beidouno" />
+	</resultMap>
+	<select id="getShippingOrderHistoyInfo" resultType="OrderHistory">
+		SELECT * FROM
+		jy_order_history where
+		orders_id=#{orderId}
+		ORDER BY order_arrive_time
+		DESC
+	</select>
+
+	<select id="getUserInfo" resultType="user">
+		SELECT * FROM jy_user ju
+		WHERE
+		ju.driver_id = #{driverId}
+		LIMIT 1
+	</select>
+
+	<select id="getRecSinTime" resultType="java.util.HashMap">
+		SELECT jdt.receivetime AS
+		receivetime ,jsn.sign_time AS
+		sign_time,jdt.updatetime,jsn.auto_sign_time as auto_sign_time ,jdt.userName,jdt.equipmentNum FROM
+		jy_drivertoorder jdt
+		LEFT
+		JOIN jy_sign_order jsn on jdt.order_id =
+		jsn.order_id
+		where
+		jdt.order_id=#{orderId} LIMIT 1
+	</select>
+
+	<select id="getDriverInfo" resultType="Driver">
+		SELECT * FROM
+		jy_driver_info jdi
+		WHERE
+		jdi.driver_id IN (SELECT driver_id FROM
+		jy_drivertoorder WHERE
+		order_id=#{orderId} ) LIMIT 1;
+	</select>
+
+	<select id="getShippingOrderInfo" resultType="ShippingOrder">
+		SELECT * FROM
+		jy_shiping_order where shiping_order_id =#{orderId}
+	</select>
+
+	<select id="getDeliveryCustomerInfo" resultType="DeliveryCustomer">
+		SELECT * FROM
+		jy_delivery_customer WHERE delivery_cus_name=#{delivery_cus_name} AND
+		(
+		delivery_people=#{delivery_people} OR
+		delivery_name=#{delivery_people})
+		limit 1
+	</select>
+
+	<select id="loadMapDriverInfo" resultMap="Mapsres">
+		SELECT
+		jda.monitorid,jda.lng,jda.lat,jda.nowdate,jda.state,jda.gpsstate,jda.angle,jda.beidouid,
+		jdt.department_name,jda.carid AS carno FROM
+		jy_monitor_data jda INNER
+		JOIN jy_user jc ON jda.carid=jc.username
+		LEFT JOIN
+		jy_department jdt
+		ON
+		jdt.department_id=jc.did
+		where 1=1
+		and jc.username=#{param1}
+		<if test="param2!=null and param2!=''">
+			 AND jda.beidouid =#{param2}
+		</if>
+		and jc.flag IN (1,2)
+		ORDER BY nowdate DESC
+	</select>
+
+	<select id="loadMapPointCount" resultType="int">
+		SELECT count(1) FROM `${param1}` where 1=1
+		<if
+			test="param3!=null and param3!=''and param2!=null and param2!=''and param4!=null and param4!=''">
+			AND
+			carno='${param2}'
+			<if test="param5!=null and param5!=''">
+			 AND beidouid =#{param5}
+			</if>
+			 <!-- and gpsstate>='5' -->
+			and nowdate BETWEEN
+			'${param3}' AND
+			'${param4}'
+		</if>
+	</select>
+
+	<select id="loadMapPointInfo" resultType="Maps" parameterType="String">
+		(SELECT monitorid,nowdate, carno, stopstate, gpsstate, lng, lat,
+		angle,nowspace FROM `${param1}` where 1=1
+		<if
+			test="param3!=null and param3!=''and param2!=null and param2!=''and param4!=null and param4!=''">
+			AND
+			carno='${param2}' 
+			<if test="param8!=null and param8!=''">
+			 AND beidouid =#{param8}
+			</if>
+			AND (lng!='4.9E-324')  AND (lat!='4.9E-324')
+			
+			<!-- and gpsstate>='5' -->
+			and nowdate BETWEEN
+			'${param3}' AND
+			'${param4}'
+		</if>
+		)
+		UNION
+		(SELECT monitorid,nowdate, carno, stopstate, gpsstate, lng, lat,
+		angle,nowspace FROM `${param5}` where 1=1
+		<if
+			test="param3!=null and param3!=''and param2!=null and param2!=''and param4!=null and param4!=''">
+			AND
+			carno='${param2}'  
+			<if test="param8!=null and param8!=''">
+			 AND beidouid =#{param8}
+			</if>
+			AND (lng!='4.9E-324')  AND (lat!='4.9E-324')
+			<!-- and gpsstate>='5' -->
+			and nowdate BETWEEN
+			'${param3}' AND
+			'${param4}'
+
+		</if>
+		)
+		ORDER BY nowdate
+		limit ${param6},${param7}
+	</select>
+
+	<select id="getSomeTimePoint" resultType="Maps">
+		SELECT lng,lat FROM `${param1}` WHERE
+		 TIMESTAMPDIFF(MINUTE,nowdate,#{param2})=#{param5}
+		 AND  carno = #{param3}
+		 <if test="param4!=null and param4!=''">
+		  AND beidouid = #{param4}
+		 </if>
+		  LIMIT 1
+	</select>
+</mapper>

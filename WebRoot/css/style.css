@@ -1,0 +1,101 @@
+/* CSS Document */
+*{margin:0;padding:0;font-size:12px;}
+body{ background:none;}
+input,button,select,textarea{outline:none;}
+ul,li,dl,ol{list-style:none;}
+a{color:#666; text-decoration:none;}
+
+.box{ width:980px; margin:0 auto;}
+.bcon{ width:270px; border:1px solid #eee; margin:30px auto;}
+.bcon h1{ border-bottom:1px solid #eee; padding:0 10px;}
+.bcon h1 b{ font:bold 14px/40px '宋体'; border-top:2px solid #3492D1; padding:0 8px; margin-top:-1px; display:inline-block;}
+
+.list_lh{ height:400px; overflow:hidden;}
+.list_lh li{ padding:10px; background:snow;}
+.list_lh li.lieven{ background:#F0F2F3;}
+.list_lh li p{ height:24px; line-height:24px;}
+.list_lh li p a{ float:left;}
+.list_lh li p em{ width:80px; font:normal 12px/24px Arial; color:#FF3300; float:right; display:inline-block;}
+.list_lh li p span{ color:#999; float:right;}
+.list_lh li p a.btn_lh{ background:#28BD19; height:17px; line-height:17px; color:#fff; padding:0 5px; margin-top:4px; display:inline-block; float:right;}
+.btn_lh:hover{ color:#fff; text-decoration:none;}
+
+.btm p{ font:normal 12px/24px 'Microsoft YaHei'; text-align:center;}
+* {
+	margin: 0;
+	padding: 0;
+}
+li {
+	list-style: none;
+}
+
+.pj-Carousel {
+	width: 200%;
+	height: 40%;
+	overflow: hidden;
+	position: relative;
+}
+
+.pj-Carousel-box {
+	height: 300px;
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+.pj-Carousel-item {
+	float: left;
+	background-color: #E3E3E3;
+	font-family: "Arial Black";
+	color: #979797;
+	font-size: 40px;
+}
+
+.pj-Carousel-active {
+	position: absolute;
+	bottom: 10px;
+	margin: auto auto;
+	z-index: 5;
+}
+
+.pj-Carousel-color {
+	background-color: #A2A2A2;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	float: left;
+	margin: 0px 5px;
+}
+
+.pj-Carousel .active {
+	background-color: #272727;
+}
+
+
+.pagination a {
+    text-decoration: none;
+	border: 1px solid #AAE;
+	color: #15B;
+}
+
+.pagination a, .pagination span {
+    display: inline-block;
+    padding: 0.1em 0.4em;
+    margin-right: 5px;
+	margin-bottom: 5px;
+}
+
+.pagination .current {
+    background: #26B;
+    color: #fff;
+	border: 1px solid #AAE;
+}
+
+.pagination .current.prev, .pagination .current.next{
+	color:#999;
+	border-color:#999;
+	background:#fff;
+}
+.pad_class{
+padding: 5px;     width: 100%
+}

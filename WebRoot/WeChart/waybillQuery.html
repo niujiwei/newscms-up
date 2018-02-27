@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<script src="mui/js/mui.min.js"></script>
+		<link href="mui/css/mui.min.css" rel="stylesheet" />
+
+		<script type="text/javascript" charset="utf-8">
+		    var id = "";
+			mui.init({
+			
+			swipeBack: false
+			});
+		
+			//window.onload = win_init;
+
+			
+
+			//$('#btn_search').click() = search();
+
+			function search() {
+			var mask = mui.createMask();
+			
+				var order_num = document.getElementById("order_num").value;
+				var order_shipper =document.getElementById("order_shipper").value;
+				if(order_num == '') {
+					mui.alert("输入运单号", '提示', '确认');
+					document.getElementById("div_message").style.display = 'none';
+				} else {
+				    
+				    mask.show();//显示遮罩
+				    	var par_ul = document.getElementById("ul_message");
+				        par_ul.innerHTML = "";
+					// mui("#demo1").progressbar().show();
+					mui.ajax('searchWaybill.do?method=quickSearch', {
+						data: {
+							shiping_order_goid: order_shipper,
+							shiping_order_num: order_num
+						},
+						dataType: 'json', //服务器返回json格式数据 
+						type: 'post', //HTTP请求类型 
+						// timeout:10000,//超时时间设置为10秒；
+						success: function(data) {
+
+							showMessge(data);
+							mask.close();//关闭遮罩
+
+							//服务器返回响应，根据响应结果，分析是否登录成功； ... 
+						},
+						error: function(xhr, type, errorThrown) {
+						    mui.alert("系统异常", '提示', '确认');
+							//异常处理；
+							console.log(type);
+						}
+					});
+
+				}
+			}
+
+			function showMessge(msg) {
+				var data = msg;
+				var length = data.length;
+				if(length == 1) {
+				    id=data[0].id;
+				    var comment_state =data[0].comment_state;
+				    var shipping_order_state =data[0].shipping_order_state;
+				    
+				    if(comment_state=='0'&&shipping_order_state>3){
+				       document.getElementById("div_btn").style.display = 'block';
+				    }  
+					mui.ajax('searchWaybill.do?method=getSearchWaybill', {
+						data: {
+							//shiping_order_goid: order_shipper,
+							shiping_order_num: id
+						},
+						dataType: 'json', //服务器返回json格式数据 
+						type: 'post', //HTTP请求类型 
+						// timeout:10000,//超时时间设置为10秒；
+						success: function(data) {
+
+							appendDom(data);
+							//showMessge(data);
+
+							//服务器返回响应，根据响应结果，分析是否登录成功； ... 
+						},
+						error: function(xhr, type, errorThrown) {
+						     mui.alert("系统异常", '提示', '确认');
+							//异常处理；
+							console.log(type);
+						}
+					});
+					//appendDom(msg);
+					document.getElementById("div_message").style.display = 'block';
+				} else {
+					mui.alert("运单号不存在或者运单编号存在多个请入出货订单号", '提示', '确认');
+					document.getElementById("div_message").style.display = 'none';
+				}
+
+			}
+
+			function appendDom(list) {
+				/* var par_ul = document.getElementById("ul_message");
+				par_ul.innerHTML = ""; */
+				var message = list;
+				mui.each(message, function(index, item) {
+					var li_childern = document.createElement("li");
+					li_childern.className = 'mui-table-view-cell';
+					li_childern.innerHTML = item.goods_arrive_remakes;
+					document.getElementById("ul_message").appendChild(li_childern);
+
+				});
+				
+			}
+			
+			function pingjia() {
+				var webview =mui.openWindow({
+						url: 'driverEvaluation.html?id='+id,
+						id: 'pingjia',
+						styles: {
+							top: 0, //新页面顶部位置
+
+						},
+						extras: {
+						   id:'1234',
+						   
+							//自定义扩展参数，可以用来处理页面间传值
+
+						},
+						createNew: false,
+						waiting: {
+							autoShow: true, //自动显示等待框，默认为true
+							title: '正在加载...', //等待对话框上显示的提示内容
+							options: {
+								width:100,
+								height:100
+
+							}
+						}
+					});
+				}
+		</script>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+		<h1 class="mui-title">DMS 司机评价</h1>
+	    </header>
+		<div class="mui-content">
+			<div class="mui-card">
+				<!--页眉，放置标题-->
+				<div class="mui-card-header mui-card-media">
+					<img src="mui/images/chaxun.png" />
+					<div class="mui-media-body">
+						运单查询
+					</div>
+				</div>
+				<!--内容区-->
+				<div class="mui-card-content">
+					<div class="mui-input-row mui-search " style="margin: 10px 5px;">
+						<input type="search" class="mui-input-clear" placeholder="请输入运单编号" id="order_num">
+					</div>
+					<div class="mui-input-row mui-search" style="margin: 10px 5px;">
+						<input type="search" class="mui-input-clear" placeholder="请输入出货订单号，为空可以不填" id="order_shipper">
+					</div>
+					<!-- 页脚区 -->
+					<div class="mui-card-footer">
+						<button type="button" class="mui-btn mui-btn-blue mui-btn-block" id="btn_search" onclick="search()">
+     					<span class="mui-icon mui-icon-search">查询</span>
+     				</button>
+					</div>
+				</div>
+
+			</div>
+		</div>
+		
+		<div class="mui-content">
+					<div style="display:none" id="div_message">
+						<ul class="mui-table-view" id="ul_message">
+						</ul>
+						
+					</div>
+					<div style="display:none" id="div_btn">
+					<button type="button" class="mui-btn mui-btn-success mui-btn-block mui-btn-outlined" onclick="pingjia()">	
+		                    <span class="mui-icon mui-icon-chatbubble" >评价</span>
+				 		</button>
+				   </div>
+		</div>		
+	</body>
+
+</html>

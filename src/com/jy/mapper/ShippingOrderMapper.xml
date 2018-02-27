@@ -1,0 +1,2929 @@
+<?xml version="1.0" encoding="UTF-8" ?><!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.ShippingOrderDao">
+    <!-- 封装的已签收运单查询的条件句 -->
+    <sql id="oldseach_sign_info_sql">
+        <if test="param3!=null and param3!=''">
+            and jso.shiping_order_num like "%${param3}%"
+        </if>
+        <if test="param4!=null and param4!=''">
+            and jso.send_time &gt;=#{param4}
+        </if>
+        <if test="param5!=null and param5!=''">
+            and jso.send_time &lt;=#{param5}
+        </if>
+        <if test="(param4!=null and param4!='') and (param5!=null and param5!='')">
+            and jso.send_time &gt;=#{param4}
+            and
+            jso.send_time&lt;=#{param5}
+        </if>
+        <if test="param6!=null  and  param6!=''   and param6 !=4 ">
+            and jso.shipping_order_state =9
+        </if>
+        <if test="param6==4   or  param6==null  or param6=='' ">
+            and jso.shipping_order_state in (4,5,6)
+        </if>
+
+        <if test="param7!=null and param7!=''">
+            and jso.send_mechanism like "%${param7}%"
+        </if>
+        <if test="param8!=null and param8!=''">
+            and jso.receipt_name like "%${param8}%"
+        </if>
+        <if test="param9!=null and param9!=''">
+            and jso.end_address like "%${param9}%"
+        </if>
+        <if test="param10!=null and param10!=''">
+            and jso.shiping_order_goid like "%${param10}%"
+        </if>
+        ORDER BY
+        jo.sign_time
+        DESC
+        limit
+        #{param1},#{param2}
+    </sql>
+    <!-- 封装的已签收的统计条件句 -->
+    <sql id="CountOld">
+        <if test="param1!=null and param1!=''">
+            and jso.shiping_order_num like "%${param1}%"
+        </if>
+        <if test="param2!=null and param2!=''">
+            and jso.send_time &gt;=#{param2}
+        </if>
+        <if test="param3!=null and param3!=''">
+            and jso.send_time &lt;=#{param3}
+        </if>
+        <if test="(param2!=null and param2!='') and (param3!=null and param3!='')">
+            and jso.send_time &gt;=#{param2}
+            and
+            jso.send_time&lt;=#{param3}
+        </if>
+
+        <if test="param4!=null  and  param4!=''   and param4 !=4  ">
+            and jso.shipping_order_state =9
+        </if>
+        <if test="param4==4   or  param4==null   or  param4=='' ">
+            and jso.shipping_order_state in (4,5,6)
+        </if>
+
+        <if test="param5!=null and param5!=''">
+            and jso.send_mechanism like "%${param5}%"
+        </if>
+        <if test="param6!=null and param6!=''">
+            and jso.receipt_name like "%${param6}%"
+        </if>
+        <if test="param7!=null and param7!=''">
+            and jso.end_address like "%${param7}%"
+        </if>
+        <if test="param8!=null and param8!=''">
+            and jso.shiping_order_goid like "%${param8}%"
+        </if>
+    </sql>
+
+    <sql id="shiping_order_info_sql">
+        <if test="param3!=null and param3!=''">
+            and ji.send_time &gt;=#{param3}
+        </if>
+        <if test="param13!=null and param13!=''">
+            and ji.send_time &lt;=#{param13}
+        </if>
+        <if test="(param3!=null and param3!='') and (param13!=null and param13!='')">
+            and ji.send_time &gt;=#{param3}
+            and
+            ji.send_time&lt;=#{param13}
+        </if>
+        <if test="param4!=null and param4!=''">
+            and ji.shiping_order_num like "%${param4}%"
+        </if>
+        <if test="param5!=null and param5!=''">
+            and ji.send_mechanism like "%${param5}%"
+        </if>
+        <if test="param6!=null and param6!=''">
+            and ji.end_address like "%${param6}%"
+        </if>
+        <if test="param7!=null and param7!=''">
+            and ji.custom_name like "%${param7}%"
+        </if>
+
+        <if test="param8!=null and param8!=''">
+            and ji.receipt_name like "%${param8}%"
+        </if>
+        <if test="param9!=null and param9!=''">
+            and ji.receipt_tel like "%${param9}%"
+        </if>
+        <if test="param10!=null and param10!=''">
+            and ji.topordernumber like "%${param10}%"
+        </if>
+        <if test="param11!=null and param11!=''">
+            and ji.downordernumber like "%${param11}%"
+        </if>
+        <if test="param12!=null and param12!=''">
+            and ji.shiping_order_goid like "%${param12}%"
+        </if>
+        ORDER BY
+        ji.updatetime
+        DESC
+        <if test="param1!=null and param2!=null">
+            limit
+            #{param1},#{param2}
+        </if>
+    </sql>
+
+
+    <select id="getShipOrderInfo" resultType="ShippingOrder">
+        SELECT
+        ji.*
+        <!-- jtc.travel_card_id, jtc.plate_number -->
+        FROM
+        jy_shiping_order ji
+        <!-- LEFT JOIN jy_travel_card jtc ON jtc.travel_card_id = ji.car_id -->
+        where
+        1=1
+        <include refid="shiping_order_info_sql" />
+    </select>
+
+    <select id="getCustomerReportPage" resultType="ShippingOrder">
+        SELECT
+        IFNULL(sum(ji.transport_pay),0) as transport_pay,
+        IFNULL(sum(ji.trade_agency),0) as trade_agency,
+        IFNULL(sum(ji.deliver_fee),0) as deliver_fee,
+        IFNULL(sum(ji.upstairs_fee),0) as upstairs_fee,
+        IFNULL(sum(ji.added_fee),0) as added_fee,
+        IFNULL(sum(ji.other_fee),0)
+        as other_fee,
+        sum(IFNULL(ji.transport_pay,0)
+        +IFNULL(ji.trade_agency,0)
+        +IFNULL(ji.deliver_fee,0)
+        +IFNULL(ji.upstairs_fee,0)
+        +IFNULL(ji.added_fee,0)
+        +IFNULL(ji.other_fee,0)) as heji
+        FROM
+        jy_shiping_order ji
+        where
+        1=1
+        <if test="param1!=null and param1!=''">
+            and ji.send_time like "%${param1}%"
+        </if>
+        <if test="param2!=null and param2!=''">
+            and ji.shiping_order_num like "%${param2}%"
+        </if>
+        <if test="param3!=null and param3!=''">
+            and ji.send_mechanism like "%${param3}%"
+        </if>
+        <if test="param4!=null and param4!=''">
+            and ji.end_address like "%${param4}%"
+        </if>
+        <if test="param5!=null and param5!=''">
+            and ji.custom_name like "%${param5}%"
+        </if>
+
+        <if test="param6!=null and param6!=''">
+            and ji.receipt_name like "%${param6}%"
+        </if>
+        <if test="param7!=null and param7!=''">
+            and ji.receipt_tel like "%${param7}%"
+        </if>
+    </select>
+    <select id="getCustomerReport" resultType="ShippingOrder">
+        SELECT
+        ji.shiping_order_num,
+        ji.custom_name,
+        ji.send_time,
+        ji.goods_name,
+        ji.goods_num,
+        ji.goods_weight,
+        ji.goods_vol,
+        ji.transport_pay,
+        ji.trade_agency,
+        ji.deliver_fee,
+        ji.upstairs_fee,
+        ji.added_fee,
+        ji.other_fee,
+        ji.remarks,
+        IFNULL(ji.transport_pay,0)
+        +IFNULL(ji.trade_agency,0)
+        +IFNULL(ji.deliver_fee,0)
+        +IFNULL(ji.upstairs_fee,0)
+        +IFNULL(ji.added_fee,0)
+        +IFNULL(ji.other_fee,0)as heji
+        FROM
+        jy_shiping_order ji
+        where
+        1=1
+        <if test="param1!=null and param1!=''">
+            and ji.send_time like "%${param1}%"
+        </if>
+        <if test="param2!=null and param2!=''">
+            and ji.shiping_order_num like "%${param2}%"
+        </if>
+        <if test="param3!=null and param3!=''">
+            and ji.send_mechanism like "%${param3}%"
+        </if>
+        <if test="param4!=null and param4!=''">
+            and ji.end_address like "%${param4}%"
+        </if>
+        <if test="param5!=null and param5!=''">
+            and ji.custom_name like "%${param5}%"
+        </if>
+
+        <if test="param6!=null and param6!=''">
+            and ji.receipt_name like "%${param6}%"
+        </if>
+        <if test="param7!=null and param7!=''">
+            and ji.receipt_tel like "%${param7}%"
+        </if>
+        ORDER BY
+        ji.updatetime
+        DESC
+    </select>
+
+    <sql id="shiping_order_count_sql">
+        <if test="param1!=null and param1!=''">
+            and ji.send_time &gt;=#{param1}
+        </if>
+        <if test="param11!=null and param11!=''">
+            and ji.send_time &lt;=#{param11}
+        </if>
+        <if test="(param1!=null and param1!='') and (param11!=null and param11!='')">
+            and ji.send_time &gt;=#{param1}
+            and
+            ji.send_time&lt;=#{param11}
+        </if>
+        <if test="param2!=null and param2!=''">
+            and ji.shiping_order_num like "%${param2}%"
+        </if>
+        <if test="param3!=null and param3!=''">
+            and ji.send_mechanism like "%${param3}%"
+        </if>
+        <if test="param4!=null and param4!=''">
+            and ji.end_address like "%${param4}%"
+        </if>
+        <if test="param5!=null and param5!=''">
+            and ji.custom_name like "%${param5}%"
+        </if>
+
+        <if test="param6!=null and param6!=''">
+            and ji.receipt_name like "%${param6}%"
+        </if>
+        <if test="param7!=null and param7!=''">
+            and ji.receipt_tel like "%${param7}%"
+        </if>
+        <if test="param8!=null and param8!=''">
+            and ji.topordernumber like "%${param8}%"
+        </if>
+        <if test="param9!=null and param9!=''">
+            and ji.downordernumber like "%${param9}%"
+        </if>
+        <if test="param10!=null and param10!=''">
+            and ji.shiping_order_goid like "%${param10}%"
+        </if>
+    </sql>
+    <select id="getShipOrder" resultType="int">
+        select count(*) from
+        jy_shiping_order ji where
+        1=1
+        <include refid="shiping_order_count_sql" />
+    </select>
+
+    <select id="getShipOrderInfoCA" resultType="ShippingOrder">
+        SELECT
+        ji.*
+        FROM
+        jy_shiping_order ji
+        where
+        (ji.shipping_order_state=0 or
+        ji.shipping_order_state=4)
+        <!-- SELECT ji.* FROM jy_shiping_order ji where (ji.shipping_order_state=0
+            OR ji.shipping_order_state=2) -->
+        <!--startDate, end_date, ddId, order_state, pay_type,perpole,end_address,send_address,phone_number -->
+        <if test="param4!=null and param4!=''">
+            and ji.send_time &gt;=#{param4}
+        </if>
+        <if test="param5!=null and param5!=''">
+            and ji.send_time &lt;=#{param5}
+        </if>
+        <if test="(param4!=null and param4!='') and (param5!=null and param5!='')">
+            and ji.send_time &gt;=#{param4}
+            and ji.send_time &lt;=#{param5}
+        </if>
+        <if test="param6!=null and param6!=''">
+            and ji.shiping_order_num like "%${param6}%"
+        </if>
+        <if test="param7!=null and param7!=''">
+            and ji.shipping_order_state =#{param7}
+        </if>
+        <if test="param8!=null and param8!=''">
+            and ji.pay_type =#{param8}
+        </if>
+        <if test="param9!=null and param9!=''">
+            and ji.receipt like "%${param9}%"
+        </if>
+        <if test="param10!=null and param10!=''">
+            and ji.end_address like "%${param10}%"
+        </if>
+        <if test="param11!=null and param11!=''">
+            and ji.send_station =#{param11}
+        </if>
+        <if test="param12!=null and param12!=''">
+            and ji.receipt_tel =#{param12}
+        </if>
+        <if test="param8!=null and param8!=''">
+            and ji.custom_id =#{param8}
+        </if>
+        ORDER BY
+        ji.updatetime
+        DESC
+        limit
+        #{param1},#{param2}
+    </select>
+
+    <select id="getShipOrderCA" resultType="int">
+        select count(*) from jy_shiping_order ji where
+        (ji.shipping_order_state=0 or ji.shipping_order_state=4)
+        AND
+        ji.send_type=1
+        <if test="param1!=null and param1!=''">
+            and ji.shiping_order_num like "%${param3}%"
+        </if>
+        <if test="param2!=null and param2!=''">
+            and ji.shiping_order_num like "%${param4}%"
+        </if>
+        <if test="param3!=null and param3!=''">
+            and ji.receipt like "%${param5}%"
+        </if>
+        <if test="param4!=null and param4!=''">
+            and ji.end_address like "%${param6}%"
+        </if>
+        <if test="param5!=null and param5!=''">
+            and ji.send_time &gt;=#{param7}
+        </if>
+        <if test="param6!=null and param6!=''">
+            and ji.send_time &lt;=#{param8}
+        </if>
+        <if test="(param5!=null and param5!='') and (param6!=null and param6!='')">
+            and ji.send_time &gt;=#{param5}
+            and ji.send_time &lt;=#{param6}
+        </if>
+        <if test="param7!=null and param7!=''">
+            and ji.send_station like "%${param7}%"
+        </if>
+        <if test="param8!=null and param8!=''">
+            and ji.end_address like "%${param10}%"
+        </if>
+        <if test="param9!=null and param9!=''">
+            and ji.car_number like "%${param11}%"
+        </if>
+
+    </select>
+    <!--导出 -->
+    <select id="getShipOrderAll" resultType="ShippingOrder">
+        SELECT
+        ji.*,
+        CASE WHEN ji.send_type='0' THEN '自提'
+        WHEN ji.send_type='1'
+        THEN '送货'
+        END AS sendtype,
+        CASE WHEN ji.check_type='0' THEN '发货人门点'
+        WHEN
+        ji.check_type='1' THEN '起运货运站'
+        END AS checktype
+        CASE WHEN
+        ji.shipping_order_state='0' THEN '受理'
+        WHEN
+        ji.shipping_order_state='1'
+        THEN '在途'
+        ji.shipping_order_state='2' THEN
+        '到达'
+        <!-- ji.shipping_order_state='3' THEN '配送' -->
+        ji.shipping_order_state='4' THEN '签收'
+        END AS order_state
+        <!-- jtc.travel_card_id, jtc.plate_number -->
+        FROM
+        jy_shiping_order ji
+        <!-- LEFT JOIN jy_travel_card jtc ON jtc.travel_card_id = ji.car_id -->
+        where
+        ji.shipping_order_state=0
+        <if test="param1!=null and param1!=''">
+            and shiping_order_num like "%${param1}%"
+        </if>
+        <if test="param2!=null and param2!=''">
+            and start_address like "%${param2}%"
+        </if>
+        <if test="param3!=null and param3!=''">
+            and end_address like "%${param3}%"
+        </if>
+        <if test="param4!=null and param4!=''">
+            and check_time &gt;=#{param4}
+        </if>
+        <if test="param5!=null and param5!=''">
+            and check_time &lt;=#{param5}
+        </if>
+        <if test="(param4!=null and param4!='') and (param5!=null and param5!='') ">
+            and check_time &gt;=#{param4}
+            and check_time &lt;=#{param5}
+        </if>
+        ORDER BY
+        ji.updatetime
+        DESC
+    </select>
+
+    <delete id="deleteShipOrder" parameterType="java.util.Arrays">
+        delete from
+        jy_shiping_order
+        where
+        shiping_order_id IN
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <!-- 删除与订单关联的需求 -->
+
+    <delete id="deleteShipToDemand" parameterType="java.util.Arrays">
+        delete from
+        jy_shiping_demand
+        where
+        shiping_id IN
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+    <!-- 删除司机关联订单 -->
+
+    <delete id="deleteDriverToOrder" parameterType="java.util.Arrays">
+        delete from
+        jy_drivertoorder
+        where
+        order_id IN
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+    <!--删除订单且删除相关修改订单信息 -->
+    <delete id="deleteOrderEH" parameterType="java.util.Arrays">
+        delete from
+        jy_order_ehistory
+        where
+        shiping_order_id IN
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <insert id="saveShipOrder" parameterType="ShippingOrder">
+        insert into
+        jy_shiping_order
+        (
+        shiping_order_id,
+        shiping_order_num,
+        <if test="goods_weight!=null and goods_weight!=''">
+            goods_weight,
+        </if>
+        <if test="goods_vol!=null and goods_vol!=''">
+            goods_vol,
+        </if>
+        <if test="transport_pay!=null and transport_pay!=''">
+            transport_pay,
+        </if>
+        <if test="trade_agency!=null and trade_agency!=''">
+            trade_agency,
+        </if>
+        send_mechanism,
+        send_station,
+        send_time,
+        end_mechanism,
+        end_address,
+        custom_code,
+        custom_name,
+        custom_contact,
+        custom_tel,
+        receipt,
+        receipt_name,
+        receipt_tel,
+        receipt_address,
+
+        goods_name,
+        goods_packing,
+        goods_num,
+        remarks ,
+        shipping_order_state,
+        creat_type,
+        updatetime,
+        shipping_order,
+        <if test="other_fee!=null and other_fee!=''">
+            other_fee,
+        </if>
+        <if test="deliver_fee!=null and deliver_fee!=''">
+            deliver_fee,
+        </if>
+        <if test="upstairs_fee!=null and upstairs_fee!=''">
+            upstairs_fee,
+        </if>
+        <if test="added_fee!=null and added_fee!=''">
+            added_fee,
+        </if>
+        is_recept,
+        aging_time,
+        topordernumber,
+        downordernumber,
+        aging_day,
+        shiping_order_goid,
+        <if test="driver_province!=null and driver_province!=''">
+            driver_province,
+
+        </if>
+        <if test="driver_city!=null and driver_city!=''">
+            driver_city,
+        </if>
+        <if test="driver_county!=null and driver_county!=''">
+            driver_county,
+        </if>
+        <if test="business_type!=null">
+            business_type,
+        </if>
+        shiping_yueid
+        )
+        values
+        (
+        #{shiping_order_id},
+        #{shiping_order_num},
+        <if test="goods_weight!=null and goods_weight!=''">
+            #{goods_weight},
+        </if>
+        <if test="goods_vol!=null and goods_vol!=''">
+            #{goods_vol},
+        </if>
+        <if test="transport_pay!=null and transport_pay!=''">
+            #{transport_pay},
+        </if>
+        <if test="trade_agency!=null and trade_agency!=''">
+            #{trade_agency},
+        </if>
+
+        #{send_mechanism},
+        #{send_station},
+        #{send_time},
+        #{end_mechanism},
+        #{end_address},
+        #{custom_code},
+        #{custom_name},
+        #{custom_contact},
+        #{custom_tel},
+        #{receipt},
+        #{receipt_name},
+        #{receipt_tel},
+        #{receipt_address},
+        #{goods_name},
+        #{goods_packing},
+        #{goods_num},
+        #{remarks},
+        0,
+        #{creat_type},
+        SYSDATE(),
+        #{shipping_order},
+        <if test="other_fee!=null and other_fee!=''">
+            #{other_fee},
+        </if>
+        <if test="deliver_fee!=null and deliver_fee!=''">
+            #{deliver_fee},
+        </if>
+        <if test="upstairs_fee!=null and upstairs_fee!=''">
+            #{upstairs_fee},
+        </if>
+        <if test="added_fee!=null and added_fee!=''">
+            #{added_fee},
+        </if>
+        #{is_recept},
+        #{aging_time},
+        #{topordernumber},
+        #{downordernumber},
+        #{aging_day},
+
+
+        #{shiping_order_goid},
+        <if test="driver_province != null and driver_province != ''">
+            #{driver_province},
+        </if>
+        <if test="driver_city != null and driver_city!= ''">
+            #{driver_city},
+        </if>
+        <if test="driver_county != null and driver_county!= ''">
+            #{driver_county},
+        </if>
+        <if test="business_type!=null">
+            #{business_type},
+        </if>
+        #{shiping_yueid}
+
+        )
+    </insert>
+    <!-- 订单修改历史表 -->
+    <insert id="saveOrderEHistory" parameterType="ShippingOrder">
+        insert into
+        jy_order_ehistory
+        (
+        ehistory_id,
+        shiping_order_id,
+        shiping_order_num,
+        send_station,
+        end_address,
+        send_time,
+        receipt,
+        receipt_tel,
+        receipt_address,
+        goods_name,
+        goods_packing,
+        <if test="goods_num != null and goods_num !=''">
+            goods_num,
+        </if>
+        <if test="goods_weight != null and goods_weight !=''">
+            goods_weight,
+        </if>
+        <if test="goods_vol != null and goods_vol !=''">
+            goods_vol,
+        </if>
+        <!-- goods_num, goods_weight, goods_vol, -->
+        <if test="take_fee != null and take_fee !=''">
+            take_fee,
+        </if>
+        <if test="ys_unloading_fee != null and ys_unloading_fee !=''">
+            ys_unloading_fee,
+        </if>
+        <if test="adorn_fee != null and adorn_fee !=''">
+            adorn_fee,
+        </if>
+        <if test="trunk_fee != null and trunk_fee !=''">
+            trunk_fee,
+        </if>
+        pay_type,
+        <if test="transport_pay != null and transport_pay !=''">
+            transport_pay,
+        </if>
+        remarks,
+        send_type,
+        <if test="trade_agency != null and trade_agency !=''">
+            trade_agency,
+        </if>
+        updatetime,
+        shipping_order,
+        is_recept,
+        custom_id,
+        car_number,
+        custom_name,
+        <if test="chayi_daifukuan1 != null and chayi_daifukuan1 !=''">
+            chayi_daifukuan1,
+        </if>
+        <if test="paid_chayi != null and paid_chayi !=''">
+            paid_chayi,
+        </if>
+
+        remarks_fee,
+        practiacl_num,
+        edit_order,
+        edit_date,
+        order_time
+        )
+        values (
+        #{ehistory_id},
+        #{shiping_order_id},
+        #{shiping_order_num},
+        #{send_station},
+        #{end_address},
+        #{send_time},
+        <!-- #{checkp}, #{check_tel}, #{check_phone}, -->
+        #{receipt},
+        #{receipt_tel},
+        #{receipt_address},
+        #{goods_name},
+        #{goods_packing},
+        <if test="goods_num != null and goods_num !=''">
+            #{goods_num},
+        </if>
+        <if test="goods_weight != null and goods_weight !=''">
+            #{goods_weight},
+        </if>
+        <if test="goods_vol != null and goods_vol !=''">
+            #{goods_vol},
+        </if>
+        <!-- #{goods_num}, #{goods_weight}, #{goods_vol}, -->
+        <if test="take_fee != null and take_fee !=''">
+            #{take_fee},
+        </if>
+        <if test="ys_unloading_fee != null and ys_unloading_fee !=''">
+            #{ys_unloading_fee},
+        </if>
+        <if test="adorn_fee != null and adorn_fee !=''">
+            #{adorn_fee},
+        </if>
+        <if test="trunk_fee != null and trunk_fee !=''">
+            #{trunk_fee},
+        </if>
+        #{pay_type},
+        <if test="transport_pay != null and transport_pay !=''">
+            #{transport_pay},
+        </if>
+        #{remarks},
+        #{send_type},
+        <if test="trade_agency != null and trade_agency !=''">
+            #{trade_agency},
+        </if>
+        #{updatetime},
+        #{shipping_order},
+        #{is_recept},
+        #{custom_id},
+        #{car_number},
+        #{custom_name},
+        <if test="chayi_daifukuan1 != null and chayi_daifukuan1 !=''">
+            #{chayi_daifukuan1},
+        </if>
+
+        <if test="paid_chayi != null and paid_chayi !=''">
+            #{paid_chayi},
+        </if>
+        #{remarks_fee},
+        #{practiacl_num},
+        #{edit_order},
+        now(),
+        #{order_time}
+        )
+    </insert>
+    <!-- 货物到达修改以及时间 -->
+    <update id="isArrive" parameterType="java.util.Arrays">
+        update jy_shiping_order
+        <set>
+            is_order_arrive=1,
+            updatetime=now()
+        </set>
+        where shiping_order_id IN
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <!-- 货物到达修改车到时间 -->
+    <update id="isArriveCoustom" parameterType="String">
+        update jy_order_custom
+        <set>
+            receipt_time=now(),
+            is_arrived=1
+        </set>
+        where custom_id =#{_parameter}
+    </update>
+    <!-- 货物取消到达修改 -->
+    <update id="isNotArrive" parameterType="java.util.Arrays">
+        update jy_shiping_order
+        <set>
+            is_order_arrive=0,
+            updatetime=now()
+        </set>
+        where shiping_order_id IN
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+
+    <!-- 到达订单历史表存储 -->
+    <insert id="saveOrderHistory" parameterType="java.util.List">
+        INSERT
+        jy_order_history
+        (
+        order_history_id,
+        orders_id,
+        order_arrive_time,
+        goods_arrive_remakes,
+        state
+        )
+        VALUES
+        <foreach collection="list" index="index" item="item" separator=",">
+            (
+            #{item.order_history_id},
+            #{item.orders_id},
+            #{item.order_arrive_time},
+            #{item.goods_arrive_remakes},
+            #{item.state}
+            )
+        </foreach>
+    </insert>
+
+    <!--取消到达删除数据 -->
+    <delete id="deleteOrderHistory" parameterType="java.util.Arrays">
+        DELETE FROM
+        jy_order_history
+        WHERE
+        orders_id IN
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+
+    <select id="getUpdateShipOrder" parameterType="String" resultType="ShippingOrder">
+        <!-- select * from jy_car_owner_info where car_owner_id=#{carOwnerId} -->
+        SELECT
+        ji.*
+        FROM
+        jy_shiping_order ji
+        where
+        ji.shiping_order_id=#{shiping_order_id}
+    </select>
+
+
+    <select id="getShipOrderCAM" parameterType="java.util.Arrays" resultType="ShippingOrder">
+        select * from
+        jy_shiping_order
+        where
+        shiping_order_id IN
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        ORDER BY
+        updatetime
+        DESC
+        LIMIT
+        #{param1},#{param2}
+    </select>
+    <!-- 运单信息修改 -->
+    <update id="updateShipOrder" parameterType="ShippingOrder">
+        update
+        jy_shiping_order
+        <trim prefix="SET" suffixOverrides=",">
+            shiping_order_num=#{shiping_order_num},
+            <if test="goods_weight!=null and goods_weight!=''">
+                goods_weight=#{goods_weight},
+            </if>
+            <if test="goods_vol!=null and goods_vol!=''">
+                goods_vol=#{goods_vol},
+            </if>
+            <if test="transport_pay!=null and transport_pay!=''">
+                transport_pay=#{transport_pay},
+            </if>
+            <if test="trade_agency!=null and trade_agency!=''">
+                trade_agency=#{trade_agency},
+            </if>
+            <!-- send_mechanism=#{s}, -->
+            send_station=#{send_station},
+            send_time=#{send_time},
+            end_mechanism=#{end_mechanism},
+            end_address=#{end_address},
+            custom_code=#{custom_code},
+            custom_name=#{custom_name},
+            custom_contact=#{custom_contact},
+            custom_tel=#{custom_tel},
+            receipt=#{receipt},
+            receipt_name=#{receipt_name},
+            receipt_tel=#{receipt_tel},
+            receipt_address=#{receipt_address},
+            send_mechanism = #{send_mechanism},
+            goods_name=#{goods_name},
+            goods_packing=#{goods_packing},
+            goods_num=#{goods_num},
+            remarks=#{remarks},
+            creat_type=#{creat_type},
+            /*updatetime=SYSDATE(),*/
+            shipping_order=#{shipping_order},
+            <if test="other_fee!=null and other_fee!=''">
+                other_fee=#{other_fee},
+            </if>
+            <if test="deliver_fee!=null and deliver_fee!=''">
+                deliver_fee=#{deliver_fee},
+            </if>
+            <if test="upstairs_fee!=null and upstairs_fee!=''">
+                upstairs_fee=#{upstairs_fee},
+            </if>
+            <if test="added_fee!=null and added_fee!=''">
+                added_fee=#{added_fee},
+            </if>
+            is_recept=#{is_recept},
+            topordernumber=#{topordernumber},
+            downordernumber=#{downordernumber},
+            shiping_order_goid=#{shiping_order_goid},
+            shiping_yueid=#{shiping_yueid},
+            <if test="driver_province != null">
+                driver_province = #{driver_province,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_city != null">
+                driver_city = #{driver_city,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_county != null">
+                driver_county = #{driver_county,jdbcType=VARCHAR},
+            </if>
+            <if test="business_type!=null">
+                business_type=#{business_type},
+            </if>
+        </trim>
+        where
+        shiping_order_id = #{shiping_order_id}
+    </update>
+    <!-- 运单信息修改 ，多加个订单状态 -->
+    <update id="updateShipOrders" parameterType="ShippingOrder">
+        update
+        jy_shiping_order
+        <trim prefix="SET" suffixOverrides=",">
+            shiping_order_num=#{shiping_order_num},
+            <if test="goods_weight!=null and goods_weight!=''">
+                goods_weight=#{goods_weight},
+            </if>
+            <if test="goods_vol!=null and goods_vol!=''">
+                goods_vol=#{goods_vol},
+            </if>
+            <if test="transport_pay!=null and transport_pay!=''">
+                transport_pay=#{transport_pay},
+            </if>
+            <if test="trade_agency!=null and trade_agency!=''">
+                trade_agency=#{trade_agency},
+            </if>
+            <if test="shipping_order_state!=null">
+                shipping_order_state=#{shipping_order_state},
+            </if>
+            <!-- send_mechanism=#{s}, -->
+            send_station=#{send_station},
+            send_time=#{send_time},
+            end_mechanism=#{end_mechanism},
+            end_address=#{end_address},
+            custom_code=#{custom_code},
+            custom_name=#{custom_name},
+            custom_contact=#{custom_contact},
+            custom_tel=#{custom_tel},
+            receipt=#{receipt},
+            receipt_name=#{receipt_name},
+            receipt_tel=#{receipt_tel},
+            receipt_address=#{receipt_address},
+            send_mechanism = #{send_mechanism},
+            goods_name=#{goods_name},
+            goods_packing=#{goods_packing},
+            goods_num=#{goods_num},
+            remarks=#{remarks},
+            creat_type=#{creat_type},
+            <if test="aging_time!=null and aging_time!=''">
+                aging_time=#{aging_time},
+            </if>
+            <if test="aging_day!=null and aging_day!=''">
+                aging_day=#{aging_day},
+            </if>
+            /*updatetime=SYSDATE(),*/
+            shipping_order=#{shipping_order},
+            <if test="other_fee!=null and other_fee!=''">
+                other_fee=#{other_fee},
+            </if>
+            <if test="deliver_fee!=null and deliver_fee!=''">
+                deliver_fee=#{deliver_fee},
+            </if>
+            <if test="upstairs_fee!=null and upstairs_fee!=''">
+                upstairs_fee=#{upstairs_fee},
+            </if>
+            <if test="added_fee!=null and added_fee!=''">
+                added_fee=#{added_fee},
+            </if>
+            is_recept=#{is_recept},
+            topordernumber=#{topordernumber},
+            downordernumber=#{downordernumber},
+            shiping_order_goid=#{shiping_order_goid},
+            shiping_yueid=#{shiping_yueid},
+            <if test="driver_province != null">
+                driver_province = #{driver_province,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_city != null">
+                driver_city = #{driver_city,jdbcType=VARCHAR},
+            </if>
+            <if test="driver_county != null">
+                driver_county = #{driver_county,jdbcType=VARCHAR},
+            </if>
+            <if test="business_type!=null">
+                business_type=#{business_type},
+            </if>
+        </trim>
+        where
+        shiping_order_id = #{shiping_order_id}
+    </update>
+
+    <select id="getNumber" resultType="ShippingOrder">
+        select
+        *
+        from
+        jy_shiping_order
+        <where>
+            <if test="param1!=null and param1!=''">
+                and shiping_order_num=#{param1}
+            </if>
+            <if test="param2!=null and param2!=''">
+                and shiping_order_goid=#{param2}
+            </if>
+        </where>
+
+    </select>
+    <select id="getAorder" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM
+        jy_shiping_order
+        <if test="_parameter!=null">
+            where shiping_order_num=#{_parameter}
+        </if>
+    </select>
+    <!-- <select id="getPlateNumberLength" resultType="ShippingOrder"> select
+        shiping_order_id, shiping_order_num from jy_shiping_order <if test="_parameter!=null">
+        where shiping_order_num like "%${_parameter}%" </if> </select> -->
+    <select id="getPlateNumberLength" resultType="ShippingOrder">
+        <!-- SELECT DISTINCT travel_card_id,plate_number FROM jy_travel_card jtc
+            WHERE travel_card_id NOT IN( SELECT DISTINCT travel_card_id FROM jy_travel_card
+            jtc INNER JOIN jy_shiping_order ji ON ji.car_id=jtc.travel_card_id ) -->
+        SELECT
+        DISTINCT travel_card_id,plate_number
+        FROM
+        jy_travel_card jtc
+        INNER
+        JOIN
+        jy_driver_info jd ON jd.car_id=jtc.travel_card_id
+        where
+        jtc.state=1
+        <if test="_parameter!=null">
+            and plate_number like "%${_parameter}%"
+        </if>
+    </select>
+
+    <sql id="sing_order_info_sql"><!-- 运单签收查询条件 -->
+        <if test="param3!=null and param3!=''">
+            and jso.shiping_order_num like "%${param3}%"
+        </if>
+        <if test="param4!=null and param4!=''">
+            and jso.send_time &gt;=#{param4}
+        </if>
+        <if test="param5!=null and param5!=''">
+            and jso.send_time &lt;=#{param5}
+        </if>
+        <if test="(param4!=null and param4!='') and (param5!=null and param5!='')">
+            and jso.send_time &gt;=#{param4}
+            and
+            jso.send_time&lt;=#{param5}
+        </if>
+        <if test="param6!=null and param6!=''">
+            <if test="param6==0">
+                and jso.shipping_order_state in (0,1,2)
+            </if>
+            <if test="param6==1">
+                and jso.shipping_order_state in (3,4,5,6)
+            </if>
+        </if>
+        <if test="param7!=null and param7!=''">
+            and jso.send_mechanism like "%${param7}%"
+        </if>
+        <if test="param8!=null and param8!=''">
+            and jso.receipt_name like "%${param8}%"
+        </if>
+        <if test="param9!=null and param9!=''">
+            and jso.end_address like "%${param9}%"
+        </if>
+        <if test="param10!=null and param10!=''">
+            and jso.shiping_order_goid like "%${param10}%"
+        </if>
+        <if test="(param11!=null and param11!='') and (param12!=null and param12!='')">
+            and date_format(jso.sign_time,'%Y-%m-%d') &gt;=#{param11}
+            and
+            date_format(jso.sign_time,'%Y-%m-%d') &lt;=#{param12}
+        </if>
+        ORDER BY
+        jso.sign_time DESC,jso.shipping_order_state DESC
+        limit
+        #{param1},#{param2}
+
+    </sql>
+    <sql id="receivetime_column_sql">
+		(SELECT receivetime FROM jy_drivertoorder WHERE order_id=jso.shiping_order_id) as receivetime
+	</sql>
+    <sql id="sign_shiporder_column_sql">
+        jo.*,jso.*,(SELECT GROUP_CONCAT(jsb.abnormal_type_name)
+        FROM jy_abnormalreport jsb WHERE
+        shiping_order_id =
+        jso.shiping_order_id) as abnormal_name,
+        <include refid="receivetime_column_sql" />
+    </sql>
+    <select id="getSignShipOrder" resultType="ShippingOrder">
+        SELECT
+        <include refid="sign_shiporder_column_sql" />
+        FROM
+        jy_shiping_order jso
+        LEFT JOIN
+        jy_sign_order jo
+        ON
+        jo.order_id=jso.shiping_order_id
+        WHERE
+        1=1
+        <include refid="sing_order_info_sql" />
+    </select>
+
+    <!-- 管理员新增已签收查询******************************** -->
+    <select id="getShipOrderOld" resultType="ShippingOrder">
+        SELECT
+        *
+        FROM
+        jy_shiping_order jso
+        inner JOIN
+        jy_sign_order jo
+        ON
+        jo.order_id=jso.shiping_order_id
+        WHERE
+        1=1
+        <include refid="oldseach_sign_info_sql" />
+
+    </select>
+    <select id="getUpdateSignShipOrder" parameterType="String" resultType="ShippingOrder">
+        <!-- select * from jy_car_owner_info where car_owner_id=#{carOwnerId} -->
+        SELECT *,CASE WHEN jso.shipping_order_state=0 THEN '已发运'
+        WHEN
+        jso.shipping_order_state=1 THEN '已分配'
+        WHEN jso.shipping_order_state=2
+        THEN '已接单'
+        WHEN jso.shipping_order_state=3 THEN '电子围栏签收'
+        WHEN
+        jso.shipping_order_state=4 THEN '已签收'
+        WHEN jso.shipping_order_state=5
+        THEN '已签收'
+        WHEN jso.shipping_order_state=6 THEN '已签收'
+        END AS
+        shipping_order_statestr
+        from
+        jy_shiping_order jso
+        left join
+        jy_sign_order
+        on
+        jy_sign_order.order_id = jso.shiping_order_id
+        where
+        jso.shiping_order_id=#{shiping_order_id} limit 1
+    </select>
+    <select id="isnotSignOrder" parameterType="String" resultType="Sign_order">
+		SELECT * from jy_sign_order jso where order_id = #{0}
+	</select>
+
+    <sql id="sign_shiporder_count_sql">
+        <if test="param1!=null and param1!=''">
+            and jso.shiping_order_num like "%${param1}%"
+        </if>
+        <if test="param2!=null and param2!=''">
+            and jso.send_time &gt;=#{param2}
+        </if>
+        <if test="param3!=null and param3!=''">
+            and jso.send_time &lt;=#{param3}
+        </if>
+        <if test="(param2!=null and param2!='') and (param3!=null and param3!='')">
+            and jso.send_time &gt;=#{param2}
+            and
+            jso.send_time&lt;=#{param3}
+        </if>
+        <if test="param4!=null and param4!=''">
+            <if test="param4==0">
+                and jso.shipping_order_state in (0,1,2)
+            </if>
+            <if test="param4==1">
+                and jso.shipping_order_state in (3,4,5,6)
+            </if>
+        </if>
+
+        <if test="param5!=null and param5!=''">
+            and jso.send_mechanism like "%${param5}%"
+        </if>
+        <if test="param6!=null and param6!=''">
+            and jso.receipt_name like "%${param6}%"
+        </if>
+        <if test="param7!=null and param7!=''">
+            and jso.end_address like "%${param7}%"
+        </if>
+        <if test="param8!=null and param8!=''">
+            and jso.shiping_order_goid like "%${param8}%"
+        </if>
+        <if test="(param9!=null and param9!='') and (param10!=null and param10!='')">
+            and date_format(jso.sign_time,'%Y-%m-%d') &gt;=#{param9}
+            and
+            date_format(jso.sign_time,'%Y-%m-%d') &lt;=#{param10}
+
+        </if>
+    </sql>
+
+    <select id="getSignShipOrdercount" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM
+        jy_shiping_order jso
+        where 1=1
+        <include refid="sign_shiporder_count_sql" />
+    </select>
+    <!-- 管理员新增已签收统计******************************* -->
+    <select id="getShipOrderOldcount" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM
+        jy_shiping_order jso
+        INNER JOIN
+        jy_sign_order jo
+        ON
+        jo.order_id=jso.shiping_order_id
+        where 1=1
+        <include refid="CountOld" />
+    </select>
+    <insert id="saveSignShipOrder" parameterType="Sign_order">
+        INSERT INTO
+        jy_sign_order (
+        sign_id,
+        order_id,
+        order_number,
+        sign_user,
+        sign_usernumber,
+        sign_userphone,
+        sign_result,
+        actual_number,
+        defect_number,
+        copies_number,
+        sign_remarks,
+        sign_time,
+        sign_name,
+        sign_username,
+        sign_number
+        )
+        VALUES
+        (
+        #{sign_id},
+        #{order_id},
+        #{order_number},
+        #{sign_user},
+        #{sign_usernumber},
+        #{sign_userphone},
+        #{sign_result},
+        #{actual_number},
+        #{defect_number},
+        #{copies_number},
+        #{sign_remarks},
+        now(),
+        #{sign_name},
+        #{sign_username},
+        #{sign_number}
+        )
+    </insert>
+    <update id="updateSignShipOrder" parameterType="Sign_order">
+        update jy_sign_order
+        <set>
+            order_number = #{order_number},
+            sign_user = #{sign_user},
+            sign_usernumber = #{sign_usernumber},
+            sign_userphone =
+            #{sign_userphone},
+            sign_result = #{sign_result},
+            actual_number =
+            #{actual_number},
+            defect_number = #{defect_number},
+            copies_number =
+            #{copies_number},
+            sign_remarks = #{sign_remarks},
+            sign_time = now(),
+            sign_name = #{sign_name},
+            sign_username = #{sign_username},
+            sign_number = #{sign_number}
+        </set>
+        where order_id=#{order_id}
+    </update>
+    <select id="getSignShipOrderNum" parameterType="String" resultType="int">
+		SELECT COUNT(*) FROM jy_sign_order WHERE
+		order_number=#{_parameter}
+	</select>
+
+    <update id="updateSignShipOrderNum" parameterType="Sign_order">
+        UPDATE jy_sign_order
+        <set>
+            sign_user = #{sign_user},
+            sign_usernumber = #{sign_usernumber},
+            sign_userphone = #{sign_userphone},
+            sign_result = #{sign_result},
+            actual_number = #{actual_number},
+            defect_number = #{defect_number},
+            copies_number = #{copies_number},
+            sign_remarks = #{sign_remarks} ,
+            sign_time = now(),
+            sign_name = #{sign_name},
+            sign_number
+            =#{sign_number}
+        </set>
+        WHERE order_number=#{order_number}
+
+
+    </update>
+
+
+    <update id="updatestate" parameterType="String">
+        <if test="_parameter!=null">
+            UPDATE jy_shiping_order
+            SET shipping_order_state='4' WHERE
+            shiping_order_id = "${_parameter}"
+        </if>
+    </update>
+    <update id="appupdatestate" parameterType="String">
+        <if test="_parameter!=null">
+            UPDATE jy_shiping_order
+            SET shipping_order_state='4'
+            ,sign_time = now() WHERE
+            shiping_order_id = "${_parameter}"
+        </if>
+    </update>
+    <!-- hqhend -->
+    <!-- 导入 -->
+    <insert id="saveShipOrders" parameterType="java.util.List">
+        insert into
+        jy_shiping_order
+        (
+        shiping_order_id,
+        shiping_order_num,
+        send_station，
+        end_address,
+        send_time,
+        receipt,
+        receipt_tel,
+        receipt_address,
+        goods_name,
+        goods_packing,
+        goods_num,
+        goods_weight,
+        goods_vol,
+        take_fee,
+        send_fee,
+        adorn_fee,
+        trunk_fee,
+        pay_type,
+        transport_pay,
+        remarks,
+        send_type,
+        trade_agency,
+        updatetime,
+        shipping_order,
+        is_recept,
+        custom_id,
+        car_number,
+        custom_name,
+        shiping_order_goid,
+        shiping_yueid
+
+        )
+        values
+        <foreach collection="list" index="index" item="item" separator=",">
+            (
+            #{item.shiping_order_id},
+            #{item.shiping_order_num},
+            #{item.send_station},
+            #{item.end_address},
+            #{item.send_time},
+            #{item.receipt},
+            #{item.receipt_tel},
+            #{item.receipt_address},
+            #{item.goods_name},
+            #{item.goods_packing},
+            #{item.goods_num},
+            #{item.goods_weight},
+            #{item.goods_vol},
+            #{item.take_fee},
+            #{item.send_fee},
+            #{item.adorn_fee},
+            #{item.trunk_fee},
+            #{item.pay_type},
+            #{item.transport_pay},
+            #{item.remarks},
+            #{item.send_type},
+            #{item.shipping_order_state},
+            #{item.trade_agency},
+            #{item.creat_type},
+            #{item.updatetime},
+            #{item.shipping_order},
+            #{item.is_recept},
+            #{item.custom_id},
+            #{item.car_number},
+            #{item.custom_name},
+            #{item.shiping_order_goid},
+            #{item.shiping_yueid}
+            )
+        </foreach>
+    </insert>
+    <!-- 图片路径 -->
+    <insert id="saveSignImages">
+		INSERT INTO
+		jy_signorderimages
+		(
+		image_id,
+		order_id,
+		imageUrl
+
+		)
+		VALUES
+		(
+		#{param1},
+		#{param2},
+		#{param3}
+		)
+	</insert>
+
+    <!-- 获取运单的司机id -->
+    <select id="getCarShipOrder" resultType="ShippingOrder">
+		SELECT *
+		FROM
+		jy_shiping_order js
+		LEFT JOIN jy_create_agreement jc ON 1=1
+		INNER JOIN
+		jy_agreementtoorder ja ON jc.agreement_id=ja.agreement_id AND
+		ja.order_id=js.shiping_order_id
+		WHERE
+		js.shipping_order_state=1
+		AND
+		jc.car_id=#{_parameter}
+	</select>
+    <!-- 一维码打印查询 -->
+    <select id="getUpdateShipOrderArray" resultType="ShippingOrder" parameterType="java.util.Arrays">
+        SELECT
+        ji.*<!-- , jtc.travel_card_id, jtc.plate_number -->
+        FROM
+        jy_shiping_order ji
+        <!-- LEFT JOIN jy_travel_card jtc ON jtc.travel_card_id = ji.car_id -->
+        where
+        ji.shiping_order_num IN
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="getAppShipOrder" parameterType="String" resultType="ShippingOrder">
+        SELECT
+        ji.*<!-- , jtc.travel_card_id, jtc.plate_number -->
+        FROM
+        jy_shiping_order ji
+        <!-- LEFT JOIN jy_travel_card jtc ON jtc.travel_card_id = ji.car_id -->
+        where
+        ji.shiping_order_num=#{_parameter}
+    </select>
+    <!-- zzp添加短信保存模板 -->
+    <insert id="sendMsgModelInfo" parameterType="MsgModel">
+		INSERT
+		INTO
+		jy_msgmodel
+		(
+		model_id,
+		model_title,
+		model_content,
+		updatetime
+		)
+		VALUES
+		(
+		#{model_id},
+		#{model_title},
+		#{model_content},
+		SYSDATE()
+		)
+	</insert>
+    <select id="getMsgModel" resultType="MsgModel">
+		SELECT * FROM jy_msgmodel
+	</select>
+    <select id="sendMsgContent" resultType="String">
+		SELECT
+		model_content
+		FROM
+		jy_msgmodel
+		WHERE
+		model_id=#{_parameter}
+	</select>
+
+    <select id="getShowOrder" resultType="OrderHistory">
+		SELECT
+		*
+		FROM
+		jy_order_history where orders_id = #{_parameter} order by
+		order_arrive_time desc
+	</select>
+    <!-- 发货客户名称 zzp -->
+    <select id="getCustomName" resultType="Customer">
+        SELECT
+        customer_num,customer_name,customer_people,customer_tel,customer_id
+        FROM
+        jy_customer where customer_name like "%${_parameter}%"
+    </select>
+    <!-- 思唯哥哥专用 -->
+    <select id="getShipOrderInfoFenpei" resultType="ShippingOrder">
+        SELECT
+        ji.*
+        FROM
+        jy_shiping_order ji
+        where shiping_order_id NOT IN(select
+        dt.order_id from jy_drivertoorder dt)
+        and ji.shipping_order_state = 0
+        AND ji.send_mechanism IN (
+        SELECT
+        jc.customer_name from jy_customer jc
+        LEFT JOIN jy_suppliers jss ON
+        find_in_set(
+        jc.customer_id,jss.suppliers_customer)
+        WHERE
+        jss.suppliers_id=#{supplersId})
+
+        <if test="list!=null and list.size()>0">
+            AND
+            <foreach collection="list" item="address" index="index" open="(ji.end_address LIKE" close=")"
+                separator="or ji.end_address LIKE">
+                '%${address}'
+            </foreach>
+        </if>
+
+        <include refid="fenpei_order_sql" />
+
+    </select>
+
+    <select id="otherShipOrderInfoFenpei" resultType="ShippingOrder">
+        SELECT
+        ji.*
+        FROM
+        jy_shiping_order ji
+        LEFT JOIN jy_customer jc ON
+        jc.customer_name LIKE ji.send_mechanism
+        LEFT JOIN jy_user ju ON
+        jc.customer_id=ju.customer_id
+        where
+        shiping_order_id NOT IN(select
+        dt.order_id from jy_drivertoorder dt)
+        and ji.shipping_order_state = 0
+        AND ju.id=#{userId}
+        <include refid="fenpei_order_sql" />
+    </select>
+
+    <!-- 司机查看自己运单，已签收的不再显示在里面 -->
+    <select id="getShipOrderInfoOnePage" resultType="ShippingOrder">
+        SELECT
+        ji.*,jd.receivetime
+        FROM
+        jy_shiping_order ji
+        LEFT JOIN
+        jy_drivertoorder jd on
+        ji.shiping_order_id = jd.order_id
+        where 1=1
+        <if test="param3!=null and param3!=''">
+            and ji.send_time &gt;= "%${param3}%"
+        </if>
+        <if test="param14!=null and param14!=''">
+            and ji.send_time &lt;=#{param14}
+        </if>
+        <if test="(param3!=null and param3!='') and (param14!=null and param14!='')">
+            and ji.send_time &gt;=#{param3}
+            and
+            ji.send_time&lt;=#{param14}
+        </if>
+        <if test="param4!=null and param4!=''">
+            and ji.shiping_order_num like "%${param4}%"
+        </if>
+        <if test="param5!=null and param5!=''">
+            and ji.send_mechanism like "%${param5}%"
+        </if>
+        <if test="param6!=null and param6!=''">
+            and ji.end_address like "%${param6}%"
+        </if>
+        <if test="param7!=null and param7!=''">
+            and ji.custom_name like "%${param7}%"
+        </if>
+
+        <if test="param8!=null and param8!=''">
+            and ji.receipt_name like "%${param8}%"
+        </if>
+        <if test="param9!=null and param9!=''">
+            and ji.receipt_tel like "%${param9}%"
+        </if>
+        <if test="param10!=null and param10!=''">
+            and jd.driver_id = "${param10}"
+        </if>
+        <if test="param11!=null and param11!=''">
+            and ji.shiping_order_goid like "%${param11}%"
+        </if>
+        <if test="param12==0">
+            and ji.shipping_order_state in(0,1,2)
+        </if>
+        <if test="param12==1">
+            and ji.shipping_order_state in(3,4,5,6)
+        </if>
+        <if test="param13!=null and param13!=''">
+            and ji.end_mechanism like "%${param13}%"
+        </if>
+        ORDER BY
+        ji.updatetime
+        DESC
+        limit
+        #{param1},#{param2}
+    </select>
+    <select id="getShipOrderOnePage" resultType="int">
+        select count(*) from jy_shiping_order ji
+        LEFT JOIN
+        jy_drivertoorder jd
+        on ji.shiping_order_id = jd.order_id
+        where
+        1=1
+        <if test="param1!=null and param1!=''">
+            and ji.send_time &gt;= "%${param1}%"
+        </if>
+        <if test="param12!=null and param12!=''">
+            and ji.send_time &lt;=#{param12}
+        </if>
+        <if test="(param1!=null and param1!='') and (param12!=null and param12!='')">
+            and ji.send_time &gt;=#{param1}
+            and
+            ji.send_time&lt;=#{param12}
+        </if>
+        <if test="param2!=null and param2!=''">
+            and ji.shiping_order_num like "%${param2}%"
+        </if>
+        <if test="param3!=null and param3!=''">
+            and ji.send_mechanism like "%${param3}%"
+        </if>
+        <if test="param4!=null and param4!=''">
+            and ji.end_address like "%${param4}%"
+        </if>
+        <if test="param5!=null and param5!=''">
+            and ji.custom_name like "%${param5}%"
+        </if>
+
+        <if test="param6!=null and param6!=''">
+            and ji.receipt_name like "%${param6}%"
+        </if>
+        <if test="param7!=null and param7!=''">
+            and ji.receipt_tel like "%${param7}%"
+        </if>
+        <if test="param8!=null and param8!=''">
+            and jd.driver_id = "${param8}"
+        </if>
+        <if test="param9!=null and param9!=''">
+            and ji.shiping_order_goid like "%${param9}%"
+        </if>
+        <if test="param10==0">
+            and ji.shipping_order_state in(0,1,2)
+        </if>
+        <if test="param10==1">
+            and ji.shipping_order_state in(3,4,5,6)
+        </if>
+        <if test="param11!=null and param11!=''">
+            and ji.end_mechanism like "%${param11}%"
+        </if>
+
+    </select>
+
+    <select id="getShipOrderFenpei" resultType="int">
+        select count(*) from jy_shiping_order ji where
+        shiping_order_id NOT
+        IN(select dt.order_id from jy_drivertoorder dt)
+        and
+        ji.shipping_order_state = 0
+        AND ji.send_mechanism IN (
+        SELECT
+        jc.customer_name from jy_customer jc
+        LEFT
+        JOIN jy_suppliers jss ON
+        find_in_set(
+        jc.customer_id,jss.suppliers_customer)
+        WHERE
+        jss.suppliers_id=#{suppliers})
+        AND
+        <foreach collection="list" item="address" index="index" open="(ji.end_address LIKE" close=")"
+            separator="or ji.end_address LIKE">
+            '%${address}'
+        </foreach>
+        <include refid="fenpei_order_count" />
+
+    </select>
+
+    <select id="otherShipOrderFenpei" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM
+        jy_shiping_order ji
+        LEFT JOIN jy_customer jc ON
+        jc.customer_name LIKE ji.send_mechanism
+        LEFT JOIN jy_user ju ON
+        jc.customer_id=ju.customer_id
+        where
+        shiping_order_id NOT IN(select
+        dt.order_id from jy_drivertoorder dt)
+        and ji.shipping_order_state = 0
+        AND ju.id=#{userId}
+        <include refid="fenpei_order_count" />
+    </select>
+
+    <delete id="deleteShipOrderPage" parameterType="java.util.Arrays">
+        delete from
+        jy_drivertoorder
+        where driver_id=#{0} and
+        order_id IN
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+    <!-- 新增删除中间表的订单信息 -->
+    <delete id="deleteShipOrders">
+
+		delete from
+		jy_drivertoorder
+		where
+		order_id=#{_parameter}
+	</delete>
+
+    <sql id="customerbilling_info_sql">
+
+        <if test="param3!=null and param3!=''">
+            and ji.send_time &gt;=#{param3}
+        </if>
+        <if test="param4!=null and param4!=''">
+            and ji.send_time &lt;=#{param4}
+        </if>
+        <if test="param5!=null and param5!=''">
+            AND ji.send_mechanism LIKE "%${param5}%"
+        </if>
+
+        GROUP BY ji.send_mechanism
+        ORDER BY ji.updatetime DESC
+        LIMIT
+        #{param1},#{param2}
+    </sql>
+
+    <select id="getShipOrderBySendMechanism" resultType="ShippingOrder">
+        SELECT
+        COUNT(jso.shiping_order_id)
+        customer_settlement_state,count(ji.shiping_order_id)
+        num,SUM(ji.goods_num) goods_num,
+        SUM(ji.goods_weight) goods_weight,
+        SUM(ji.goods_vol) goods_vol,
+        SUM(ji.deliver_fee) deliver_fee,
+        SUM(ji.upstairs_fee) upstairs_fee,
+        SUM(ji.added_fee) added_fee,
+        SUM(ji.other_fee) other_fee,
+        SUM(ji.trade_agency) trade_agency,
+        SUM(ji.transport_pay) transport_pay,
+        MAX(ji.send_time) max_time,
+        MIN(ji.send_time) min_time,
+        ji.custom_name,ji.send_time
+        ,ji.custom_code,ji.send_mechanism
+        From jy_shiping_order ji LEFT JOIN
+        jy_shiping_order jso ON
+        ji.shiping_order_id=jso.shiping_order_id AND
+        jso.customer_settlement_state=0
+        where 1=1
+        <include refid="customerbilling_info_sql" />
+    </select>
+
+    <select id="selectCustomerSettlementState" resultType="int">
+        SELECT COUNT(shiping_order_id) FROM jy_shiping_order WHERE
+        customer_settlement_state=0
+
+        <if test="param1!=null and param1!=''">
+            and send_time &gt;=#{param1}
+        </if>
+        <if test="param2!=null and param2!=''">
+            and send_time &lt;=#{param2}
+        </if>
+        <if test="param3!=null and param3!=''">
+            AND custom_name LIKE "%${param3}%"
+        </if>
+
+
+    </select>
+    <sql id="customerbilling_count_sql">
+
+        <if test="param1!=null and param1!=''">
+            and ji.send_time &gt;=#{param1}
+        </if>
+        <if test="param2!=null and param2!=''">
+            and ji.send_time &lt;=#{param2}
+        </if>
+        <if test="param3!=null and param3!=''">
+            AND ji.send_mechanism LIKE "%${param3}%"
+        </if>
+
+        GROUP BY ji.send_mechanism
+    </sql>
+
+    <select id="getShipOrderBySendMechanismTotal" resultType="int">
+        select COUNT(*) from (SELECT COUNT(jso.shiping_order_id)
+        customer_settlement_state,count(ji.shiping_order_id)
+        num,SUM(ji.goods_num) goods_num,
+        SUM(ji.goods_weight) goods_weight,
+        SUM(ji.goods_vol) goods_vol,
+        SUM(ji.deliver_fee) deliver_fee,
+        SUM(ji.upstairs_fee) upstairs_fee,
+        SUM(ji.added_fee) added_fee,
+        SUM(ji.other_fee) other_fee,
+        SUM(ji.trade_agency) trade_agency,
+        SUM(ji.transport_pay) transport_pay,
+        MAX(ji.send_time) max_time,
+        MIN(ji.send_time) min_time,
+        ji.custom_name,ji.send_time ,ji.custom_code
+        From jy_shiping_order ji LEFT JOIN jy_shiping_order jso ON
+        ji.shiping_order_id=jso.shiping_order_id AND
+        jso.customer_settlement_state=0
+        where 1=1
+        <include refid="customerbilling_count_sql" />
+        ) t
+    </select>
+    <select id="getDtailCustomerbilling" resultType="ShippingOrder">
+        SELECT *
+        From jy_shiping_order ji
+        <where>
+            <if test="param3!=null and param3!=''">
+                and ji.send_time like "%${param3}%"
+            </if>
+            <if test="param4!=null and param4!=''">
+                and ji.shiping_order_num like "%${param4}%"
+            </if>
+            <if test="param5!=null and param5!=''">
+                and ji.send_mechanism like "%${param5}%"
+            </if>
+            <if test="param6!=null and param6!=''">
+                and ji.end_address like "%${param6}%"
+            </if>
+            <if test="param7!=null and param7!=''">
+                and ji.custom_name like "%${param7}%"
+            </if>
+
+            <if test="param8!=null and param8!=''">
+                and ji.receipt_name like "%${param8}%"
+            </if>
+            <if test="param9!=null and param9!=''">
+                and ji.receipt_tel like "%${param9}%"
+            </if>
+            <if test="param13!=null and param13!=''">
+                and ji.shiping_order_goid like "%${param13}%"
+            </if>
+            <if test="param14!=null and param14!=''">
+                and ji.customer_settlement_state =#{param14}
+            </if>
+
+            and ji.send_time &gt;=#{param10} and ji.send_time &lt;=#{param11}AND
+            ji.send_mechanism =#{param12}
+        </where>
+
+        ORDER BY ji.updatetime DESC
+        LIMIT
+        #{param1},#{param2}
+    </select>
+    <select id="getDtailCustomerbillingTotal" resultType="int">
+        select COUNT(*)
+        From jy_shiping_order ji
+        <where>
+            <if test="param1!=null and param1!=''">
+                and ji.send_time like "%${param1}%"
+            </if>
+            <if test="param2!=null and param2!=''">
+                and ji.shiping_order_num like "%${param2}%"
+            </if>
+            <if test="param3!=null and param3!=''">
+                and ji.send_mechanism like "%${param3}%"
+            </if>
+            <if test="param4!=null and param4!=''">
+                and ji.end_address like "%${param4}%"
+            </if>
+            <if test="param5!=null and param5!=''">
+                and ji.custom_name like "%${param5}%"
+            </if>
+
+            <if test="param6!=null and param6!=''">
+                and ji.receipt_name like "%${param6}%"
+            </if>
+            <if test="param7!=null and param7!=''">
+                and ji.receipt_tel like "%${param7}%"
+            </if>
+            <if test="param11!=null and param11!=''">
+                and ji.shiping_order_goid like "%${param11}%"
+            </if>
+            <if test="param12!=null and param12!=''">
+                and ji.customer_settlement_state =#{param12}
+            </if>
+            and ji.send_time &gt;=#{param8} and ji.send_time &lt;=#{param9}AND
+            ji.send_mechanism =#{param10}
+        </where>
+        ORDER BY ji.updatetime DESC
+    </select>
+    <select id="getAllCustom" resultType="string">
+		SELECT DISTINCT custom_name
+		FROM jy_shiping_order;
+	</select>
+    <select id="getAllMessage" resultType="ShippingOrder">
+		select DISTINCT
+		ji.shiping_order_id,ji.shiping_order_num,ji.shiping_order_goid,ji.send_mechanism,ji.end_address,ji.goods_num,ji.deliver_fee,ji.upstairs_fee,ji.added_fee,
+		ji.trade_agency,ji.remarks,ji.send_time,ji.receipt_name,ji.goods_name,ji.goods_weight,ji.goods_vol,
+		IFNULL(ji.deliver_fee,0)
+		+IFNULL(ji.upstairs_fee,0)
+		+IFNULL(ji.added_fee,0)
+		as heji,
+		js. result
+		FROM
+		jy_shiping_order ji
+		left
+		join jy_shipping_time js on js.shiping_order_id = ji.shiping_order_id
+		where
+		ji.send_mechanism=#{param1} and
+		ji.send_time
+		&gt;=#{param2} and
+		ji.send_time &lt;=#{param3}
+	</select>
+    <select id="getSumMessage" resultType="ShippingOrder">
+		SELECT
+		IFNULL(SUM(ji.goods_vol),0) AS goods_vol,
+		IFNULL(SUM(ji.goods_weight),0) AS goods_weight,
+		IFNULL(SUM(ji.goods_num),0) AS goods_num,
+		IFNULL(sum(ji.transport_pay),0) as transport_pay,
+		IFNULL(sum(ji.trade_agency),0) as trade_agency,
+		IFNULL(sum(ji.deliver_fee),0) as deliver_fee,
+		IFNULL(sum(ji.upstairs_fee),0) as upstairs_fee,
+		IFNULL(sum(ji.added_fee),0) as added_fee,
+		IFNULL(sum(ji.other_fee),0)
+		as other_fee,
+		sum(
+		IFNULL(ji.deliver_fee,0)
+		+IFNULL(ji.upstairs_fee,0)
+		+IFNULL(ji.added_fee,0)
+		) as heji
+		FROM
+		jy_shiping_order ji where
+		ji.send_mechanism=#{param1} and
+		ji.send_time
+		&gt;=#{param2} and
+		ji.send_time &lt;=#{param3}
+	</select>
+    <update id="custom_pay">
+		UPDATE jy_shiping_order
+		SET
+		customer_settlement_state='1' WHERE
+		send_mechanism=#{param1}
+		and
+		send_time
+		&gt;=#{param2} and send_time &lt;=#{param3}
+	</update>
+
+    <select id="selectShippinOrderId" resultType="ShippingOrder">
+		SELECT
+		shiping_order_id,shiping_order_num FROM jy_shiping_order
+		WHERE
+		custom_name=#{param1}
+		AND send_time &gt;=#{param2} AND send_time
+		&lt;=#{param3} AND
+		customer_settlement_state=0
+
+	</select>
+
+    <insert id="saveFilename">
+        insert into jy_signorderimages
+        (image_id,order_id,imageUrl) values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.image_id},
+            #{item.order_id},
+            #{item.imageUrl})
+        </foreach>
+
+    </insert>
+
+    <!-- 订单录入页面 -->
+    <select id="suppliersGetShipperOrderInfo" resultType="ShippingOrder">
+        select ji.* FROM jy_shiping_order ji
+        WHERE ji.send_mechanism IN (
+        SELECT
+        jc.customer_name from jy_customer jc
+        LEFT JOIN jy_suppliers jss
+        ON
+        find_in_set(
+        jc.customer_id,jss.suppliers_customer)
+        WHERE
+        jss.suppliers_id=#{suppliersId})
+        AND
+        <foreach collection="list" item="address" index="index" open="(ji.end_address LIKE" close=")"
+            separator="or ji.end_address LIKE">
+            '%${address}'
+        </foreach>
+        <include refid="shiping_order_info_sql" />
+    </select>
+
+    <select id="suppliersGetShipOrder" resultType="int">
+        select COUNT(*) FROM jy_shiping_order ji
+        WHERE ji.send_mechanism IN (
+        SELECT
+        jc.customer_name from jy_customer jc
+        LEFT JOIN jy_suppliers jss
+        ON
+        find_in_set(
+        jc.customer_id,jss.suppliers_customer)
+        WHERE
+        jss.suppliers_id=#{suppliersId})
+        AND
+        <foreach collection="list" item="address" index="index" open="(ji.end_address LIKE" close=")"
+            separator="or ji.end_address LIKE">
+            '%${address}'
+        </foreach>
+        <include refid="shiping_order_count_sql" />
+    </select>
+
+    <select id="driverGetShipperOrderInfo" resultType="ShippingOrder">
+        select ji.* from jy_shiping_order ji
+        LEFT JOIN jy_drivertoorder jd ON
+        jd.order_id = ji.shiping_order_id
+        LEFT JOIN jy_driver_info jdi ON
+        jdi.driver_id = jd.driver_id
+        WHERE jdi.driver_id= #{driverId}
+        <include refid="shiping_order_info_sql" />
+    </select>
+
+    <select id="driverGetShipOrder" resultType="int">
+        select COUNT(ji.shiping_order_id) from jy_shiping_order ji
+        LEFT JOIN
+        jy_drivertoorder jd ON jd.order_id = ji.shiping_order_id
+        LEFT JOIN
+        jy_driver_info jdi ON jdi.driver_id = jd.driver_id
+        WHERE jdi.driver_id=
+        #{driverId}
+        <include refid="shiping_order_count_sql" />
+    </select>
+
+    <select id="otherGetShipOrderInfo" resultType="ShippingOrder">
+        SELECT ji.* from jy_shiping_order ji
+        LEFT JOIN jy_customer jcu ON
+        jcu.customer_name=ji.send_mechanism
+        LEFT JOIN
+        jy_user ju ON
+        ju.customer_id =
+        jcu.customer_id WHERE ju.id=#{userId}
+        <include refid="shiping_order_info_sql" />
+    </select>
+
+    <select id="otherGetShipOrder" resultType="int">
+        SELECT COUNT(*) from jy_shiping_order ji
+        LEFT JOIN jy_customer jcu ON
+        jcu.customer_name=ji.send_mechanism
+        LEFT JOIN
+        jy_user ju ON
+        ju.customer_id =
+        jcu.customer_id WHERE ju.id=#{user_id}
+        <include refid="shiping_order_count_sql" />
+    </select>
+
+    <select id="getDepartmentFatherId" resultType="string">
+		select
+		jd.father_Id from jy_department jd LEFT JOIN jy_user ju ON
+		jd.department_id =ju.did WHERE
+		ju.id =#{_parameter}
+	</select>
+
+    <!-- 订单签收页面 -->
+    <select id="suppliersSignShipOrder" resultType="ShippingOrder">
+        SELECT
+        <include refid="sign_shiporder_column_sql" />
+        FROM jy_shiping_order jso LEFT JOIN
+        jy_sign_order jo
+        ON
+        jo.order_id=jso.shiping_order_id
+        WHERE
+        jso.send_mechanism IN (
+        SELECT
+        jc.customer_name from jy_customer jc
+        LEFT JOIN jy_suppliers
+        jss ON
+        find_in_set(
+        jc.customer_id,jss.suppliers_customer)
+        WHERE
+        jss.suppliers_id=#{suppliersId})
+        <if test="list!=null and list.size()>0">
+            AND
+            <foreach collection="list" item="address" index="index" open="(jso.end_address LIKE" close=")"
+                separator="or jso.end_address LIKE">
+                '%${address}'
+            </foreach>
+        </if>
+
+        <include refid="sing_order_info_sql" />
+    </select>
+    <!-- 供应商运单信息签收查询新增*************** -->
+    <select id="suppliersShipOrderOld" resultType="ShippingOrder">
+        SELECT jso.*,jo.* FROM jy_shiping_order jso INNER JOIN
+        jy_sign_order jo
+        ON jo.order_id=jso.shiping_order_id
+        WHERE
+        jso.send_mechanism IN (
+        SELECT
+        jc.customer_name from jy_customer jc
+        LEFT JOIN jy_suppliers
+        jss ON
+        find_in_set(
+        jc.customer_id,jss.suppliers_customer)
+        WHERE
+        jss.suppliers_id=#{suppliersId})
+        AND
+        <foreach collection="list" item="address" index="index" open="(jso.end_address LIKE" close=")"
+            separator="or jso.end_address LIKE">
+            '%${address}'
+        </foreach>
+        <include refid="oldseach_sign_info_sql" />
+    </select>
+
+    <select id="suppliersGetShipOrderCount" resultType="int">
+        SELECT count(*) FROM jy_shiping_order jso
+        WHERE jso.send_mechanism IN (
+        SELECT
+        jc.customer_name from jy_customer jc
+        LEFT JOIN jy_suppliers jss
+        ON
+        find_in_set(
+        jc.customer_id,jss.suppliers_customer)
+        WHERE
+        jss.suppliers_id=#{suppliersId})
+        AND
+        <foreach collection="list" item="address" index="index" open="(jso.end_address LIKE" close=")"
+            separator="or jso.end_address LIKE">
+            '%${address}'
+        </foreach>
+        <include refid="sign_shiporder_count_sql" />
+
+    </select>
+    <!-- 供应商运单签收信息查询总条数新增*************** -->
+    <select id="suppliersShipOrderOldCount" resultType="int">
+        SELECT count(*) FROM jy_shiping_order jso INNER JOIN
+        jy_sign_order jo
+        ON
+        jo.order_id=jso.shiping_order_id
+        WHERE jso.send_mechanism IN (
+        SELECT
+        jc.customer_name from jy_customer jc
+        LEFT JOIN jy_suppliers jss ON
+        find_in_set(
+        jc.customer_id,jss.suppliers_customer)
+        WHERE
+        jss.suppliers_id=#{suppliersId})
+        AND
+        <foreach collection="list" item="address" index="index" open="(jso.end_address LIKE" close=")"
+            separator="or jso.end_address LIKE">
+            '%${address}'
+        </foreach>
+        <include refid="CountOld" />
+    </select>
+
+    <select id="driverSignShipOrder" resultType="ShippingOrder">
+        SELECT
+        <include refid="sign_shiporder_column_sql" />
+        FROM jy_shiping_order jso LEFT JOIN
+        jy_sign_order jo
+        ON
+        jo.order_id=jso.shiping_order_id LEFT JOIN
+        jy_drivertoorder jd ON
+        jd.order_id = jso.shiping_order_id
+        LEFT JOIN
+        jy_driver_info jdi ON
+        jdi.driver_id =
+        jd.driver_id WHERE
+        jdi.driver_id=#{driverId}
+        <include refid="sing_order_info_sql" />
+    </select>
+    <!-- 司机运单签收信息查询新增************** -->
+    <select id="driverShipOrderOld" resultType="ShippingOrder">
+        SELECT jso.*,jo.* FROM jy_shiping_order jso inner JOIN
+        jy_sign_order jo
+        ON jo.order_id=jso.shiping_order_id LEFT JOIN
+        jy_drivertoorder jd ON
+        jd.order_id = jso.shiping_order_id
+        LEFT JOIN
+        jy_driver_info jdi ON
+        jdi.driver_id =
+        jd.driver_id WHERE
+        jdi.driver_id=#{driverId}
+        <include refid="oldseach_sign_info_sql" />
+    </select>
+
+    <select id="driverSignShipOrderCount" resultType="int">
+        SELECT count(*) FROM jy_shiping_order jso INNER JOIN
+        jy_drivertoorder
+        jd ON
+        jd.order_id =
+        jso.shiping_order_id
+        LEFT JOIN jy_driver_info jdi ON
+        jdi.driver_id =
+        jd.driver_id WHERE
+        jdi.driver_id=#{driverId}
+        <include refid="sign_shiporder_count_sql" />
+    </select>
+
+    <!-- 司机运单签收信息查询总条数新增************** -->
+    <select id="driverShipOrderOldCount" resultType="int">
+        SELECT count(*) FROM jy_shiping_order jso INNER JOIN
+        jy_sign_order jo
+        ON
+        jo.order_id=jso.shiping_order_id INNER JOIN
+        jy_drivertoorder jd ON
+        jd.order_id =
+        jso.shiping_order_id
+        LEFT JOIN jy_driver_info jdi ON
+        jdi.driver_id =
+        jd.driver_id WHERE
+        jdi.driver_id=#{driverId}
+        <include refid="CountOld" />
+    </select>
+
+    <select id="otherSignShipOrder" resultType="ShippingOrder">
+        SELECT
+        <include refid="sign_shiporder_column_sql" />
+        FROM jy_shiping_order jso LEFT JOIN
+        jy_sign_order jo
+        ON
+        jo.order_id=jso.shiping_order_id
+        LEFT JOIN jy_customer jcu ON
+        jcu.customer_name=jso.send_mechanism
+        LEFT JOIN jy_user ju ON
+        ju.customer_id = jcu.customer_id WHERE
+        ju.id=#{userId}
+        <include refid="sing_order_info_sql" />
+    </select>
+    <!-- 录单员运单信息已签收查询新增************** -->
+    <select id="otherShipOrderOld" resultType="ShippingOrder">
+        SELECT jso.*,jo.* FROM jy_shiping_order jso inner JOIN
+        jy_sign_order jo
+        ON jo.order_id=jso.shiping_order_id
+        LEFT JOIN jy_customer jcu ON
+        jcu.customer_name=jso.send_mechanism
+        LEFT JOIN jy_user ju ON
+        ju.customer_id = jcu.customer_id WHERE
+        ju.id=#{userId}
+        <include refid="oldseach_sign_info_sql" />
+    </select>
+    <select id="otherSignShipOrderCount" resultType="int">
+        SELECT count(*) FROM jy_shiping_order jso
+        INNER JOIN jy_customer jcu ON
+        jcu.customer_name=jso.send_mechanism
+        LEFT JOIN
+        jy_user ju ON
+        ju.customer_id =
+        jcu.customer_id WHERE ju.id=#{userId}
+        <include refid="sign_shiporder_count_sql" />
+
+    </select>
+    <!-- 信息员运单签收信息查询总条数新增************ -->
+    <select id="otherShipOrderOldCount" resultType="int">
+        SELECT count(*) FROM jy_shiping_order jso INNER JOIN
+        jy_sign_order jo
+        ON
+        jo.order_id=jso.shiping_order_id
+        INNER JOIN jy_customer jcu ON
+        jcu.customer_name=jso.send_mechanism
+        LEFT JOIN
+        jy_user ju ON
+        ju.customer_id =
+        jcu.customer_id WHERE ju.id=#{param9}
+        <include refid="CountOld" />
+    </select>
+
+    <sql id="fenpei_order_sql"><!-- 运单分配查询未分配的运单 -->
+        <if test="param3!=null and param3!=''">
+            and ji.send_time like "%${param3}%"
+        </if>
+        <if test="param4!=null and param4!=''">
+            and ji.shiping_order_num like "%${param4}%"
+        </if>
+        <if test="param5!=null and param5!=''">
+            and ji.send_mechanism like "%${param5}%"
+        </if>
+        <if test="param6!=null and param6!=''">
+            and ji.end_address like "%${param6}%"
+        </if>
+        <if test="param7!=null and param7!=''">
+            and ji.custom_name like "%${param7}%"
+        </if>
+
+        <if test="param8!=null and param8!=''">
+            and ji.receipt_name like "%${param8}%"
+        </if>
+        <if test="param9!=null and param9!=''">
+            and ji.receipt_tel like "%${param9}%"
+        </if>
+        <if test="param10!=null and param10!=''">
+            and ji.shiping_order_goid like "%${param10}%"
+        </if>
+        <if test="param11!=null and param11!=''">
+            and ji.end_mechanism like "%${param11}%"
+        </if>
+
+        ORDER BY
+        ji.updatetime
+        DESC
+        limit
+        #{param1},#{param2}
+    </sql>
+
+    <sql id="fenpei_order_count">
+        <if test="param1!=null and param1!=''">
+            and ji.send_time like "%${param1}%"
+        </if>
+        <if test="param2!=null and param2!=''">
+            and ji.shiping_order_num like "%${param2}%"
+        </if>
+        <if test="param3!=null and param3!=''">
+            and ji.send_mechanism like "%${param3}%"
+        </if>
+        <if test="param4!=null and param4!=''">
+            and ji.end_address like "%${param4}%"
+        </if>
+        <if test="param5!=null and param5!=''">
+            and ji.custom_name like "%${param5}%"
+        </if>
+
+        <if test="param6!=null and param6!=''">
+            and ji.receipt_name like "%${param6}%"
+        </if>
+        <if test="param7!=null and param7!=''">
+            and ji.receipt_tel like "%${param7}%"
+        </if>
+        <if test="param8!=null and param8!=''">
+            and ji.shiping_order_goid like "%${param8}%"
+        </if>
+        <if test="param9!=null and param9!=''">
+            and ji.end_mechanism like "%${param9}%"
+        </if>
+
+    </sql>
+    <select id="getAllShipOrderInfoFenPei" resultType="ShippingOrder">
+        SELECT
+        ji.*
+        FROM
+        jy_shiping_order ji
+        where shiping_order_id NOT IN(select
+        dt.order_id from jy_drivertoorder dt)
+        and ji.shipping_order_state = 0
+        <include refid="fenpei_order_sql" />
+    </select>
+
+    <select id="getAllShipOrderInfoFenPeiCount" resultType="int">
+        select
+        count(*) from jy_shiping_order ji where
+        shiping_order_id NOT
+        IN(select
+        dt.order_id from jy_drivertoorder dt)
+        and
+        ji.shipping_order_state = 0
+        <include refid="fenpei_order_count" />
+    </select>
+
+    <!-- <select id="suppliersGetShipperOrderInfoapp" resultType="ShippingOrder">
+        SELECT ji.* FROM jy_shiping_order ji where shiping_order_id NOT IN(select
+        dt.order_id from jy_drivertoorder dt) and ji.shipping_order_state = 0 and
+        ji.end_address IN (select concat_ws('',jci.cityname ,jcii.cityname,jciii.cityname)
+        from jy_supperlis_city_info jsci LEFT JOIN jy_city_info jci ON jsci.suppliers_province
+        = jci.citycode AND city_type= '1' LEFT JOIN jy_city_info jcii ON jsci.suppliers_city
+        =jcii.citycode AND jcii.city_type='2' LEFT JOIN jy_city_info jciii ON jciii.citycode=jsci.suppliers_county
+        AND jciii.city_type='3' WHERE jsci.suppliersid=#{param3}) AND ji.send_mechanism
+        IN ( SELECT jc.customer_name from jy_customer jc LEFT JOIN jy_suppliers jss
+        ON find_in_set( jc.customer_id,jss.suppliers_customer) WHERE jss.suppliers_id=#{param3})
+        <if test="param4!=null and param4!=''"> and ji.shiping_order_num like "%${param4}%"
+        </if> <if test="param5!= null and param5!=''"> and ji.shiping_order_goid
+        like '%${param5}%' </if> <if test="param6!=null and param6!=''"> and ji.custom_name
+        like '%${param6}%' </if> <if test="param7!=null and param7!=''"> and ji.receipt_name
+        like '%${param7}%' </if> ORDER BY ji.updatetime DESC <if test="param1!=null
+        and param2!=null"> limit #{param1},#{param2} </if> </select> -->
+    <select id="suppliersGetShipperOrderInfoapp" resultType="ShippingOrder">
+        SELECT
+        ji.*
+        FROM
+        jy_shiping_order ji
+        where shiping_order_id NOT IN(select
+        dt.order_id from jy_drivertoorder dt)
+        and ji.shipping_order_state = 0
+        AND ji.send_mechanism IN (
+        SELECT
+        jc.customer_name from jy_customer jc
+        LEFT JOIN jy_suppliers jss ON
+        find_in_set(
+        jc.customer_id,jss.suppliers_customer)
+        WHERE
+        jss.suppliers_id=#{param3})
+        AND
+        <foreach collection="list" item="address" index="index" open="(ji.end_address LIKE" close=")"
+            separator="or ji.end_address LIKE">
+            '%${address}'
+        </foreach>
+
+        <if test="param4!=null and param4!=''">
+            and ji.shiping_order_num like "%${param4}%"
+        </if>
+        <if test="param5!= null and param5!=''">
+            and ji.shiping_order_goid like '%${param5}%'
+        </if>
+        <if test="param6!=null and param6!=''">
+            and ji.custom_name like '%${param6}%'
+        </if>
+        <if test="param7!=null and param7!=''">
+            and ji.receipt_name like '%${param7}%'
+        </if>
+        ORDER BY
+        ji.updatetime
+        DESC
+        <if test="param1!=null and param2!=null">
+            limit
+            #{param1},#{param2}
+        </if>
+    </select>
+
+    <select id="psSuppPageInfoShipperOrder" resultType="ShippingOrder">
+        SELECT * FROM (
+        SELECT order_id FROM
+        jy_drivertoorder jdto INNER JOIN
+        jy_driver_info jdi ON jdto.driver_id =jdi.driver_id
+        INNER JOIN jy_suppliers js ON js.suppliers_id = jdi.driver_suppliers
+        WHERE
+        js.suppliers_id =#{param3}
+        )jdt INNER JOIN jy_shiping_order jso ON jso.shiping_order_id =
+        jdt.order_id
+        WHERE jso.shipping_order_state BETWEEN 0 AND 4
+        <if test="param4 != null and param4 != ''">
+            and jso.shiping_order_num like '%${param4}%'
+        </if>
+
+        <if test="param5!=null and param5!=''">
+            and jso.send_time &gt;=#{param5}
+        </if>
+        <if test="param6!=null and param6!=''">
+            and jso.send_time &lt;=#{param6}
+        </if>
+        <if test="(param5!=null and param5!='') and (param6!=null and param6!='')">
+            and jso.send_time &gt;=#{param5}
+            and jso.send_time &lt;=#{param6}
+        </if>
+        <if test="param7!=null and param7!=''">
+            and jso.shipping_order_state=#{param7}
+        </if>
+        <if test="param8!= null and param8!=''">
+            and jso.shiping_order_goid like '%${param8}%'
+        </if>
+        <if test="param9!=null and param9!=''">
+            and jso.custom_name like '%${param9}%'
+        </if>
+        <if test="param10!=null and param10!=''">
+            and jso.receipt_name like '%${param10}%'
+        </if>
+        ORDER BY jso.sign_time DESC ,jso.updatetime DESC
+    </select>
+
+    <select id="psDriverPageInfoShipperOrder" resultType="ShippingOrder">
+        SELECT * FROM jy_shiping_order jso
+        LEFT JOIN jy_drivertoorder jdt ON
+        jso.shiping_order_id= jdt.order_id
+        WHERE
+        jdt.driver_id=#{param3}
+        and
+        jso.shipping_order_state BETWEEN 0 AND 4
+        <if test="param4 != null and param4 != ''">
+            and jso.shiping_order_num like '%${param4}%'
+        </if>
+
+        <if test="param5!=null and param5!=''">
+            and jso.send_time &gt;=#{param5}
+        </if>
+        <if test="param6!=null and param6!=''">
+            and jso.send_time &lt;=#{param6}
+        </if>
+        <if test="(param5!=null and param5!='') and (param6!=null and param6!='')">
+            and jso.send_time &gt;=#{param5}
+            and jso.send_time &lt;=#{param6}
+        </if>
+        <if test="param7!=null and param7!=''">
+            and jso.shipping_order_state=#{param7}
+        </if>
+        <if test="param8!= null and param8!=''">
+            and jso.shiping_order_goid like '%${param8}%'
+        </if>
+        <if test="param9!=null and param9!=''">
+            and jso.custom_name like '%${param9}%'
+        </if>
+        <if test="param10!=null and param10!=''">
+            and jso.receipt_name like '%${param10}%'
+        </if>
+        ORDER BY
+        jso.sign_time desc,jso.updatetime desc
+    </select>
+
+    <update id="updateShipperOrderDelete">
+        UPDATE jy_shiping_order SET shipping_order_state='0' WHERE
+        shiping_order_id IN
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <delete id="deleteAllMessage">
+        DELETE jso.* from
+        jy_shiping_order
+        jso
+        <where>
+            <if test="param1!=null and param1!=''">
+                and jso.send_time &gt;=#{param1}
+            </if>
+            <if test="param10!=null and param10!=''">
+                and jso.send_time &lt;=#{param10}
+            </if>
+            <if test="(param1!=null and param1!='') and (param10!=null and param10!='')">
+                and jso.send_time &gt;=#{param1}
+                and
+                jso.send_time&lt;=#{param10}
+            </if>
+            <if test="param2!=null and param2!=''">
+                and jso.shiping_order_num = #{param2}
+            </if>
+            <if test="param3!=null and param3!=''">
+                and jso.send_mechanism = #{param3}
+            </if>
+            <if test="param4!=null and param4!=''">
+                and jso.end_address = #{param4}
+            </if>
+            <if test="param5!=null and param5!=''">
+                and jso.custom_name = #{param5}
+            </if>
+
+            <if test="param6!=null and param6!=''">
+                and jso.receipt_name = #{param6}
+            </if>
+            <if test="param7!=null and param7!=''">
+                and jso.receipt_tel = #{param7}
+            </if>
+            <if test="param8!=null and param8!=''">
+                and jso.topordernumber = #{param8}
+            </if>
+            <if test="param9!=null and param9!=''">
+                and jso.downordernumber = #{param9}
+            </if>
+        </where>
+    </delete>
+    <select id="getSingShiperOrderImg" resultType="ShipperOrderImg">
+		SELECT * FROM
+		jy_signorderimages
+		WHERE order_id=#{_parameter}
+	</select>
+    <select id="callSignShipperOrderProcedure" resultType="String" parameterType="String" statementType="CALLABLE">
+		<![CDATA[
+
+
+    		CALL signShipperOrderProcedure (#{_parameter,mode=IN});
+
+
+        ]]>
+	</select>
+    <select id="outSignShipOrderFile" resultType="ShippingOrder">
+
+        <![CDATA[
+    		CALL signShipperOrderProcedure (#{param1});
+		]]>
+
+        SELECT
+        ji.shiping_order_num,ji.send_mechanism,ji.shiping_order_goid,ji.end_address,ji.send_time,
+        ji.sign_time,ji.receipt_name,ji.sign_user,
+        ji.sign_usernumber,ji.sign_remarks,ji.goods_num,ji.sign_name,ji.sign_number,ji.sign_username,
+        CASE ji.shipping_order_state
+        WHEN '0' THEN '已发运'
+        WHEN '1' THEN '已分配'
+        WHEN '2' THEN '已接单'
+        WHEN '3' THEN '围栏签收'
+        WHEN '4' THEN '已签收'
+        WHEN '5'
+        THEN '已签收'
+        WHEN '6' THEN '已签收'
+        END AS shipping_order_statestr
+        from
+        table_temp ji where 1=1
+        <if test="array!=null and array.length!=0">
+            and ji.shiping_order_id in
+            <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="array==null or array==''">
+            <if test="param2!=null and param2!=''">
+                and ji.shiping_order_num like "%${param2}%"
+            </if>
+            <if test="param3!=null and param3!=''">
+                and ji.send_time &gt;=#{param3}
+            </if>
+            <if test="param4!=null and param4!=''">
+                and ji.send_time &lt;=#{param4}
+            </if>
+            <if test="(param3!=null and param3!='') and (param4!=null and param4!='')">
+                and ji.send_time &gt;=#{param3}
+                and
+                ji.send_time &lt;=#{param4}
+            </if>
+            <if test="param5!=null and param5!='' and param5!=4">
+                and ji.shipping_order_state=#{param5}
+            </if>
+            <if test="param5==4 ">
+                and ji.shipping_order_state in (4,5,6)
+            </if>
+            <if test="param6!=null and param6!=''">
+                and ji.send_mechanism like "%${param6}%"
+            </if>
+            <if test="param7!=null and param7!=''">
+                and ji.receipt_name like "%${param7}%"
+            </if>
+            <if test="param8!=null and param8!=''">
+                and ji.end_address like "%${param8}%"
+            </if>
+            <if test="param9!=null and param9!=''">
+                and ji.shiping_order_goid like "%${param9}%"
+            </if>
+        </if>
+
+    </select>
+    <select id="getQuickSearchShiping" resultType="ShippingOrder">
+
+        <![CDATA[
+    		CALL shipperOrderProcedure (#{param3});
+		]]>
+        SELECT * FROM user_id ji
+        <where>
+            <if test="param2!=null and param2!=''">
+                and ji.shiping_order_num=#{param2}
+            </if>
+            <if test="param1!=null and param1!=''">
+                AND ji.shiping_order_goid=#{param1}
+            </if>
+        </where>
+
+    </select>
+    <select id="otherGetShipOrderBySendMechanism" resultType="ShippingOrder">
+        SELECT COUNT(jso.shiping_order_id)
+        customer_settlement_state,count(ji.shiping_order_id)
+        num,SUM(ji.goods_num) goods_num,
+        SUM(ji.goods_weight) goods_weight,
+        SUM(ji.goods_vol) goods_vol,
+        SUM(ji.deliver_fee) deliver_fee,
+        SUM(ji.upstairs_fee) upstairs_fee,
+        SUM(ji.added_fee) added_fee,
+        SUM(ji.other_fee) other_fee,
+        SUM(ji.trade_agency) trade_agency,
+        SUM(ji.transport_pay) transport_pay,
+        MAX(ji.send_time) max_time,
+        MIN(ji.send_time) min_time,
+        ji.custom_name,ji.send_time
+        ,ji.custom_code,ji.send_mechanism
+        From jy_shiping_order ji LEFT JOIN
+        jy_shiping_order jso ON
+        ji.shiping_order_id=jso.shiping_order_id AND
+        jso.customer_settlement_state=0
+        LEFT JOIN jy_customer jcu ON
+        jcu.customer_name LIKE ji.send_mechanism
+        LEFT JOIN jy_user ju ON
+        ju.customer_id =
+        jcu.customer_id WHERE
+        ju.id=#{user_id}
+        <include refid="customerbilling_info_sql" />
+    </select>
+    <select id="otherGetShipOrderBySendMechanismTotal" resultType="int">
+        select COUNT(*) from (SELECT COUNT(jso.shiping_order_id)
+        customer_settlement_state,count(ji.shiping_order_id)
+        num,SUM(ji.goods_num) goods_num,
+        SUM(ji.goods_weight) goods_weight,
+        SUM(ji.goods_vol) goods_vol,
+        SUM(ji.deliver_fee) deliver_fee,
+        SUM(ji.upstairs_fee) upstairs_fee,
+        SUM(ji.added_fee) added_fee,
+        SUM(ji.other_fee) other_fee,
+        SUM(ji.trade_agency) trade_agency,
+        SUM(ji.transport_pay) transport_pay,
+        MAX(ji.send_time) max_time,
+        MIN(ji.send_time) min_time,
+        ji.custom_name,ji.send_time ,ji.custom_code
+        From jy_shiping_order ji LEFT JOIN jy_shiping_order jso ON
+        ji.shiping_order_id=jso.shiping_order_id AND
+        jso.customer_settlement_state=0
+        LEFT JOIN jy_customer jcu ON
+        jcu.customer_name LIKE ji.send_mechanism
+        LEFT JOIN jy_user ju ON
+        ju.customer_id =
+        jcu.customer_id WHERE
+        ju.id=#{user_id}
+        <include refid="customerbilling_count_sql" />
+        ) t
+    </select>
+
+    <select id="someMessageOutPut" resultType="ShippingOrder">
+        select *
+        from jy_shiping_order where shiping_order_id IN
+        <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="outNewSignShipOrderFile" resultType="ShippingOrder">
+        SELECT
+        <include refid="outSignShipperMessage" />
+        FROM
+        jy_shiping_order ji LEFT JOIN jy_sign_order jo ON
+        jo.order_id=ji.shiping_order_id
+        where 1=1
+        <include refid="outSignShipperInfo" />
+    </select>
+
+    <select id="otherOutSignShipOrderFile" resultType="ShippingOrder">
+        SELECT
+        <include refid="outSignShipperMessage" />
+        FROM
+        jy_shiping_order ji LEFT JOIN jy_sign_order jo ON
+        jo.order_id=ji.shiping_order_id LEFT JOIN jy_customer jcu ON
+        jcu.customer_name=ji.send_mechanism
+        LEFT JOIN jy_user ju ON
+        ju.customer_id = jcu.customer_id WHERE
+        ju.id=#{customerId}
+        <include refid="outSignShipperInfo" />
+    </select>
+
+    <select id="driverOutSignShipOrderFile" resultType="ShippingOrder">
+        SELECT
+        <include refid="outSignShipperMessage" />
+        FROM
+        jy_shiping_order ji LEFT JOIN
+        jy_sign_order jo ON
+        jo.order_id=ji.shiping_order_id LEFT JOIN jy_drivertoorder jd ON
+        jd.order_id = ji.shiping_order_id LEFT JOIN jy_driver_info jdi ON
+        jdi.driver_id = jd.driver_id WHERE
+        jdi.driver_id=#{driverId}
+        <include refid="outSignShipperInfo" />
+    </select>
+
+    <select id="supperOutSignShipOrderFile" resultType="ShippingOrder">
+        SELECT
+        <include refid="outSignShipperMessage" />
+        FROM jy_shiping_order ji LEFT JOIN
+        jy_sign_order jo ON
+        jo.order_id=ji.shiping_order_id
+        where 1=1
+        ji.send_mechanism IN (
+        SELECT
+        jc.customer_name from jy_customer jc
+        LEFT JOIN jy_suppliers
+        jss ON
+        find_in_set(
+        jc.customer_id,jss.suppliers_customer)
+        WHERE
+        jss.suppliers_id=#{suppliersId})
+        AND
+        <foreach collection="list" item="address" index="index" open="(ji.end_address LIKE" close=")"
+            separator="or ji.end_address LIKE">
+            '%${address}'
+        </foreach>
+        <include refid="outSignShipperInfo" />
+    </select>
+
+    <sql id="outSignShipperMessage">
+		ji.shiping_order_num,ji.send_mechanism,ji.shiping_order_goid,ji.end_address,ji.send_time,
+		jo.sign_time,ji.receipt_name,jo.sign_user,
+		jo.sign_usernumber,jo.sign_remarks,ji.goods_num,jo.sign_name,jo.sign_number,jo.sign_username,
+		CASE ji.shipping_order_state
+		WHEN '0' THEN '已发运'
+		WHEN '1' THEN '已分配'
+		WHEN '2' THEN '已接单'
+		WHEN '3' THEN '围栏签收'
+		WHEN '4' THEN '已签收'
+		WHEN '5'
+		THEN '已签收'
+		WHEN '6' THEN '已签收'
+		END AS shipping_order_statestr,
+		(SELECT
+		GROUP_CONCAT(jsb.abnormal_type_name) FROM jy_abnormalreport jsb WHERE
+		shiping_order_id = ji.shiping_order_id) as abnormal_name
+	</sql>
+    <!-- 新的订单导出 -->
+    <sql id="outSignShipperInfo">
+        <if test="array!=null and array.length!=0">
+            and ji.shiping_order_id in
+            <foreach collection="array" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="array==null or array==''">
+            <if test="param1!=null and param1!=''">
+                and ji.shiping_order_num like "%${param1}%"
+            </if>
+            <if test="param2!=null and param2!=''">
+                and ji.send_time &gt;=#{param2}
+            </if>
+            <if test="param3!=null and param3!=''">
+                and ji.send_time &lt;=#{param3}
+            </if>
+            <if test="(param2!=null and param2!='') and (param3!=null and param3!='')">
+                and ji.send_time &gt;=#{param2}
+                and
+                ji.send_time &lt;=#{param3}
+            </if>
+            <if test="param4!=null and param4!=''">
+                <if test="param4==0">
+                    and ji.shipping_order_state in (0,1,2)
+                </if>
+                <if test="param4==1">
+                    and ji.shipping_order_state in (3,4,5,6)
+                </if>
+            </if>
+            <if test="param5!=null and param5!=''">
+                and ji.send_mechanism like "%${param5}%"
+            </if>
+            <if test="param6!=null and param6!=''">
+                and ji.receipt_name like "%${param6}%"
+            </if>
+            <if test="param7!=null and param7!=''">
+                and ji.end_address like "%${param7}%"
+            </if>
+            <if test="param8!=null and param8!=''">
+                and ji.shiping_order_goid like "%${param8}%"
+            </if>
+            ORDER BY ji.send_time desc
+        </if>
+
+    </sql>
+    <update id="updateComment_state">
+		update jy_shiping_order set comment_state='1' where
+		shiping_order_id=#{_parameter}
+	</update>
+
+    <insert id="insertShippingTime">
+        INSERT INTO jy_shipping_time
+        (shiping_order_id,shiping_order_num,end_address,receipt_name,auto_sign_time,sign_time,aging_time,custom_name,send_mechanism,receivetime,updatetime,shiping_order_goid,sign_remarks,result)
+        select
+        jpo.shiping_order_id,jpo.shiping_order_num,jpo.end_address,jpo.receipt_name,js.auto_sign_time,js.sign_time,
+        CASE jpo.aging_day WHEN '0' THEN
+        CONCAT(jpo.aging_time,'(当日)') WHEN '1'
+        THEN CONCAT(jpo.aging_time,'(次日)')
+        WHEN '2' THEN
+        CONCAT(jpo.aging_time,'(隔日)') END AS aging_time,
+        jpo.custom_name,jpo.send_mechanism,jd.receivetime,jpo.updatetime,jpo.shiping_order_goid,js.sign_remarks,
+        myFunction(js.sign_time,jd.receivetime,jpo.updatetime,jpo.aging_time,jpo.aging_day)
+        AS result
+        from
+        jy_sign_order js
+        INNER join
+        jy_shiping_order jpo on
+        js.order_id=jpo.shiping_order_id
+        INNER JOIN
+        jy_drivertoorder jd ON
+        jd.order_id=jpo.shiping_order_id
+        where
+        jpo.shiping_order_id
+        =#{shiping_order_id}
+    </insert>
+
+    <select id="get56LinkProject" resultType="int">
+		SELECT count(1) FROM
+		jy_shiping_order WHERE shiping_order_goid =#{goid}
+		AND send_mechanism =
+		#{mechanism}
+		AND shipping_order_state = '4'
+	</select>
+
+    <select id="getDriverInfo" resultType="Driver">
+		SELECT * FROM
+		jy_driver_info jdi
+		LEFT JOIN jy_drivertoorder jdt ON jdi.driver_id =
+		jdt.driver_id where
+		jdt.order_id=#{orderId} limit 1
+	</select>
+
+    <select id="userGetCusetomerInfo" resultType="Customer">
+	SELECT customer_name,customer_id FROM jy_customer WHERE customer_id =#{customerId}
+	</select>
+
+    <update id="updateOrderSignRemarks">
+		UPDATE jy_sign_order SET sign_remarks = CONCAT(#{remarks},sign_remarks) WHERE order_id=#{orderId}
+	</update>
+
+    <update id="updateOrderShipperTimeRemarks">
+		UPDATE jy_shipping_time SET sign_remarks = CONCAT(#{remarks},sign_remarks) where shiping_order_id=#{orderId}
+	</update>
+    <update id="updateShippingOrderBusinessType">
+        UPDATE jy_shiping_order set business_type=#{businessType}
+        WHERE shiping_order_id IN
+        <foreach collection="list" index="index" item="item"
+            separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </update>
+
+
+    <select id="customerGetCustomName" resultType="Customer">
+		SELECT
+		customer_num,customer_name,customer_people,customer_tel,customer_id
+		FROM
+		jy_customer where customer_name like "%${number}%"
+		AND  customer_id=#{customerId}
+	</select>
+
+    <select id="getShippingOrderId" resultType="ShippingOrder">
+        SELECT * FROM jy_shiping_order
+        <where>
+            <if test="shiping_order_num!=null and shiping_order_num!=''">
+                AND shiping_order_num =#{shiping_order_num}
+            </if>
+            <if test="shiping_order_goid!=null and shiping_order_goid!=''">
+                AND shiping_order_goid =#{shiping_order_goid}
+            </if>
+        </where>
+    </select>
+    <select id="getShippingOrderBusinessType" resultType="java.lang.String">
+        SELECT shiping_order_id FROM jy_shiping_order
+        <where>
+            <if test="shiping_order_num!=null and shiping_order_num!=''">
+                AND shiping_order_num =#{shiping_order_num}
+            </if>
+            <if test="shiping_order_goid!=null and shiping_order_goid!=''">
+                AND shiping_order_goid =#{shiping_order_goid}
+            </if>
+            <if test="businessType!=null">
+                and business_type = #{businessType}
+            </if>
+
+        </where>
+    </select>
+</mapper>

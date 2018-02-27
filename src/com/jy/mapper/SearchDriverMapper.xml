@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jy.dao.SearchDriverDao">
+	<!-- 通过查询收货人、联系方式,展示司机信息到app -->
+	<select id="getSearchDriver" resultType="Comment">
+		select
+		df.driver_name as driver_name ,df.driver_phone as
+		driver_phone,so.shipping_order_state as
+		shipping_order_state,so.comment_state as comment_state,
+		so.shiping_order_id as shiping_order_id,
+		so.send_mechanism as
+		send_mechanism,df.driver_id as driver_id,
+		df.driver_name as
+		driver_name,
+		so.receipt_name as comment_name,su.suppliers_id as suppliers_id
+		from jy_driver_info df
+		left join
+		jy_drivertoorder dr
+		on
+		df.driver_id=dr.driver_id
+		left join
+		jy_shiping_order so
+		on
+		dr.order_id=so.shiping_order_id 
+		left join jy_suppliers su on 
+		su.suppliers_id=df.driver_suppliers
+		where
+		so.shiping_order_num=#{param3}
+		<if test="param1!=null  and  param1!='' and param2==null   and  param2==''">
+			and so.receipt_name=#{param1}
+		</if>
+		<if test="param2!=null   and  param2!='' and param1==null  and  param1==''">
+			and so.receipt_tel=#{param2}
+		</if>
+		<if test="param2!=null   and  param2!='' and param1!=null  and  param1!=''">
+			and so.receipt_tel=#{param2} and so.receipt_name=#{param1}
+		</if>
+	</select>
+	<insert id="saveComment">
+		insert into jy_comment
+		(comment_id,shiping_order_id,send_mechanism,driver_id,driver_name,comment_name,remark,xing,comment_data,suppliers_id)
+		values(#{comment_id},#{shiping_order_id},#{send_mechanism},#{driver_id},#{driver_name},#{comment_name},#{remark},#{xing},sysdate(),#{suppliers_id})
+
+	</insert>
+</mapper>
